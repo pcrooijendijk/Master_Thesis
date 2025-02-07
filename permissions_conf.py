@@ -349,7 +349,7 @@ class UserPermissionsResource:
     def get_permissions(self, target_username: str, request):
         current_username = self.user_manager.get_remote_username(request)
 
-        if (current_username is None or not self.user_manager.is_system_admin(current_username)):
+        if (current_username is None):
             return "error: User not found"
         
         entity = self.rest_user_permission_manager.get_permission_entity(target_username)

@@ -31,6 +31,13 @@ for x in os.listdir(file_path):
                 )
 
 #%%
+role_permissions = {
+    "admin": list(Permission.Permission),  # Full access with all permissions
+    "editor": [Permission.Permission.VIEWSPACE_PERMISSION, Permission.Permission.CREATEEDIT_PAGE_PERMISSION, Permission.Permission.COMMENT_PERMISSION],
+    "viewer": [Permission.Permission.VIEWSPACE_PERMISSION],
+    "restricted_user": []  # No permissions
+}
+
 # Making a space, space keys are defined (for now) as integers
 space = Space.Space('mark', 0)
 space_new = Space.Space('new', 1)
@@ -47,15 +54,24 @@ space_manager = SpaceManager()
 space_manager.add_space(space) 
 space_manager.add_space(space_new) 
 
+# Adding users
+user_accessor = UserAccessor.UserAccessor()
+user_accessor.add_user("admin")
+user_accessor.add_user("user1")
+
+# Adding the admin
+user_manager = UserManager.UserManager(user_accessor)
+user_manager.add_admin("admin")
+
 # Make a space permission manager
 space_permission_manager = SpacePermissionManager()
 
 # Adding permissions for admin (space, username, permission type)
-space_permission_manager.save_permission(space, 'admin', Permission.Permission.VIEWSPACE_PERMISSION)
-space_permission_manager.save_permission(space_new, 'user1', Permission.Permission.REMOVE_OWN_CONTENT_PERMISSION)
+space_permission_manager.save_permission(space, 'admin', role_permissions["admin"])
+space_permission_manager.save_permission(space_new, 'user1', role_permissions["viewer"])
 
 # Getting the permissions for user with admin permissions
-user_permissions_resource = UserPermissionsResource.UserPermissionsResource(UserManager.UserManager(), TransactionTemplate.TransactionTemplate(), UserAccessor.UserAccessor(), space_manager, space_permission_manager)
+user_permissions_resource = UserPermissionsResource.UserPermissionsResource(user_manager, TransactionTemplate.TransactionTemplate(), user_accessor, space_manager, space_permission_manager)
 
 # Get the permissions for user admin (target username, request)
 print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))
