@@ -19,3 +19,6 @@ class SpacePermissionManager:
         if space.name not in self.permissions:
             self.permissions[space.name] = {}
         self.permissions[space.name][username] = [perm.value for perm in permission_type]
+    
+    def get_permissions(self):
+        return self.permissions

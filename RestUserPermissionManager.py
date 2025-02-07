@@ -16,6 +16,9 @@ class RestUserPermissionManager:
         self.space_manager = space_manager
         self.space_permission_manager = space_permission_manager
         self.user_accessor = user_accessor
+
+    def get_space_permission_manager(self):
+        return self.space_permission_manager
     
     # Get permission entity for a user
     def get_permission_entity(self, username: str):

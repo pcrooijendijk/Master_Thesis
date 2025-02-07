@@ -31,19 +31,24 @@ class UserPermissionsResource:
             return "error: User not found"
         
         entity = self.rest_user_permission_manager.get_permission_entity(target_username)
+        space_permission_manager = self.rest_user_permission_manager.get_space_permission_manager()
+        
         if entity is None: 
             return "error: User not found"
 
         space_permissions = []
 
         for space in entity.get_space_permissions():
+            # Get the permissions for the current user
+            permissions = space_permission_manager.get_permissions()[space.get_space_name()][current_username]
+
             space_data = {
             "spaceName": space.get_space_name(),
             "spaceKey": space.get_space_key(),
             "permissions": [
                 {
                     "permissionType": perm.get_permission_type().value,
-                    "permissionGranted": perm.is_permission_granted(),
+                    "permissionGranted": perm.get_permission_type().value in permissions,
                     "userPermission": perm.is_user_permission()
                 } for perm in space.get_permissions()]
             }
