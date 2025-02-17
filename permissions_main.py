@@ -1,16 +1,15 @@
-#%%
 import os
 import pymupdf
 import random
 
-import UserAccessor
 import Space
-import TransactionTemplate
-from SpaceManager import *
-from SpacePermissionManager import *
 import Permission
-import UserManager
-import UserPermissionsResource
+from UserPermissions import UserAccessor
+import TransactionTemplate
+from SpacePermissions import SpaceManager
+from SpacePermissions import SpacePermissionManager
+from UserPermissions import UserManager
+from UserPermissionManagement import UserPermissionsResource
 
 
 file_path = "/media/sf_thesis/data_DocBench_test"
@@ -30,7 +29,6 @@ for x in os.listdir(file_path):
                     ]
                 )
 
-#%%
 role_permissions = {
     "admin": list(Permission.Permission),  # Full access with all permissions
     "editor": [Permission.Permission.VIEWSPACE_PERMISSION, Permission.Permission.CREATEEDIT_PAGE_PERMISSION, Permission.Permission.COMMENT_PERMISSION],
@@ -55,12 +53,12 @@ space_manager.add_space(space)
 space_manager.add_space(space_new) 
 
 # Adding users
-user_accessor = UserAccessor.UserAccessor()
+user_accessor = UserAccessor()
 user_accessor.add_user("admin")
 user_accessor.add_user("user1")
 
 # Adding the admin
-user_manager = UserManager.UserManager(user_accessor)
+user_manager = UserManager(user_accessor)
 user_manager.add_admin("admin")
 
 # Make a space permission manager
@@ -71,7 +69,7 @@ space_permission_manager.save_permission(space, 'admin', role_permissions["admin
 space_permission_manager.save_permission(space_new, 'user1', role_permissions["viewer"])
 
 # Getting the permissions for user with admin permissions
-user_permissions_resource = UserPermissionsResource.UserPermissionsResource(user_manager, TransactionTemplate.TransactionTemplate(), user_accessor, space_manager, space_permission_manager)
+user_permissions_resource = UserPermissionsResource(user_manager, TransactionTemplate.TransactionTemplate(), user_accessor, space_manager, space_permission_manager)
 
 # Get the permissions for user admin (target username, request)
 print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))

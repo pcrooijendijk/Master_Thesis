@@ -1,11 +1,15 @@
-import SpaceManager
-import SpacePermissionManager
-import UserAccessor
-import SpacePermissionsEntity
-import Permission as per
-import UserPermissionsEntity
-import SpacePermission
 import Space
+import Permission as per
+import TransactionTemplate
+from SpacePermissions import SpaceManager
+from SpacePermissions import SpacePermissionManager
+from UserPermissions import UserAccessor
+from SpacePermissions import SpacePermissionsEntity
+from UserPermissions import UserPermissionsEntity
+from SpacePermissions import SpacePermission
+from UserPermissions import UserManager
+
+import jsonify
 
 class RestUserPermissionManager:
     """
@@ -30,7 +34,7 @@ class RestUserPermissionManager:
             spaces = self.space_manager.get_all_spaces()
 
             for space in spaces: 
-                space_permissions_entity = SpacePermissionsEntity.SpacePermissionsEntity(spaces[space].name, spaces[space].key, spaces[space])
+                space_permissions_entity = SpacePermissionsEntity(spaces[space].name, spaces[space].key, spaces[space])
                 self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.VIEWSPACE_PERMISSION, spaces[space])
                 if space_permissions_entity.get_permission_status(per.Permission.VIEWSPACE_PERMISSION):
                     self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.REMOVE_OWN_CONTENT_PERMISSION, spaces[space])
@@ -49,7 +53,7 @@ class RestUserPermissionManager:
                     self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.EXPORT_SPACE_PERMISSION, spaces[space])
                     self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.ADMINISTER_SPACE_PERMISSION, spaces[space])
                     space_permissions.append(space_permissions_entity)
-            entity = UserPermissionsEntity.UserPermissionsEntity(space_permissions)
+            entity = UserPermissionsEntity(space_permissions)
         return entity
 
     # Set permissions for a user
@@ -127,3 +131,63 @@ class RestUserPermissionManager:
                 granted = True
         
         return granted
+
+class UserPermissionsResource:
+    """
+        User Permissions Resource is used to get and set user permissions
+    """
+
+    def __init__(self, user_manager : UserManager, transaction_template : TransactionTemplate, user_accessor : UserAccessor, space_manager : SpaceManager, space_permission_manager : SpacePermissionManager):
+        self.user_manager = user_manager
+        self.transaction_template = transaction_template
+        self.user_accessor = user_accessor
+        self.rest_user_permission_manager = RestUserPermissionManager(space_manager, space_permission_manager, user_accessor)
+
+    def authorize_admin(self, request: str):
+        current_username = self.user_manager.get_remote_username(request)
+        if not current_username or not self.user_manager.is_system_admin(current_username):
+            return jsonify({"error": "Unauthorized"}), 404 
+
+    def get_permissions(self, target_username: str, request):
+        current_username = self.user_manager.get_remote_username(request)
+
+        if (current_username is None):
+            return "error: User not found"
+        
+        entity = self.rest_user_permission_manager.get_permission_entity(target_username)
+        space_permission_manager = self.rest_user_permission_manager.get_space_permission_manager()
+        
+        if entity is None: 
+            return "error: User not found"
+
+        space_permissions = []
+
+        for space in entity.get_space_permissions():
+            # Get the permissions for the current user
+            permissions = space_permission_manager.get_permissions()[space.get_space_name()][current_username]
+
+            space_data = {
+            "spaceName": space.get_space_name(),
+            "spaceKey": space.get_space_key(),
+            "permissions": [
+                {
+                    "permissionType": perm.get_permission_type().value,
+                    "permissionGranted": perm.get_permission_type().value in permissions,
+                    "userPermission": perm.is_user_permission()
+                } for perm in space.get_permissions()]
+            }
+            space_permissions.append(space_data)
+        return space_permissions
+
+    def put(self, target_username : str, only_user_permissions: bool, user_permissions_entity : UserPermissionsEntity, request):
+        username = self.user_manager.get_remote_username(request)
+        if username == None or not self.user_manager.is_system_admin(username):
+            return jsonify({"error": "Unauthorized"}), 404 
+        
+        if self.user_accessor.get_user(target_username) is None: 
+            return jsonify({"error": "Not found"}), 404 
+        
+        def transaction():
+            self.rest_user_permission_manager.set_permissions(username, user_permissions_entity, only_user_permissions)
+        
+        self.transaction_template.execute(transaction)
