@@ -20,3 +20,6 @@ class Space:
     
     def add_document(self, document):
         self.documents.append(document)
+    
+    def get_documents(self):
+        return self.documents

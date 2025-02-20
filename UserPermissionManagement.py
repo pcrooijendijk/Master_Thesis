@@ -20,6 +20,9 @@ class RestUserPermissionManager:
         self.space_manager = space_manager
         self.space_permission_manager = space_permission_manager
         self.user_accessor = user_accessor
+    
+    def get_space_manager(self):
+        return self.space_manager
 
     def get_space_permission_manager(self):
         return self.space_permission_manager
@@ -191,3 +194,6 @@ class UserPermissionsResource:
             self.rest_user_permission_manager.set_permissions(username, user_permissions_entity, only_user_permissions)
         
         self.transaction_template.execute(transaction)
+    
+    def get_rest_user_permission_manager(self):
+        return self.rest_user_permission_manager

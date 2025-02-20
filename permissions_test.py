@@ -120,18 +120,18 @@ permissions_structure = {
 
 print("test?")
 
-# # Convert the permissions structure to a JSON string
-# permissions_json = json.dumps(permissions_structure, indent=4)
+# Convert the permissions structure to a JSON string
+permissions_json = json.dumps(permissions_structure, indent=4)
 
-# documents = [
-#     {
-#         "title": "blabla",
-#         "content": "blabla", 
-#         "spaceKey": "ENG"
-#     }, 
-#     {
-#         "title": "blabla",
-#         "content": "blabla", 
-#         "spaceKey": "DEV"
-#     }
-# ]
+documents = [
+    {
+        "title": "blabla",
+        "content": "blabla", 
+        "spaceKey": "ENG"
+    }, 
+    {
+        "title": "blabla",
+        "content": "blabla", 
+        "spaceKey": "DEV"
+    }
+]
