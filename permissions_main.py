@@ -5,7 +5,7 @@ from pathlib import Path
 import Space
 import Permission
 import TransactionTemplate
-from client import Client
+from Client import Client
 from UserPermissions import UserAccessor
 from SpacePermissions import SpaceManager
 from SpacePermissions import SpacePermissionManager
