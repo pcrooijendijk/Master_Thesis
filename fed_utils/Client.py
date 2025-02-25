@@ -1,13 +1,14 @@
 # The client should contain the following: name, documents assigned to this client, list of permissions and the local LLM
 
-from Permission import Permission
+from utils import Permission
 import transformers
 from sklearn.model_selection import train_test_split
+from DeepSeek import main as DeepSeek
 
 from UserPermissionManagement import UserPermissionsResource
 
 class Client:
-    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model):
+    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model) -> None:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
@@ -19,34 +20,32 @@ class Client:
         self.documents = []
 
         self.spaces_permissions_init()
+        self.intialize_model()
     
-    def spaces_permissions_init(self):
+    def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
         for perm in permissions:
             # Add to the set of spaces this client has access to
-            # print(perm)
             self.spaces.add((perm['spaceName'], perm['spaceKey']))
             for type in perm['permissions']:
                 # Add to the set of permissions for this user
-                self.permissions.add(type['permissionType']) if type['permissionGranted'] is True else None
-    
-    def get_permissions(self):
-        return self.permissions
+                self.permissions.add(type['permissionType']) if type['permissionGranted'] else None
 
-    def get_spaces(self):
-        return self.spaces
-
-    def filter_documents(self):
+    def filter_documents(self) -> None:
         for space in self.spaces:
             _, space_key = space
+            # Only allow to add the documents to the Clients documents if the client has the permission
+            # to view these documents
             if Permission.VIEWSPACE_PERMISSION.value in self.permissions:
                 self.documents.append(self.space_manager.get_space(space_key).get_documents())
     
-    def intialize_model(self):
-        # Use the deepseek code here to initialize the model
-        pass
+    def intialize_model(self) -> None:
+        if self.model.lower() == "deepseek":
+            DeepSeek()
+        else: 
+            print("Please indicate a valid model name.")
 
-    def dataset_init(self, set_size):
+    def dataset_init(self, set_size) -> None:
         if set_size > 0:
             local_train = train_test_split(
                 self.documents, test_size=0.7, shuffle=True, seed=42
@@ -91,3 +90,9 @@ class Client:
     def send_update(self):
         # Encrypt the weights and send them to the global server
         pass
+
+    def get_permissions(self):
+        return self.permissions
+
+    def get_spaces(self):
+        return self.spaces

@@ -3,9 +3,9 @@ import random
 from pathlib import Path
 
 import Space
-import Permission
+import utils.Permission as Permission
 import TransactionTemplate
-from Client import Client
+from fed_utils.Client import Client
 from UserPermissions import UserAccessor
 from SpacePermissions import SpaceManager
 from SpacePermissions import SpacePermissionManager
@@ -21,12 +21,12 @@ for pdf in file_path.rglob("*.pdf"): # Use rglob to find all PDFs
     with pymupdf.open(pdf) as file: 
         space_key_index = random.randint(0, 3)  # For the space key
         texts.append(
-                    [
-                        chr(12).join([page.get_text() for page in file]),
-                        file.metadata,
-                        space_key_index,
-                    ]
-                )
+            [
+                chr(12).join([page.get_text() for page in file]),
+                file.metadata,
+                space_key_index,
+            ]
+        )
 
 # Template for role permissions (not mandatory to use these)
 role_permissions = {

@@ -1,5 +1,5 @@
 import Space
-import Permission as per
+from utils import Permission as per
 import TransactionTemplate
 from SpacePermissions import SpaceManager
 from SpacePermissions import SpacePermissionManager
@@ -155,13 +155,13 @@ class UserPermissionsResource:
         current_username = self.user_manager.get_remote_username(request)
 
         if (current_username is None):
-            return "error: User not found"
+            return "error: User not found in the current usernames."
         
         entity = self.rest_user_permission_manager.get_permission_entity(target_username)
         space_permission_manager = self.rest_user_permission_manager.get_space_permission_manager()
         
         if entity is None: 
-            return "error: User not found"
+            return "error: User not found."
 
         space_permissions = []
 
