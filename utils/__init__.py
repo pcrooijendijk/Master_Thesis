@@ -1,4 +1,4 @@
 from .dataset import Dataset
-from .instances import Instances
+from .instances import SpaceManagement
 from .Permission import Permission
-from .role import Role
+from .Role import Role

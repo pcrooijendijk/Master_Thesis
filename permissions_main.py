@@ -13,7 +13,7 @@ from UserPermissions import UserManager
 from UserPermissionManagement import UserPermissionsResource
 
 
-file_path = Path("/media/sf_thesis/data_DocBench_test")
+file_path = Path("data_DocBench_test")
 texts = []
 
 # Append the documents to texts lists to get the content of the documents
@@ -30,9 +30,9 @@ for pdf in file_path.rglob("*.pdf"): # Use rglob to find all PDFs
 
 # Template for role permissions (not mandatory to use these)
 role_permissions = {
-    "admin": list(Permission.Permission),  # Full access with all permissions
-    "editor": [Permission.Permission.VIEWSPACE_PERMISSION, Permission.Permission.CREATEEDIT_PAGE_PERMISSION, Permission.Permission.COMMENT_PERMISSION],
-    "viewer": [Permission.Permission.VIEWSPACE_PERMISSION],
+    "admin": list(Permission),  # Full access with all permissions
+    "editor": [Permission.VIEWSPACE_PERMISSION, Permission.CREATEEDIT_PAGE_PERMISSION, Permission.COMMENT_PERMISSION],
+    "viewer": [Permission.VIEWSPACE_PERMISSION],
     "restricted_user": []  # No permissions
 }
 
@@ -68,19 +68,19 @@ user_manager.add_admin("admin")
 space_permission_manager = SpacePermissionManager()
 
 # Adding permissions for admin (space, username, permission type)
-space_permission_manager.save_permission(space, 'admin', role_permissions["editor"])
+space_permission_manager.save_permission(space, 'admin', role_permissions["admin"])
 space_permission_manager.save_permission(space_new, 'user1', role_permissions["viewer"])
-space_permission_manager.save_permission(space_3, 'admin', role_permissions["editor"])
+# space_permission_manager.save_permission(space_3, 'admin', role_permissions["editor"])
 
 # Getting the permissions for user with admin permissions
 user_permissions_resource = UserPermissionsResource(user_manager, TransactionTemplate.TransactionTemplate(), user_accessor, space_manager, space_permission_manager)
 
 # Get the permissions for user admin (target username, request)
-# print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))
-# print("----------------------------------------------------------")
-# print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
+print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))
+print("----------------------------------------------------------")
+print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
 
 # Make the clients by using the Client class:
-admin_client = Client(1, "admin", user_permissions_resource, "DeepSeek-v3:1.5b")
-admin_client.get_spaces()
-admin_client.filter_documents()
+# admin_client = Client(1, "admin", user_permissions_resource, "DeepSeek")
+# admin_client.get_spaces()
+# admin_client.filter_documents()

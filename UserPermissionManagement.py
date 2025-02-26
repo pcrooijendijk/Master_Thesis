@@ -1,5 +1,5 @@
 import Space
-from utils import Permission as per
+from utils.Permission import Permission
 import TransactionTemplate
 from SpacePermissions import SpaceManager
 from SpacePermissions import SpacePermissionManager
@@ -16,19 +16,19 @@ class RestUserPermissionManager:
         Rest User Permission Manager keeps track of user permissions per space
     """
 
-    def __init__(self, space_manager : SpaceManager, space_permission_manager : SpacePermissionManager, user_accessor : UserAccessor):
+    def __init__(self, space_manager: SpaceManager, space_permission_manager: SpacePermissionManager, user_accessor: UserAccessor):
         self.space_manager = space_manager
         self.space_permission_manager = space_permission_manager
         self.user_accessor = user_accessor
     
-    def get_space_manager(self):
+    def get_space_manager(self) -> SpaceManager:
         return self.space_manager
 
-    def get_space_permission_manager(self):
+    def get_space_permission_manager(self) -> SpacePermissionManager:
         return self.space_permission_manager
     
     # Get permission entity for a user
-    def get_permission_entity(self, username: str):
+    def get_permission_entity(self, username: str) -> UserPermissionsEntity:
         entity = None
 
         # Only continue if the user exists
@@ -38,59 +38,37 @@ class RestUserPermissionManager:
 
             for space in spaces: 
                 space_permissions_entity = SpacePermissionsEntity(spaces[space].name, spaces[space].key, spaces[space])
-                self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.VIEWSPACE_PERMISSION, spaces[space])
-                if space_permissions_entity.get_permission_status(per.Permission.VIEWSPACE_PERMISSION):
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.REMOVE_OWN_CONTENT_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.CREATEEDIT_PAGE_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.REMOVE_PAGE_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.EDITBLOG_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.REMOVE_BLOG_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.EDITBLOG_PERMISSION, spaces[space])    
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.REMOVE_BLOG_PERMISSION, spaces[space])      
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.CREATE_ATTACHMENT_PERMISSION, spaces[space])    
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.REMOVE_ATTACHMENT_PERMISSION, spaces[space])  
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.COMMENT_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.REMOVE_COMMENT_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.SET_PAGE_PERMISSIONS_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.REMOVE_MAIL_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.EXPORT_SPACE_PERMISSION, spaces[space])
-                    self.set_user_space_permission_entity(space_permissions_entity, username, per.Permission.ADMINISTER_SPACE_PERMISSION, spaces[space])
+                self.set_user_space_permission_entity(space_permissions_entity, username, Permission.VIEWSPACE_PERMISSION, spaces[space])
+                if space_permissions_entity.get_permission_status(Permission.VIEWSPACE_PERMISSION):
+                    list_of_permissions = list(Permission)
+                    for permission in list_of_permissions:
+                        self.set_user_space_permission_entity(space_permissions_entity, username, permission, spaces[space])
                     space_permissions.append(space_permissions_entity)
             entity = UserPermissionsEntity(space_permissions)
         return entity
 
     # Set permissions for a user
-    def set_permissions(self, target_user_name : str, user_permissions_entity : UserPermissionsEntity, only_user_permissions : bool):
+    def set_permissions(self, target_user_name: str, user_permissions_entity: UserPermissionsEntity, only_user_permissions: bool) -> None:
         space_permissions = user_permissions_entity.get_space_permissions()
         for space_perm in space_permissions:
             granted = False
             view_granted = False
 
-            if space_perm.get_permission_status(per.Permission.VIEWSPACE_PERMISSION):
+            if space_perm.get_permission_status(Permission.VIEWSPACE_PERMISSION):
                 space = self.space_manager.get_space(space.get_space_key())
-                view_granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.VIEWSPACE_PERMISSION, space, only_user_permissions) 
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.REMOVE_OWN_CONTENT_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.CREATEEDIT_PAGE_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.REMOVE_PAGE_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.EDITBLOG_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.REMOVE_BLOG_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.CREATE_ATTACHMENT_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.REMOVE_ATTACHMENT_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.COMMENT_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.REMOVE_COMMENT_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.SET_PAGE_PERMISSIONS_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.REMOVE_MAIL_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.EXPORT_SPACE_PERMISSION, space, only_user_permissions) or granted
-                granted = self.set_space_permission_for_user(space_perm, target_user_name, per.Permission.ADMINISTER_SPACE_PERMISSION, space, only_user_permissions) or granted
-            
+                view_granted = self.set_space_permission_for_user(space_perm, target_user_name, Permission.VIEWSPACE_PERMISSION, space, only_user_permissions) 
+                list_of_permissions = list(Permission).pop(0) # Take out VIEWSPACE_PERMISSION
+                for permission in list_of_permissions:
+                    granted = self.set_space_permission_for_user(space_perm, target_user_name, permission, space, only_user_permissions) or granted
+
             if granted and not view_granted:
-                if not self.has_user_permission(per.Permission.VIEWSPACE_PERMISSION, space, target_user_name):
-                    space_permission = SpacePermission.create_user_space_permission(per.Permission.VIEWSPACE_PERMISSION, space, target_user_name)
+                if not self.has_user_permission(Permission.VIEWSPACE_PERMISSION, space, target_user_name):
+                    space_permission = SpacePermission(space, target_user_name, Permission.VIEWSPACE_PERMISSION, is_user_permission=True)
                     self.space_permission_manager.save_permission(space_permission)
 
 
     # Check if user has permission
-    def has_user_permission(self, space_permission_type : str, space : Space, username : str):
+    def has_user_permission(self, space_permission_type: str, space: Space, username: str) -> bool:
         user_permission = False
 
         if self.space_permission_manager.has_permissions(space_permission_type, space, self.user_accessor.get_user(username)):
@@ -106,7 +84,7 @@ class RestUserPermissionManager:
         return user_permission
 
     # Set user space permission
-    def set_user_space_permission_entity(self, space_permissions_entity : SpacePermissionsEntity, username : str, space_permission_type, space : Space):
+    def set_user_space_permission_entity(self, space_permissions_entity: SpacePermissionsEntity, username: str, space_permission_type: Permission, space: Space) -> None:
         user = self.user_accessor.get_user(username)
         if self.space_permission_manager.has_permissions(space_permission_type, space, user):
             user_permission  = False
@@ -118,18 +96,18 @@ class RestUserPermissionManager:
                     if space_permission.get_permission_type() == space_permission_type:
                         user_permission = True
                         break
-            space_permissions_entity.set_space_permissions_status(space_permission_type, True, user_permission, username)
+            space_permissions_entity.set_space_permissions_status(space_permission_type, True, user_permission)
         else: 
-            space_permissions_entity.set_space_permissions_status(space_permission_type, False, False, username)
+            space_permissions_entity.set_space_permissions_status(space_permission_type, False, False)
     
     # Set space permission
-    def set_space_permission_for_user(self, space_permissions_entity : SpacePermissionsEntity, username : str, space_permission_type : str, space : Space, only_user_permissions : bool):
+    def set_space_permission_for_user(self, space_permissions_entity: SpacePermissionsEntity, username: str, space_permission_type: str, space: Space, only_user_permissions: bool) -> None:
         granted = False
         entity = space_permissions_entity.get_space_permission_entity(space_permission_type)
 
         if entity is not None and entity.is_permission_granted() and not SpacePermissionManager.has_permissions(space_permission_type, space, self.user_accessor.get_user(username)):
             if not only_user_permissions or (only_user_permissions and entity.is_user_permission()):
-                space_permission = SpacePermission.create_user_space_permission(space_permission_type, space, username)
+                space_permission = SpacePermission(space, username, space_permission_type, is_user_permission=True)
                 SpacePermissionManager.save_permission(space_permission)
                 granted = True
         
@@ -140,18 +118,18 @@ class UserPermissionsResource:
         User Permissions Resource is used to get and set user permissions
     """
 
-    def __init__(self, user_manager : UserManager, transaction_template : TransactionTemplate, user_accessor : UserAccessor, space_manager : SpaceManager, space_permission_manager : SpacePermissionManager):
+    def __init__(self, user_manager: UserManager, transaction_template: TransactionTemplate, user_accessor: UserAccessor, space_manager: SpaceManager, space_permission_manager: SpacePermissionManager):
         self.user_manager = user_manager
         self.transaction_template = transaction_template
         self.user_accessor = user_accessor
         self.rest_user_permission_manager = RestUserPermissionManager(space_manager, space_permission_manager, user_accessor)
 
-    def authorize_admin(self, request: str):
+    def authorize_admin(self, request: str) -> str:
         current_username = self.user_manager.get_remote_username(request)
         if not current_username or not self.user_manager.is_system_admin(current_username):
             return jsonify({"error": "Unauthorized"}), 404 
 
-    def get_permissions(self, target_username: str, request):
+    def get_permissions(self, target_username: str, request: dict) -> list:
         current_username = self.user_manager.get_remote_username(request)
 
         if (current_username is None):
@@ -182,7 +160,7 @@ class UserPermissionsResource:
             space_permissions.append(space_data)
         return space_permissions
 
-    def put(self, target_username : str, only_user_permissions: bool, user_permissions_entity : UserPermissionsEntity, request):
+    def put(self, target_username: str, only_user_permissions: bool, user_permissions_entity: UserPermissionsEntity, request: dict) -> None:
         username = self.user_manager.get_remote_username(request)
         if username == None or not self.user_manager.is_system_admin(username):
             return jsonify({"error": "Unauthorized"}), 404 
@@ -195,5 +173,5 @@ class UserPermissionsResource:
         
         self.transaction_template.execute(transaction)
     
-    def get_rest_user_permission_manager(self):
+    def get_rest_user_permission_manager(self) -> RestUserPermissionManager:
         return self.rest_user_permission_manager

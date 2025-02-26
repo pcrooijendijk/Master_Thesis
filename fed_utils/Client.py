@@ -4,6 +4,8 @@ from utils import Permission
 import transformers
 from sklearn.model_selection import train_test_split
 from DeepSeek import main as DeepSeek
+import subprocess
+from streamlit import runtime
 
 from UserPermissionManagement import UserPermissionsResource
 
@@ -13,10 +15,10 @@ class Client:
         self.name = name
         self.user_permissions_resource = user_permissions_resource
         self.permissions = set()
+        self.spaces = set()
         self.model = model
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
-        self.spaces = set()
         self.documents = []
 
         self.spaces_permissions_init()
@@ -41,7 +43,11 @@ class Client:
     
     def intialize_model(self) -> None:
         if self.model.lower() == "deepseek":
-            DeepSeek()
+            if runtime.exists():
+                DeepSeek()
+            else: 
+                # Start a subprocess to start the streamlit interface
+                process = subprocess.Popen(["streamlit", "run", "DeepSeek/run.py"])
         else: 
             print("Please indicate a valid model name.")
 

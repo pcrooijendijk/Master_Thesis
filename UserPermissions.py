@@ -5,13 +5,13 @@ class UserAccessor:
     def __init__(self):
         self.users = {"users": []}
     
-    def add_user(self, username):
+    def add_user(self, username: str) -> None:
         self.users["users"].append(username)
 
-    def get_all_users(self):
+    def get_all_users(self) -> dict:
         return self.users
 
-    def get_user(self, username):
+    def get_user(self, username: str) -> bool:
         return username if username in self.users["users"] else None
 
 class UserManager:
@@ -24,17 +24,17 @@ class UserManager:
         self.users = {"users": []}
         self.user_accessor = user_accessor
 
-    def add_admin(self, username):
+    def add_admin(self, username: str) -> None:
         self.admins["admins"].append(username)
     
-    def add_user(self, username):
+    def add_user(self, username: str) -> None:
         usernames = self.user_accessor.get_all_users()
         self.users["users"].append(usernames)
 
-    def get_remote_username(self, req):
+    def get_remote_username(self, req: dict) -> str:
         return req.get("Username")
     
-    def is_system_admin(self, username):
+    def is_system_admin(self, username: str) -> bool:
         return username in self.admins["admins"]
     
 class UserPermissionsEntity:
@@ -42,11 +42,11 @@ class UserPermissionsEntity:
         User Permissions Entity keeps track of user permissions
     """
 
-    def __init__(self, space_permissions):
+    def __init__(self, space_permissions: list):
         self.space_permissions = space_permissions
     
-    def get_space_permissions(self):
+    def get_space_permissions(self) -> list:
         return self.space_permissions
 
-    def set_space_permissions(self, new_space_permissions):
+    def set_space_permissions(self, new_space_permissions: list) -> None:
         self.space_permissions = new_space_permissions

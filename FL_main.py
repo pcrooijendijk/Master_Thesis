@@ -1,7 +1,6 @@
 from fed_utils import Client
+from utils import Dataset, SpaceManagement, Role
 # import Server
-
-from utils import Dataset, Instances, Role
 
 # Loading the dataset
 documents = Dataset("/media/sf_thesis/data_DocBench_test").get_documents()
@@ -10,6 +9,7 @@ documents = Dataset("/media/sf_thesis/data_DocBench_test").get_documents()
 space_names = ["mark", "new", "dev", "HR"]
 space_keys = [0, 1, 2, 3]
 
+# Initialize the users where they have per space the option to be admin and a list of permissions
 users = {
     "admin": {
         "space": space_keys[0],
@@ -23,7 +23,8 @@ users = {
     }
 }
 
-inst = Instances(space_names, space_keys, documents, users)
+# Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
+inst = SpaceManagement(space_names, space_keys, documents, users)
 user_permissions_resource = inst.get_user_permissions_resource()
 
 # Get the permissions for user admin (target username, request)

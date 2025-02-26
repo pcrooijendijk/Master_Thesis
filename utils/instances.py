@@ -8,7 +8,7 @@ from UserPermissions import UserManager
 from SpacePermissions import SpacePermissionManager
 from UserPermissionManagement import UserPermissionsResource
 
-class Instances:
+class SpaceManagement:
     def __init__(self, space_names: list, space_keys: list, documents: list, users: dict):
         self.space_names = space_names
         self.space_keys = space_keys
