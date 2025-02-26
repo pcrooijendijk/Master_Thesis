@@ -1,3 +1,5 @@
+from typing import List
+
 class Space: 
     """
         Space is a collection of documents
@@ -18,8 +20,8 @@ class Space:
     def get_name(self) -> str:
         return self.name
     
-    def add_document(self, document: list) -> None:
+    def add_document(self, document: List) -> None:
         self.documents.append(document)
     
-    def get_documents(self) -> list:
+    def get_documents(self) -> List:
         return self.documents

@@ -1,13 +1,8 @@
-import Space
-from utils.Permission import Permission
-import TransactionTemplate
-from SpacePermissions import SpaceManager
-from SpacePermissions import SpacePermissionManager
-from UserPermissions import UserAccessor
-from SpacePermissions import SpacePermissionsEntity
-from UserPermissions import UserPermissionsEntity
-from SpacePermissions import SpacePermission
-from UserPermissions import UserManager
+import perm_utils.Space as Space
+from perm_utils.Permission import Permission
+from perm_utils.TransactionTemplate import TransactionTemplate
+from perm_utils.SpacePermissions import SpaceManager, SpacePermissionManager, SpacePermissionsEntity, SpacePermission
+from perm_utils.UserPermissions import UserAccessor, UserPermissionsEntity, UserManager
 
 import jsonify
 

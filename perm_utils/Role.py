@@ -1,5 +1,5 @@
 from enum import Enum
-from utils import Permission
+from perm_utils import Permission
 
 class Role(Enum):
     ADMIN = "admin"

@@ -117,8 +117,8 @@ class DocumentProcessor:
 class EnhancedRAGApplication:
     def __init__(
         self,
-        model_name: str = "llama3.2",
-        embedding_model: str = "llama3.2",
+        model_name: str = "deepseek-r1:7b",
+        embedding_model: str = "deepseek-r1:7b",
         chunk_size: int = 500,
         chunk_overlap: int = 50,
         temperature: float = 0.7,

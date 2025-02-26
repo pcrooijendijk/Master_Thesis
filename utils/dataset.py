@@ -1,12 +1,13 @@
 from pathlib import Path
 import pymupdf
 import random
+from typing import List
 
 class Dataset:
     def __init__(self, path: str):
         self.path = path 
 
-    def get_documents(self) -> list:        
+    def get_documents(self) -> List:        
         # Get the documents
         file_path = Path(self.path)
         documents = []

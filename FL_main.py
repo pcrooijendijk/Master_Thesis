@@ -1,5 +1,6 @@
 from fed_utils import Client
-from utils import Dataset, SpaceManagement, Role
+from utils import Dataset, SpaceManagement
+from perm_utils import Role
 # import Server
 
 # Loading the dataset
@@ -34,8 +35,8 @@ print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
 
 # Define clients with different permissions -> Client(client_id, name, user_permissions_resource, model)
 clients = [
-    Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model="DeepSeek"),
-    Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model="DeepSeek")
+    Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model="DeepSeek", server="server"),
+    Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model="DeepSeek", server="server")
 ]
 
 # # Initialize the server

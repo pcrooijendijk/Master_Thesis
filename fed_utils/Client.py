@@ -1,22 +1,30 @@
 # The client should contain the following: name, documents assigned to this client, list of permissions and the local LLM
 
-from utils import Permission
+from perm_utils import Permission
+from fed_utils.Server import FederatedServer
 import transformers
 from sklearn.model_selection import train_test_split
 from DeepSeek import main as DeepSeek
 import subprocess
 from streamlit import runtime
+import logging
+from typing import List
+import numpy as np
 
-from UserPermissionManagement import UserPermissionsResource
+logger = logging.getLogger(__name__)
+
+from perm_utils.UserPermissionManagement import UserPermissionsResource
 
 class Client:
-    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model) -> None:
+    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model, server: FederatedServer) -> None:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
+        self.model = model
+        self.server = server
+
         self.permissions = set()
         self.spaces = set()
-        self.model = model
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
         self.documents = []
@@ -87,11 +95,16 @@ class Client:
         )
     
     def train(self):
+        logger.info("Receiving weights from server.")
+        parameters = self.server.get_weights()
         if not self.documents:
             print(f"Client {self.name} has no access to any documents to train the model on.")
             return self.model
         
         self.local_trainer.train()
+    
+    def get_parameters(self) -> List[np.ndarray]:
+        return [val.cpu().numpy() for _, val in self.model.state_dict().items()]
     
     def send_update(self):
         # Encrypt the weights and send them to the global server

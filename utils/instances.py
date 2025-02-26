@@ -1,15 +1,14 @@
-import utils.Permission as Permission
-import Space
-import TransactionTemplate
+import perm_utils.Permission as Permission
+import perm_utils.Space as Space
+from perm_utils.TransactionTemplate import TransactionTemplate
+from typing import List
 
-from SpacePermissions import SpaceManager
-from UserPermissions import UserAccessor
-from UserPermissions import UserManager
-from SpacePermissions import SpacePermissionManager
-from UserPermissionManagement import UserPermissionsResource
+from perm_utils.SpacePermissions import SpaceManager, SpacePermissionManager
+from perm_utils.UserPermissions import UserAccessor, UserManager
+from perm_utils.UserPermissionManagement import UserPermissionsResource
 
 class SpaceManagement:
-    def __init__(self, space_names: list, space_keys: list, documents: list, users: dict):
+    def __init__(self, space_names: List, space_keys: List, documents: List, users: dict):
         self.space_names = space_names
         self.space_keys = space_keys
         self.documents = documents
@@ -28,7 +27,7 @@ class SpaceManagement:
         self.save_permissions()
         self.user_permissions_resource = UserPermissionsResource(
             self.user_manager, 
-            TransactionTemplate.TransactionTemplate(), 
+            TransactionTemplate(), 
             self.user_accessor,
             self.space_manager,
             self.space_permission_manager
@@ -39,7 +38,7 @@ class SpaceManagement:
 
         for index in range(len(self.space_names)):
             # Make the space by using the space name and the space key
-            space = Space.Space(self.space_names[index], self.space_keys[index])
+            space = Space(self.space_names[index], self.space_keys[index])
             # Adding the documents with the correct space key
             space = self.add_document(space)
             # Adding the space to the space manager

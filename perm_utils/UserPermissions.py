@@ -1,3 +1,5 @@
+from typing import List
+
 class UserAccessor:
     """
         User Accessor keeps track of users
@@ -42,11 +44,11 @@ class UserPermissionsEntity:
         User Permissions Entity keeps track of user permissions
     """
 
-    def __init__(self, space_permissions: list):
+    def __init__(self, space_permissions: List):
         self.space_permissions = space_permissions
     
-    def get_space_permissions(self) -> list:
+    def get_space_permissions(self) -> List:
         return self.space_permissions
 
-    def set_space_permissions(self, new_space_permissions: list) -> None:
+    def set_space_permissions(self, new_space_permissions: List) -> None:
         self.space_permissions = new_space_permissions
