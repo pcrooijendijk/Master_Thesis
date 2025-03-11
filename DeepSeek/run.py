@@ -331,10 +331,10 @@ def create_streamlit_ui():
 def main():
     session_state = create_streamlit_ui()
     
-    st.title("🔍 Deepseek & LLAMA RAG Application")
+    st.title("emo DeepSeek Q&A")
     st.markdown("""
-    ### Advanced Document Analysis and Question Answering
-    Upload documents or paste text to get AI-powered insights and answers.
+    ### Document Analysis and Question Answering
+    Upload documents or paste text to ask questions about the content.
     """)
     
     # Initialize RAG application with configurable parameters
@@ -342,7 +342,7 @@ def main():
         st.header("⚙️ Configuration")
         model_name = st.selectbox(
                                 "Model", 
-                                ["llama3.2", "deepseek-r1:7b", "llama2-uncensored", "mistral"],  # Added deepseek
+                                ["deepseek-r1:7b"],  # Added deepseek
                                 index=0
                             )
         temperature = st.slider("Temperature", 0.0, 1.0, 0.7)
@@ -381,14 +381,14 @@ def main():
         process_button = st.button("Generate Response")
     
     with col2:
-        st.markdown("### 📊 Document Stats")
+        st.markdown("### 📊 Document Info")
         if uploaded_files:
             for file in uploaded_files:
                 st.info(f"📄 {file.name}")
     
     if process_button and (uploaded_files or manual_docs) and query:
         try:
-            with st.spinner('Processing documents and generating response...'):
+            with st.spinner('Analyzing documents and generating response...'):
                 # Process documents
                 documents = []
                 metadata = {}
