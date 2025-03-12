@@ -47,7 +47,7 @@ class SpaceManagement:
     # Helper function for make_spaces
     def add_document(self, space) -> Space:
         for index, document in enumerate(self.documents):
-            space_key_index = document[2]
+            space_key_index = document.get_space_key_index()
             if space.get_space_key() is space_key_index:
                 space.add_document(self.documents[index])
         return space

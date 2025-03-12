@@ -63,6 +63,35 @@ class Client:
             # to view these documents
             if Permission.VIEWSPACE_PERMISSION.value in self.permissions:
                 self.documents = self.space_manager.get_space(space_key).get_documents()
+
+    def load_documents(self, documents: List[str], metadata: Optional[Dict[str, DocumentMetadata]] = None) -> None:
+        """Process and index documents with metadata tracking"""
+        try:
+            doc_chunks = []
+            
+            for doc in documents:
+                cleaned_doc = self.preprocess_text(doc)
+                if cleaned_doc:
+                    chunks = self.text_splitter.split_text(cleaned_doc)
+                    doc_chunks.extend(chunks)
+            
+            if not doc_chunks:
+                raise ValueError("No valid document content found after processing.")
+            
+            self.vector_store = FAISS.from_texts(
+                texts=doc_chunks,
+                embedding=self.embeddings
+            )
+            
+            if metadata:
+                self.document_metadata.update(metadata)
+            
+            logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
+            
+        except Exception as e:
+            logger.error(f"Error loading documents: {str(e)}")
+            raise
+
     
     def intialize_model(self) -> None:
         if self.model.lower().contains("deepseek"):
@@ -74,9 +103,9 @@ class Client:
         else: 
             print("Please indicate a valid model name.")
 
-    def local_dataset_init(self) -> None:
+    def local_dataset_init(self, generate_and_tokenize_prompt) -> None:
         local_train = train_test_split(
-            self.documents, test_size=0.7, shuffle=True, seed=42
+            self.documents, test_size=0.7, shuffle=True
         )
         self.local_train_dataset = local_train["train"]
         self.local_eval_dataset = local_train["test"]

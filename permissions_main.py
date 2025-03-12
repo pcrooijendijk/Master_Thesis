@@ -76,12 +76,12 @@ space_permission_manager.save_permission(space_new, 'user1', role_permissions["v
 user_permissions_resource = UserPermissionsResource(user_manager, TransactionTemplate(), user_accessor, space_manager, space_permission_manager)
 
 # Get the permissions for user admin (target username, request)
-# print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))
-# print("----------------------------------------------------------")
-# print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
+print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))
+print("----------------------------------------------------------")
+print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
 
 # Make the clients by using the Client class:
-admin_client = Client(1, "admin", user_permissions_resource, "DeepSeek", "server")
-admin_client.get_spaces()
-admin_client.filter_documents()
-admin_client.get_parameters()
+# admin_client = Client(1, "admin", user_permissions_resource, "DeepSeek", "server")
+# admin_client.get_spaces()
+# admin_client.filter_documents()
+# admin_client.get_parameters()

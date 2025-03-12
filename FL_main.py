@@ -1,5 +1,5 @@
 from fed_utils import Client, client_selection, Server
-from utils import Dataset, SpaceManagement, PromptHelper
+from utils import Dataset, Document, SpaceManagement, PromptHelper
 from perm_utils import Role
 
 import torch
@@ -55,6 +55,8 @@ clients = [
     Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model=local_model)
 ]
 
+clients[0].local_dataset_init()
+
 server = Server(num_clients=len(clients), global_model=global_model)
 
 # Helper functions for the training process
@@ -78,21 +80,14 @@ def tokenizer_init(tokenizer: AutoTokenizer, max_length: int, prompt: str, add_e
 
         return result
 
-def generate_and_tokenize_prompt(prompt_helper: PromptHelper, data_point, training_on_inputs):
+def generate_and_tokenize_prompt(prompt_helper: PromptHelper, document: Document, question: str, answer: str):
+        pre_question = "Based on the uploaded information, answer the following questions. You should answer all above questions line by line. \n"
         full_prompt = prompt_helper.generate_prompt(
-            data_point["instruction"],
-            data_point["context"],
-            data_point["response"],
+            question,
+            document,
+            answer,
         )
         tokenized_full_prompt = tokenizer_init(full_prompt)
-        if not training_on_inputs:
-            user_prompt = prompt_helper.generate_prompt(
-                data_point["instruction"], data_point["context"]
-            )
-            tokenized_user_prompt = tokenizer_init(user_prompt, add_eos_token=False)
-            user_prompt_len = len(tokenized_user_prompt["input_ids"])
-
-            tokenized_full_prompt["labels"] = [-100] * user_prompt_len + tokenized_full_prompt["labels"][user_prompt_len:]  
         return tokenized_full_prompt
 
 
@@ -102,7 +97,7 @@ def federated_privacy_learning(
     output_dir: str = 'FL_output/', # The output directory
     client_frac: float = 0.1, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
-    num_clients: int = 10, # Number of clients
+    num_clients: int = 2, # Number of clients
     batch_size = 8, # Batch size for the local models
     micro_batch_size: int = 1, # Micro batch size for the local models
     epochs: int = 1, # Number of total epochs for the local models to train on
@@ -165,7 +160,7 @@ def federated_privacy_learning(
         for client_id in selected_clients: 
             client = clients[client_id] # TODO: Fix this according to the clients list!
             print("\nPreparing the local dataset and trainter for client {}".format(client_id))
-            client.local_dataset_init()
+            client.local_dataset_init(generate_and_tokenize_prompt)
             client.trainer_init(
                 tokenizer,
                 micro_batch_size, 
@@ -192,5 +187,5 @@ def federated_privacy_learning(
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
 
-if __name__ == "__main__":
-    fire.Fire(federated_privacy_learning)
+# if __name__ == "__main__":
+#     fire.Fire(federated_privacy_learning)
