@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 def client_selection(num_clients, client_frac):
     selected_clients = max(int(client_frac * num_clients), 1)
-    return set(np.choice(np.arrange(num_clients), selected_clients, replace=False))
+    return set(np.choose(np.arrange(num_clients), selected_clients, replace=False))
 
 class Client:
     def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model) -> None:
