@@ -1,143 +1,128 @@
-# from fed_utils import Client
-# from utils import Dataset, SpaceManagement
-# from perm_utils import Role
-# # import Server
+from fed_utils import Client, client_selection, Server
+from utils import Dataset, SpaceManagement, PromptHelper
+from perm_utils import Role
 
-# # Loading the dataset
-# documents = Dataset("/media/sf_thesis/data_DocBench_test").get_documents()
-
-# # Intialize the spaces
-# space_names = ["mark", "new", "dev", "HR"]
-# space_keys = [0, 1, 2, 3]
-
-# # Initialize the users where they have per space the option to be admin and a list of permissions
-# users = {
-#     "admin": {
-#         "space": space_keys[0],
-#         "is_admin": True,
-#         "permissions": Role.get_role_permissions()["admin"]
-#     }, 
-#     "user1": {
-#         "space": space_keys[1],
-#         "is_admin": False,
-#         "permissions": Role.get_role_permissions()["editor"]
-#     }
-# }
-
-# # Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
-# inst = SpaceManagement(space_names, space_keys, documents, users)
-# user_permissions_resource = inst.get_user_permissions_resource()
-
-# # Get the permissions for user admin (target username, request)
-# print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))
-# print("----------------------------------------------------------")
-# print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
-
-# # Define clients with different permissions -> Client(client_id, name, user_permissions_resource, model)
-# clients = [
-#     Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model="DeepSeek", server="server"),
-#     Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model="DeepSeek", server="server")
-# ]
-
-# # Initialize the server
-# server = Server(num_clients=len(clients))
-
-# # Run multiple federated learning rounds
-# for round in range(3):
-#     print(f"\n=== Federated Round {round + 1} ===")
-#     server.run_federated_round(clients)
-
-
-#-------------------------------------- TEMPLATE ---------------------------------------------------
-import os
-from typing import List
-from tqdm import tqdm
-import fire
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+import fire
+from typing import List
 from peft import (
     LoraConfig,
     get_peft_model,
     prepare_model_for_kbit_training,
 )
-from fed_utils2 import FedAvg, client_selection, global_evaluation, GeneralClient
-import datasets
-from utils2.prompter import Prompter
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from tqdm import tqdm
 
-datasets.utils.logging.set_verbosity_error()
+global_model = 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'
+local_model = 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'
+output_dir = 'FL_output/'
 
+# Loading the dataset
+documents = Dataset("data_DocBench_test").get_documents()
 
-def fl_finetune(
-        # model/data params
-        global_model: str = '',
-        data_path: str = './data_DocBench_test',
-        output_dir: str = './FL_output/',
-        # FL hyperparamas
-        client_selection_strategy: str = 'random',
-        client_selection_frac: float = 0.1,
-        num_communication_rounds: int = 10,
-        num_clients: int = 10,
-        # Local training hyperparams
-        local_batch_size: int = 8,  # 64,
-        local_micro_batch_size: int = 1,
-        local_num_epochs: int = 10,
-        local_learning_rate: float = 3e-4,
-        local_val_set_size: int = 0,
-        local_save_steps: int = 3,
-        cutoff_len: int = 512,
-        # LoRA hyperparams
-        lora_r: int = 16,
-        lora_alpha: int = 16,
-        lora_dropout: float = 0.05,
-        lora_target_modules: List[str] = [
-            "q_proj",
-        ],
-        # llm hyperparams
-        train_on_inputs: bool = True,
-        group_by_length: bool = False,
-        resume_from_checkpoint: str = None,  # either training checkpoint or final adapter
-        prompt_template_name: str = "alpaca",  # The prompt template to use, will default to alpaca.
-):
-    if int(os.environ.get("LOCAL_RANK", 0)) == 0:
-        print(
-            f"Federated Finetuning LLM-LoRA with params:\n"
-            f"global_model: {global_model}\n"
-            f"data_path: {data_path}\n"
-            f"output_dir: {output_dir}\n"
-            f"client_selection_strategy: {client_selection_strategy}\n"
-            f"client_selection_frac: {client_selection_frac}\n"
-            f"num_communication_rounds: {num_communication_rounds}\n"
-            f"num_clients: {num_clients}\n"
-            f"local_batch_size: {local_batch_size}\n"
-            f"local_micro_batch_size: {local_micro_batch_size}\n"
-            f"local_num_epochs: {local_num_epochs}\n"
-            f"local_learning_rate: {local_learning_rate}\n"
-            f"local_val_set_size: {local_val_set_size}\n"
-            f"local_save_steps: {local_save_steps}\n"
-            f"cutoff_len: {cutoff_len}\n"
-            f"lora_r: {lora_r}\n"
-            f"lora_alpha: {lora_alpha}\n"
-            f"lora_dropout: {lora_dropout}\n"
-            f"lora_target_modules: {lora_target_modules}\n"
-            f"train_on_inputs: {train_on_inputs}\n"
-            f"group_by_length: {group_by_length}\n"
-            f"resume_from_checkpoint: {resume_from_checkpoint or False}\n"
-            f"prompt template: {prompt_template_name}\n"
+# Intialize the spaces
+space_names = ["mark", "new", "dev", "HR"]
+space_keys = [0, 1, 2, 3]
+
+# Initialize the users where they have per space the option to be admin and a list of permissions
+users = {
+    "admin": {
+        "id": 1, 
+        "space": space_keys[0],
+        "is_admin": True,
+        "permissions": Role.get_role_permissions()["admin"]
+    }, 
+    "user1": {
+        "id":2, 
+        "space": space_keys[1],
+        "is_admin": False,
+        "permissions": Role.get_role_permissions()["editor"]
+    }
+}
+
+# Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
+management = SpaceManagement(space_names, space_keys, documents, users)
+user_permissions_resource = management.get_user_permissions_resource()
+
+# Get the permissions for user admin (target username, request)
+# print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))
+# print("--------------------------------------------------------------------------------------------")
+# print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
+
+# Define clients with different permissions -> Client(client_id, name, user_permissions_resource, model)
+clients = [
+    Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model=local_model),
+    Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model=local_model)
+]
+
+server = Server(num_clients=len(clients), global_model=global_model)
+
+# Helper functions for the training process
+def tokenizer_init(tokenizer: AutoTokenizer, max_length: int, prompt: str, add_eos_token: bool=True):
+        result = tokenizer(
+            prompt,
+            truncation=True,
+            max_length=max_length,
+            padding=False,
+            return_tensors=None,
         )
+        if (
+                result["input_ids"][-1] != tokenizer.eos_token_id
+                and len(result["input_ids"]) < max_length
+                and add_eos_token
+        ):
+            result["input_ids"].append(tokenizer.eos_token_id)
+            result["attention_mask"].append(1)
 
-    global_model = 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'
+        result["labels"] = result["input_ids"].copy()
 
-    data_path = os.path.join(data_path, str(num_clients))
+        return result
 
-    # set up the global model & toknizer
-    gradient_accumulation_steps = local_batch_size // local_micro_batch_size
-    prompter = Prompter(prompt_template_name)
+def generate_and_tokenize_prompt(prompt_helper: PromptHelper, data_point, training_on_inputs):
+        full_prompt = prompt_helper.generate_prompt(
+            data_point["instruction"],
+            data_point["context"],
+            data_point["response"],
+        )
+        tokenized_full_prompt = tokenizer_init(full_prompt)
+        if not training_on_inputs:
+            user_prompt = prompt_helper.generate_prompt(
+                data_point["instruction"], data_point["context"]
+            )
+            tokenized_user_prompt = tokenizer_init(user_prompt, add_eos_token=False)
+            user_prompt_len = len(tokenized_user_prompt["input_ids"])
+
+            tokenized_full_prompt["labels"] = [-100] * user_prompt_len + tokenized_full_prompt["labels"][user_prompt_len:]  
+        return tokenized_full_prompt
+
+
+# Main federated learning function
+def federated_privacy_learning(
+    global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B', # The global model
+    output_dir: str = 'FL_output/', # The output directory
+    client_frac: float = 0.1, # The fraction of clients chosen from the total number of clients
+    comm_rounds: int = 10, # Number of communication rounds
+    num_clients: int = 10, # Number of clients
+    batch_size = 8, # Batch size for the local models
+    micro_batch_size: int = 1, # Micro batch size for the local models
+    epochs: int = 1, # Number of total epochs for the local models to train on
+    lr: float = 1e-2, # Learning rate for the local models
+    save_steps: int = 3, # After this amount of steps there is a checkpoint
+    max_length: int = 512, # After this length there is a cutoff 
+    lora_rank: int = 16 , # Lora attention dimension 
+    lora_alpha: int = 16, # The alpha parameter for Lora scaling
+    lora_dropout: float = 0.05, # The dropout probability for Lora layers
+    lora_module: List[str] = [ # The layers which need to be finetuned
+        "q_proj",
+    ],
+    training_on_inputs: bool = True, 
+    group_by_length: bool = False,
+    template: str = 'utils/prompt_template', # Prompt template 
+):
+    assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
+    gradient_steps = batch_size // micro_batch_size
+    prompt_helper = PromptHelper
     device_map = "auto"
-    world_size = int(os.environ.get("WORLD_SIZE", 1))
-    ddp = world_size != 1
-    if ddp:
-        device_map = {"": int(os.environ.get("LOCAL_RANK") or 0)}
-        gradient_accumulation_steps = gradient_accumulation_steps // world_size
 
     model = AutoModelForCausalLM.from_pretrained(
         global_model,
@@ -152,110 +137,60 @@ def fl_finetune(
     )
     tokenizer.padding_side = "left"
 
-    def tokenize(prompt, add_eos_token=True):
-        result = tokenizer(
-            prompt,
-            truncation=True,
-            max_length=cutoff_len,
-            padding=False,
-            return_tensors=None,
-        )
-        if (
-                result["input_ids"][-1] != tokenizer.eos_token_id
-                and len(result["input_ids"]) < cutoff_len
-                and add_eos_token
-        ):
-            result["input_ids"].append(tokenizer.eos_token_id)
-            result["attention_mask"].append(1)
+    # Using this technique to reduce memory-usage and accelarting inference
+    model = prepare_model_for_kbit_training(model) 
 
-        result["labels"] = result["input_ids"].copy()
-
-        return result
-
-    def generate_and_tokenize_prompt(data_point):
-        full_prompt = prompter.generate_prompt(
-            data_point["instruction"],
-            data_point["context"],
-            data_point["response"],
-        )
-        tokenized_full_prompt = tokenize(full_prompt)
-        if not train_on_inputs:
-            user_prompt = prompter.generate_prompt(
-                data_point["instruction"], data_point["context"]
-            )
-            tokenized_user_prompt = tokenize(user_prompt, add_eos_token=False)
-            user_prompt_len = len(tokenized_user_prompt["input_ids"])
-
-            tokenized_full_prompt["labels"] = [
-                                                  -100
-                                              ] * user_prompt_len + tokenized_full_prompt["labels"][
-                                                                    user_prompt_len:
-                                                                    ]  # could be sped up, probably
-        return tokenized_full_prompt
-
-    model = prepare_model_for_kbit_training(model)
-    config = LoraConfig(
-        r=lora_r,
-        lora_alpha=lora_alpha,
-        target_modules=lora_target_modules,
-        lora_dropout=lora_dropout,
+    # Initialize LoRA
+    lora_config = LoraConfig(
+        r=lora_rank, 
+        lora_alpha=lora_alpha, 
+        target_modules=lora_module, 
+        lora_dropout=lora_dropout, 
         bias="none",
-        task_type="CAUSAL_LM",
+        task_type="CAUSAL_LM"
     )
-    model = get_peft_model(model, config)
-    if not ddp and torch.cuda.device_count() > 1:
-        model.is_parallelizable = True
-        model.model_parallel = True
 
-    print("The process of federated instruction-tuning has started..")
-    previously_selected_clients_set = set()
-    last_client_id = None
-    local_dataset_len_dict = dict()
-    output_dir = os.path.join(output_dir, str(num_clients))
+    # Get the PEFT model using LoRA
+    model = get_peft_model(model, lora_config)
 
-    for epoch in tqdm(range(num_communication_rounds)):
+    # Initialize before the federated learning starts
+    selected_clients = set()
+    last_client = None
+    dataset_length = dict()
 
-        print("\nConducting the client selection")
-        selected_clients_set = client_selection(num_clients, client_selection_frac, client_selection_strategy,
-                                                other_info=epoch)
+    for epoch in tqdm(range(comm_rounds)):
+        print("Selecting clients...")
+        selected_clients = client_selection(num_clients, client_frac)
 
-        for client_id in selected_clients_set:
-            client = GeneralClient(client_id, model, data_path, output_dir)
+        for client_id in selected_clients: 
+            client = clients[client_id] # TODO: Fix this according to the clients list!
+            print("\nPreparing the local dataset and trainter for client {}".format(client_id))
+            client.local_dataset_init()
+            client.trainer_init(
+                tokenizer,
+                micro_batch_size, 
+                batch_size, 
+                epochs, 
+                lr, 
+                group_by_length,
+                output_dir
+            )
 
-            print("\nPreparing the local dataset and trainer for Client_{}".format(client_id))
-            client.preprare_local_dataset(generate_and_tokenize_prompt, local_val_set_size)
-            client.build_local_trainer(tokenizer,
-                                       local_micro_batch_size,
-                                       gradient_accumulation_steps,
-                                       local_num_epochs,
-                                       local_learning_rate,
-                                       group_by_length,
-                                       ddp)
+            print("\nInitializing the local training of client {}".format(client_id))
+            client.local_training()
 
-            print("Initiating the local training of Client_{}".format(client_id))
-            client.initiate_local_training()
-
-            print("Local training starts ... ")
+            print("\nStarting local training...")
             client.train()
 
-            print("\nTerminating the local training of Client_{}".format(client_id))
-            model, local_dataset_len_dict, previously_selected_clients_set, last_client_id = client.terminate_local_training(
-                epoch, local_dataset_len_dict, previously_selected_clients_set)
-            del client
-
-        print("Collecting the weights of clients and performing aggregation")
-        model = FedAvg(model,
-                       selected_clients_set,
-                       output_dir,
-                       local_dataset_len_dict,
-                       epoch,
-                       )
-        torch.save(model.state_dict(), os.path.join(output_dir, str(epoch), "adapter_model.bin"))
-        config.save_pretrained(output_dir)
-
-        # Please design the evaluation method based on your specific requirements in the fed_utils/evaluation.py file.
-        global_evaluation()
-
+            print("\nEnding the local training of client {}".format(client_id))
+            model, dataset_length, selected_clients, last_client = client.end_local_training(
+                epoch, dataset_length, selected_clients
+                )
+        
+        print('\nGetting the weights of the clients and send it to the server for aggregation')
+        model = server.FedAvg(model, selected_clients, dataset_length, epoch)
+        torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
+        lora_config.save_pretrained(output_dir)
 
 if __name__ == "__main__":
-    fire.Fire(fl_finetune)
+    fire.Fire(federated_privacy_learning)
