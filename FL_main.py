@@ -4,6 +4,7 @@ from perm_utils import Role
 
 import torch
 import fire
+import json
 from typing import List
 from peft import (
     LoraConfig,
@@ -12,13 +13,18 @@ from peft import (
 )
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from tqdm import tqdm
+from datasets import load_dataset
 
 global_model = 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'
 local_model = 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'
 output_dir = 'FL_output/'
 
 # Loading the dataset
-documents = Dataset("data_DocBench_test").get_documents()
+# documents = Dataset("data_DocBench_test").get_documents()
+# Dataset("/media/sf_internship/data_DocBench/data").convert_to_json()
+
+with open("utils/documents.json", "r") as file: 
+    documents = json.load(file)
 
 # Intialize the spaces
 space_names = ["mark", "new", "dev", "HR"]
@@ -55,41 +61,7 @@ clients = [
     Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model=local_model)
 ]
 
-clients[0].local_dataset_init()
-
 server = Server(num_clients=len(clients), global_model=global_model)
-
-# Helper functions for the training process
-def tokenizer_init(tokenizer: AutoTokenizer, max_length: int, prompt: str, add_eos_token: bool=True):
-        result = tokenizer(
-            prompt,
-            truncation=True,
-            max_length=max_length,
-            padding=False,
-            return_tensors=None,
-        )
-        if (
-                result["input_ids"][-1] != tokenizer.eos_token_id
-                and len(result["input_ids"]) < max_length
-                and add_eos_token
-        ):
-            result["input_ids"].append(tokenizer.eos_token_id)
-            result["attention_mask"].append(1)
-
-        result["labels"] = result["input_ids"].copy()
-
-        return result
-
-def generate_and_tokenize_prompt(prompt_helper: PromptHelper, document: Document, question: str, answer: str):
-        pre_question = "Based on the uploaded information, answer the following questions. You should answer all above questions line by line. \n"
-        full_prompt = prompt_helper.generate_prompt(
-            question,
-            document,
-            answer,
-        )
-        tokenized_full_prompt = tokenizer_init(full_prompt)
-        return tokenized_full_prompt
-
 
 # Main federated learning function
 def federated_privacy_learning(
@@ -116,7 +88,6 @@ def federated_privacy_learning(
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     gradient_steps = batch_size // micro_batch_size
-    prompt_helper = PromptHelper
     device_map = "auto"
 
     model = AutoModelForCausalLM.from_pretrained(
@@ -131,6 +102,36 @@ def federated_privacy_learning(
         0
     )
     tokenizer.padding_side = "left"
+
+    # Helper functions for the training process
+    def tokenizer_init(prompt: str, add_eos_token: bool=True):
+            result = tokenizer(
+                prompt,
+                truncation=True,
+                max_length=max_length,
+                padding=False,
+                return_tensors=None,
+            )
+            if (
+                    result["input_ids"][-1] != tokenizer.eos_token_id
+                    and len(result["input_ids"]) < max_length
+                    and add_eos_token
+            ):
+                result["input_ids"].append(tokenizer.eos_token_id)
+                result["attention_mask"].append(1)
+
+            result["labels"] = result["input_ids"].copy()
+
+            return result
+
+    def generate_and_tokenize_prompt(document: dict):
+            prompt_helper = PromptHelper("utils/documents.json")
+            full_prompt = prompt_helper.generate_prompt(
+                document["question"],
+                document["context"]
+            )
+            tokenized_full_prompt = tokenizer_init(full_prompt)
+            return tokenized_full_prompt
 
     # Using this technique to reduce memory-usage and accelarting inference
     model = prepare_model_for_kbit_training(model) 

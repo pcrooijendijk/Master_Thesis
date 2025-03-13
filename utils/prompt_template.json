@@ -1,0 +1,5 @@
+{
+    "description": "Template used by Alpaca-LoRA.",
+    "prompt_input": "Below is a question and paired with it a document which should contain the answer to the question. Write a response that appropriately completes the request. \n\n### Question:\n{question}\n\n### Document:\n{document}\n\n### Response:\n",
+    "response_split": "### Response:"    
+}

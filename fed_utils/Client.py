@@ -14,6 +14,8 @@ from streamlit import runtime
 import logging
 from typing import List
 from collections import OrderedDict
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
 
 from sklearn.model_selection import train_test_split
 from peft import (
@@ -41,6 +43,7 @@ class Client:
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
         self.documents = []
+        # self.local_train_dataset = 
 
         self.spaces_permissions_init()
         self.filter_documents()
@@ -64,35 +67,6 @@ class Client:
             if Permission.VIEWSPACE_PERMISSION.value in self.permissions:
                 self.documents = self.space_manager.get_space(space_key).get_documents()
 
-    def load_documents(self, documents: List[str], metadata: Optional[Dict[str, DocumentMetadata]] = None) -> None:
-        """Process and index documents with metadata tracking"""
-        try:
-            doc_chunks = []
-            
-            for doc in documents:
-                cleaned_doc = self.preprocess_text(doc)
-                if cleaned_doc:
-                    chunks = self.text_splitter.split_text(cleaned_doc)
-                    doc_chunks.extend(chunks)
-            
-            if not doc_chunks:
-                raise ValueError("No valid document content found after processing.")
-            
-            self.vector_store = FAISS.from_texts(
-                texts=doc_chunks,
-                embedding=self.embeddings
-            )
-            
-            if metadata:
-                self.document_metadata.update(metadata)
-            
-            logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
-            
-        except Exception as e:
-            logger.error(f"Error loading documents: {str(e)}")
-            raise
-
-    
     def intialize_model(self) -> None:
         if self.model.lower().contains("deepseek"):
             if runtime.exists():
@@ -107,8 +81,8 @@ class Client:
         local_train = train_test_split(
             self.documents, test_size=0.7, shuffle=True
         )
-        self.local_train_dataset = local_train["train"]
-        self.local_eval_dataset = local_train["test"]
+        self.local_train_dataset = local_train["train"].shuffle().map(generate_and_tokenize_prompt)
+        self.local_eval_dataset = local_train["test"].shuffle().map(generate_and_tokenize_prompt)
     
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
