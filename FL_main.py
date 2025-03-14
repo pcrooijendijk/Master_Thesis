@@ -58,14 +58,6 @@ user_permissions_resource = management.get_user_permissions_resource()
 # print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
 
 # Define clients with different permissions -> Client(client_id, name, user_permissions_resource, model)
-clients = [
-    Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model=local_model),
-    Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model=local_model)
-]
-
-clients[0].local_dataset_init("lol")
-
-server = Server(num_clients=len(clients), global_model=global_model)
 
 # Main federated learning function
 def federated_privacy_learning(
@@ -161,6 +153,13 @@ def federated_privacy_learning(
     for epoch in tqdm(range(comm_rounds)):
         print("Selecting clients...")
         selected_clients = client_selection(num_clients, client_frac)
+
+        clients = [
+            Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model_name=model),
+            Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model_name=model)
+        ]
+
+        server = Server(num_clients=len(clients), global_model=global_model)
 
         for client_id in selected_clients: 
             client = clients[client_id] # TODO: Fix this according to the clients list!

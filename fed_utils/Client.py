@@ -31,11 +31,11 @@ def client_selection(num_clients, client_frac):
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
 class Client:
-    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model_name: str) -> None:
+    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model) -> None:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
-        self.model_name = model_name
+        self.model = model
 
         self.permissions = set()
         self.spaces = set()
@@ -45,7 +45,7 @@ class Client:
 
         self.spaces_permissions_init()
         self.filter_documents()
-        self.intialize_model()
+        # self.intialize_model()
     
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
@@ -67,13 +67,13 @@ class Client:
 
     def intialize_model(self) -> None:
         self.model = AutoModelForCausalLM.from_pretrained(
-        self.model,
+        self.model_name,
         load_in_8bit=True,
         torch_dtype=torch.float16,
         device_map="auto",
         )
 
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
         # if self.model.lower().contains("deepseek"):
         #     if runtime.exists():
@@ -91,7 +91,7 @@ class Client:
         self.local_train_dataset = map(generate_and_tokenize_prompt, X_train)
         self.local_eval_dataset = map(generate_and_tokenize_prompt, y_test)
     
-    def trainer_init(self, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
+    def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
         
         self.train_args = transformers.TrainingArguments(
@@ -114,7 +114,7 @@ class Client:
             eval_dataset=self.local_eval_dataset,
             args=self.train_args,
             data_collator=transformers.DataCollatorForSeq2Seq(
-                self.tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
+                tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
             )
         )
     
