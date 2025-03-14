@@ -14,8 +14,7 @@ from streamlit import runtime
 import logging
 from typing import List
 from collections import OrderedDict
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from sklearn.model_selection import train_test_split
 from peft import (
@@ -32,22 +31,21 @@ def client_selection(num_clients, client_frac):
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
 class Client:
-    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model) -> None:
+    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model_name: str) -> None:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
-        self.model = model
+        self.model_name = model_name
 
         self.permissions = set()
         self.spaces = set()
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
         self.documents = []
-        # self.local_train_dataset = 
 
         self.spaces_permissions_init()
         self.filter_documents()
-        # self.intialize_model()
+        self.intialize_model()
     
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
@@ -68,23 +66,32 @@ class Client:
                 self.documents = self.space_manager.get_space(space_key).get_documents()
 
     def intialize_model(self) -> None:
-        if self.model.lower().contains("deepseek"):
-            if runtime.exists():
-                DeepSeek()
-            else: 
-                # Start a subprocess to start the streamlit interface
-                process = subprocess.Popen(["streamlit", "run", "DeepSeek/run.py"])
-        else: 
-            print("Please indicate a valid model name.")
+        self.model = AutoModelForCausalLM.from_pretrained(
+        self.model,
+        load_in_8bit=True,
+        torch_dtype=torch.float16,
+        device_map="auto",
+        )
+
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model)
+
+        # if self.model.lower().contains("deepseek"):
+        #     if runtime.exists():
+        #         DeepSeek()
+        #     else: 
+        #         # Start a subprocess to start the streamlit interface
+        #         process = subprocess.Popen(["streamlit", "run", "DeepSeek/run.py"])
+        # else: 
+        #     print("Please indicate a valid model name.")
 
     def local_dataset_init(self, generate_and_tokenize_prompt) -> None:
-        local_train = train_test_split(
+        X_train, y_test = train_test_split(
             self.documents, test_size=0.7, shuffle=True
         )
-        self.local_train_dataset = local_train["train"].shuffle().map(generate_and_tokenize_prompt)
-        self.local_eval_dataset = local_train["test"].shuffle().map(generate_and_tokenize_prompt)
+        self.local_train_dataset = map(generate_and_tokenize_prompt, X_train)
+        self.local_eval_dataset = map(generate_and_tokenize_prompt, y_test)
     
-    def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
+    def trainer_init(self, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
         
         self.train_args = transformers.TrainingArguments(
@@ -107,7 +114,7 @@ class Client:
             eval_dataset=self.local_eval_dataset,
             args=self.train_args,
             data_collator=transformers.DataCollatorForSeq2Seq(
-                tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
+                self.tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
             )
         )
     

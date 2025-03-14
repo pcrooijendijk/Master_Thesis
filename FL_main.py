@@ -23,8 +23,10 @@ output_dir = 'FL_output/'
 # documents = Dataset("data_DocBench_test").get_documents()
 # Dataset("/media/sf_internship/data_DocBench/data").convert_to_json()
 
-with open("utils/documents.json", "r") as file: 
-    documents = json.load(file)
+documents = load_dataset("json", data_files="utils/documents.json")
+
+# with open("utils/documents.json", "r") as file: 
+#     documents = json.load(file)
 
 # Intialize the spaces
 space_names = ["mark", "new", "dev", "HR"]
@@ -60,6 +62,8 @@ clients = [
     Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model=local_model),
     Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model=local_model)
 ]
+
+clients[0].local_dataset_init("lol")
 
 server = Server(num_clients=len(clients), global_model=global_model)
 
@@ -163,7 +167,6 @@ def federated_privacy_learning(
             print("\nPreparing the local dataset and trainter for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)
             client.trainer_init(
-                tokenizer,
                 micro_batch_size, 
                 batch_size, 
                 epochs, 

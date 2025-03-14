@@ -46,10 +46,10 @@ class SpaceManagement:
 
     # Helper function for make_spaces
     def add_document(self, space: Space) -> Space:
-        for index, document in enumerate(self.documents):
+        for index, document in enumerate(self.documents['train']):
             space_key_index = document["space_key_index"]
             if space.get_space_key() is space_key_index:
-                space.add_document(self.documents[index])
+                space.add_document(self.documents["train"][index])
         return space
     
     def adding_users(self) -> None:
