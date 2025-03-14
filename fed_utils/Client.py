@@ -100,18 +100,25 @@ class Client:
             warmup_steps=0,
             num_train_epochs=epochs,
             learning_rate=learning_rate,
+            fp16=True,
+            logging_steps=1,
             optim="adamw_torch",
+            evaluation_strategy="steps",
+            save_strategy="steps",
             eval_steps=200,
             save_steps=200,
             output_dir=output_dir,
+            save_total_limit=1,
+            load_best_model_at_end=True,
+            ddp_find_unused_parameters=None,
             group_by_length=group_by_length,
             dataloader_drop_last=False
         )
         
         self.local_trainer = transformers.Trainer(
             model=self.model,
-            train_dataset=self.local_train_dataset,
-            eval_dataset=self.local_eval_dataset,
+            train_dataset=list(self.local_train_dataset),
+            eval_dataset=list(self.local_eval_dataset),
             args=self.train_args,
             data_collator=transformers.DataCollatorForSeq2Seq(
                 tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True

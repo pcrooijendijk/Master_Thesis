@@ -25,9 +25,6 @@ output_dir = 'FL_output/'
 
 documents = load_dataset("json", data_files="utils/documents.json")
 
-# with open("utils/documents.json", "r") as file: 
-#     documents = json.load(file)
-
 # Intialize the spaces
 space_names = ["mark", "new", "dev", "HR"]
 space_keys = [0, 1, 2, 3]
@@ -121,7 +118,7 @@ def federated_privacy_learning(
             return result
 
     def generate_and_tokenize_prompt(document: dict):
-            prompt_helper = PromptHelper("utils/documents.json")
+            prompt_helper = PromptHelper(template)
             full_prompt = prompt_helper.generate_prompt(
                 document["question"],
                 document["context"]
@@ -166,6 +163,7 @@ def federated_privacy_learning(
             print("\nPreparing the local dataset and trainter for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)
             client.trainer_init(
+                tokenizer, 
                 micro_batch_size, 
                 batch_size, 
                 epochs, 
@@ -190,6 +188,5 @@ def federated_privacy_learning(
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
 
-# if __name__ == "__main__":
-#     fire.Fire(federated_privacy_learning)
-federated_privacy_learning()
+if __name__ == "__main__":
+    fire.Fire(federated_privacy_learning)
