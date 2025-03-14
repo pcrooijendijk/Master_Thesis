@@ -155,8 +155,8 @@ def federated_privacy_learning(
         selected_clients = client_selection(num_clients, client_frac)
 
         clients = [
-            Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model_name=model),
-            Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model_name=model)
+            Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model=model),
+            Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model=model)
         ]
 
         server = Server(num_clients=len(clients), global_model=global_model)
@@ -192,3 +192,4 @@ def federated_privacy_learning(
 
 # if __name__ == "__main__":
 #     fire.Fire(federated_privacy_learning)
+federated_privacy_learning()
