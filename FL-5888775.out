@@ -1,0 +1,29 @@
+
+
+###############################################################################
+Science Cluster
+Job 5888775 for user 'prooijendijk'
+Finished at: Fri Mar 21 14:10:28 CET 2025
+
+Job details:
+============
+
+Name                : FL_main.sh
+User                : prooijendijk
+Partition           : csedu-prio
+Nodes               : cn48
+Cores               : 4
+State               : FAILED
+Submit              : 2025-03-21T14:09:57
+Start               : 2025-03-21T14:09:58
+End                 : 2025-03-21T14:10:28
+Reserved walltime   : 02:00:00
+Used walltime       : 00:00:30
+Used CPU time       : 00:00:23 (efficiency: 19.48%)
+% User (Computation): 74.63%
+% System (I/O)      : 25.37%
+Mem reserved        : 15G
+Max Mem used        : 20.00K (cn48)
+Max Disk Write      : 0.00  (cn48)
+Max Disk Read       : 0.00  (cn48)
+
