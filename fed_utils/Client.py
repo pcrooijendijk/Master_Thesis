@@ -66,23 +66,14 @@ class Client:
                 self.documents = self.space_manager.get_space(space_key).get_documents()
 
     def intialize_model(self) -> None:
-        self.model = AutoModelForCausalLM.from_pretrained(
-        self.model_name,
-        load_in_8bit=True,
-        torch_dtype=torch.float16,
-        device_map="auto",
-        )
-
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-
-        # if self.model.lower().contains("deepseek"):
-        #     if runtime.exists():
-        #         DeepSeek()
-        #     else: 
-        #         # Start a subprocess to start the streamlit interface
-        #         process = subprocess.Popen(["streamlit", "run", "DeepSeek/run.py"])
-        # else: 
-        #     print("Please indicate a valid model name.")
+        if self.model.lower().contains("deepseek"):
+            if runtime.exists():
+                DeepSeek()
+            else: 
+                # Start a subprocess to start the streamlit interface
+                process = subprocess.Popen(["streamlit", "run", "DeepSeek/run.py"])
+        else: 
+            print("Please indicate a valid model name.")
 
     def local_dataset_init(self, generate_and_tokenize_prompt) -> None:
         X_train, y_test = train_test_split(

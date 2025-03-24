@@ -15,8 +15,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from tqdm import tqdm
 from datasets import load_dataset
 
-global_model = 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'
-local_model = 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'
+global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
+local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 output_dir = 'FL_output/'
 
 # Loading the dataset
@@ -58,12 +58,12 @@ user_permissions_resource = management.get_user_permissions_resource()
 
 # Main federated learning function
 def federated_privacy_learning(
-    global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B', # The global model
+    global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
     client_frac: float = 0.1, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
     num_clients: int = 2, # Number of clients
-    batch_size = 8, # Batch size for the local models
+    batch_size = 4, # Batch size for the local models
     micro_batch_size: int = 1, # Micro batch size for the local models
     epochs: int = 1, # Number of total epochs for the local models to train on
     lr: float = 1e-2, # Learning rate for the local models
@@ -77,7 +77,7 @@ def federated_privacy_learning(
     ],
     training_on_inputs: bool = True, 
     group_by_length: bool = False,
-    template: str = 'utils/prompt_template', # Prompt template 
+    template: str = 'utils/prompt_template.json', # Prompt template 
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     gradient_steps = batch_size // micro_batch_size
@@ -184,7 +184,7 @@ def federated_privacy_learning(
                 )
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
-        model = server.FedAvg(model, selected_clients, dataset_length, epoch)
+        model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
 
