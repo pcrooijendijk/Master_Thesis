@@ -1,25 +1,27 @@
+from typing import List
+
 class Space: 
     """
         Space is a collection of documents
     """
     
-    def __init__(self, name, key):
+    def __init__(self, name: str, key: str):
         self.name = name
         self.key = key
         self.permissions = {}
         self.documents = []
     
-    def get_permissions(self):
+    def get_permissions(self) -> dict:
         return self.permissions
     
-    def get_space_key(self):
+    def get_space_key(self) -> int:
         return self.key
         
-    def get_name(self):
+    def get_name(self) -> str:
         return self.name
     
-    def add_document(self, document):
+    def add_document(self, document: List) -> None:
         self.documents.append(document)
     
-    def get_documents(self):
+    def get_documents(self) -> List:
         return self.documents
