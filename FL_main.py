@@ -1,5 +1,5 @@
 from fed_utils import Client, client_selection, Server
-from utils import Dataset, Document, SpaceManagement, PromptHelper, make_users
+from utils import Dataset, Document, SpaceManagement, PromptHelper, Users
 
 import torch
 import fire
@@ -23,7 +23,7 @@ documents = load_dataset("json", data_files="utils/documents.json")
 space_names = ["mark", "new", "dev", "HR"]
 space_keys = [0, 1, 2, 3]
 
-users = make_users(space_keys)
+users = Users(space_keys).get_users()
 
 # Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
 management = SpaceManagement(space_names, space_keys, documents, users)
@@ -122,15 +122,16 @@ def federated_privacy_learning(
 
     for epoch in tqdm(range(comm_rounds)):
         print("Selecting clients...")
+        # Selecting the indices of the clients which will be used for FL 
         selected_clients_index = client_selection(num_clients, client_frac)
 
-        clients = [
-            Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model=model),
-            Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model=model)
-        ]
+        # Get all the clients
+        clients = Users.get_clients()
 
+        # Get the correct client IDs from all the clients
         selected_clients = [clients[index].get_client_id() for index in selected_clients_index]
 
+        # Initialize the server
         server = Server(num_clients=len(clients), global_model=global_model)
 
         for client_id in selected_clients_index: 
