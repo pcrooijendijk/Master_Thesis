@@ -149,12 +149,14 @@ def federated_privacy_learning(
 
     for epoch in tqdm(range(comm_rounds)):
         print("Selecting clients...")
-        selected_clients = client_selection(num_clients, client_frac)
+        selected_clients_index = client_selection(num_clients, client_frac)
 
         clients = [
             Client(client_id=1, name="admin", user_permissions_resource=user_permissions_resource, model=model),
             Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model=model)
         ]
+
+        selected_clients = [clients[index] for index in selected_clients_index]
 
         server = Server(num_clients=len(clients), global_model=global_model)
 
