@@ -1,7 +1,7 @@
 from perm_utils import Role
 from typing import List
 
-def make_users(space_keys: List) -> None:
+def make_users(space_keys: List) -> dict:
     # Initialize the users where they have per space the option to be admin and a list of permissions
     users = {
         "admin": {
@@ -65,3 +65,4 @@ def make_users(space_keys: List) -> None:
             "permissions": Role.get_role_permissions()["editor"]
         }
     }
+    return users
