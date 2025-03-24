@@ -23,6 +23,7 @@ documents = load_dataset("json", data_files="utils/documents.json")
 space_names = ["mark", "new", "dev", "HR"]
 space_keys = [0, 1, 2, 3]
 
+# Making the users object to get the users and clients from
 users = Users(space_keys)
 
 # Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
@@ -164,6 +165,20 @@ def federated_privacy_learning(
         model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
+
+    def generate_response(prompt, model, tokenizer, max_length=512):
+        inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
+        
+        with torch.no_grad():
+            output = model.generate(**inputs, max_new_tokens=max_length, do_sample=True, temperature=0.7, top_k=50)
+
+        return tokenizer.decode(output[0], skip_special_tokens=True)
+
+    # Example question
+    question = "What is federated learning?"
+    response = generate_response(question, model, tokenizer)
+
+    print("DeepSeek Response:", response)
 
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)
