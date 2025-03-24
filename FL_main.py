@@ -23,10 +23,10 @@ documents = load_dataset("json", data_files="utils/documents.json")
 space_names = ["mark", "new", "dev", "HR"]
 space_keys = [0, 1, 2, 3]
 
-users = Users(space_keys).get_users()
+users = Users(space_keys)
 
 # Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
-management = SpaceManagement(space_names, space_keys, documents, users)
+management = SpaceManagement(space_names, space_keys, documents, users.get_users())
 user_permissions_resource = management.get_user_permissions_resource()
 
 # Main federated learning function
@@ -125,8 +125,10 @@ def federated_privacy_learning(
         # Selecting the indices of the clients which will be used for FL 
         selected_clients_index = client_selection(num_clients, client_frac)
 
-        # Get all the clients
-        clients = Users.get_clients()
+        # Setting and getting all the clients
+        users.set_clients(user_permissions_resource, model)
+        clients = users.get_clients()
+        
 
         # Get the correct client IDs from all the clients
         selected_clients = [clients[index].get_client_id() for index in selected_clients_index]
@@ -135,7 +137,7 @@ def federated_privacy_learning(
         server = Server(num_clients=len(clients), global_model=global_model)
 
         for client_id in selected_clients_index: 
-            client = clients[client_id] # TODO: Fix this according to the clients list!
+            client = clients[client_id] 
             print("\nPreparing the local dataset and trainter for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)
             client.trainer_init(
