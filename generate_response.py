@@ -32,9 +32,9 @@ except:
 def main(
     load_8bit: bool = False,
     base_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
-    lora_weights_path: str = "",
-    lora_config_path: str= "", # provide only the file path, excluding the file name 'adapter_config.json'
-    prompt_template: str = "",  # The prompt template to use, will default to alpaca.
+    lora_weights_path: str = "FL_output/pytorch_model.bin",
+    lora_config_path: str= "FL_output",
+    prompt_template: str = 'utils/prompt_template.json',  
     server_name: str = "127.0.0.1",
     share_gradio: bool = False,
 ):
