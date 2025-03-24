@@ -14,7 +14,7 @@ class Server:
         # Normalizing the weights of each client
         # TODO: change the following to the pytorch implementation
         weights_array = normalize(
-            torch.tensor([dataset_length[client_id] for client_id in selected_clients],
+            torch.tensor([dataset_length[int(client_id)] for client_id in selected_clients],
                         dtype=torch.float32), p=1, dim=0)
 
         for k, client_id in enumerate(selected_clients):
