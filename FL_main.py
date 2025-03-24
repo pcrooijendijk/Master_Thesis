@@ -182,7 +182,7 @@ def federated_privacy_learning(
 
             print("\nEnding the local training of client {}".format(client_id))
             model, dataset_length, selected_clients, last_client = client.end_local_training(
-                epoch, dataset_length, selected_clients
+                epoch, dataset_length, selected_clients, output_dir
                 )
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')

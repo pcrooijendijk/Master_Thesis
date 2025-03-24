@@ -141,10 +141,10 @@ class Client:
             )
         ).__get__(self.model, type(self.model))
     
-    def end_local_training(self, epoch, dataset_length, selected_clients):
+    def end_local_training(self, epoch, dataset_length, selected_clients, output_dir):
         dataset_length[self.client_id] = len(self.documents)
         new_weight = self.model.state_dict()
-        output_dir = os.path.join("ouput", str(epoch), "local_output_{}".format(self.client_id))
+        output_dir = os.path.join(output_dir, str(epoch), "local_output_{}".format(self.client_id))
         os.makedirs(output_dir, exist_ok=True)
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
 
