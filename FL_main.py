@@ -1,10 +1,8 @@
 from fed_utils import Client, client_selection, Server
-from utils import Dataset, Document, SpaceManagement, PromptHelper
-from perm_utils import Role
+from utils import Dataset, Document, SpaceManagement, PromptHelper, make_users
 
 import torch
 import fire
-import json
 from typing import List
 from peft import (
     LoraConfig,
@@ -19,42 +17,17 @@ global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 output_dir = 'FL_output/'
 
-# Loading the dataset
-# documents = Dataset("data_DocBench_test").get_documents()
-# Dataset("/media/sf_internship/data_DocBench/data").convert_to_json()
-
 documents = load_dataset("json", data_files="utils/documents.json")
 
 # Intialize the spaces
 space_names = ["mark", "new", "dev", "HR"]
 space_keys = [0, 1, 2, 3]
 
-# Initialize the users where they have per space the option to be admin and a list of permissions
-users = {
-    "admin": {
-        "id": 1, 
-        "space": space_keys[0],
-        "is_admin": True,
-        "permissions": Role.get_role_permissions()["admin"]
-    }, 
-    "user1": {
-        "id":2, 
-        "space": space_keys[1],
-        "is_admin": False,
-        "permissions": Role.get_role_permissions()["editor"]
-    }
-}
+users = make_users(space_keys)
 
 # Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
 management = SpaceManagement(space_names, space_keys, documents, users)
 user_permissions_resource = management.get_user_permissions_resource()
-
-# Get the permissions for user admin (target username, request)
-# print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))
-# print("--------------------------------------------------------------------------------------------")
-# print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
-
-# Define clients with different permissions -> Client(client_id, name, user_permissions_resource, model)
 
 # Main federated learning function
 def federated_privacy_learning(
