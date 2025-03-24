@@ -156,11 +156,11 @@ def federated_privacy_learning(
             Client(client_id=2, name="user1", user_permissions_resource=user_permissions_resource, model=model)
         ]
 
-        selected_clients = [clients[index] for index in selected_clients_index]
+        selected_clients = [clients[index].get_client_id() for index in selected_clients_index]
 
         server = Server(num_clients=len(clients), global_model=global_model)
 
-        for client_id in selected_clients: 
+        for client_id in selected_clients_index: 
             client = clients[client_id] # TODO: Fix this according to the clients list!
             print("\nPreparing the local dataset and trainter for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)

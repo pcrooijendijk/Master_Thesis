@@ -171,3 +171,6 @@ class Client:
 
     def get_documents(self):
         return self.documents
+    
+    def get_client_id(self) -> int:
+        return self.client_id
