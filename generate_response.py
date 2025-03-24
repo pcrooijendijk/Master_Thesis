@@ -40,7 +40,19 @@ def main(
 ):
 
     prompter = PromptHelper(prompt_template)
+    model = AutoModelForCausalLM.from_pretrained(
+        base_model,
+        load_in_8bit=True,
+        torch_dtype=torch.float16,
+        device_map="auto",
+    )
+
     tokenizer = AutoTokenizer.from_pretrained(base_model)
+    tokenizer.pad_token_id = (
+        0
+    )
+    tokenizer.padding_side = "left"
+    # tokenizer = AutoTokenizer.from_pretrained(base_model)
     if not lora_weights_path.endswith(".bin"):
         if device == "cuda":
             model = AutoModelForCausalLM.from_pretrained(
