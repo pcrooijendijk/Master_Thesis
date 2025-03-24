@@ -31,7 +31,7 @@ except:
 
 def main(
     load_8bit: bool = False,
-    base_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+    base_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
     lora_weights_path: str = "FL_output/pytorch_model.bin",
     lora_config_path: str= "FL_output",
     prompt_template: str = 'utils/prompt_template.json',  
