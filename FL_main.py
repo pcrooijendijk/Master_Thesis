@@ -166,19 +166,5 @@ def federated_privacy_learning(
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
 
-    def generate_response(prompt, model, tokenizer, max_length=512):
-        inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
-        
-        with torch.no_grad():
-            output = model.generate(**inputs, max_new_tokens=max_length, do_sample=True, temperature=0.7, top_k=50)
-
-        return tokenizer.decode(output[0], skip_special_tokens=True)
-
-    # Example question
-    question = "What is federated learning?"
-    response = generate_response(question, model, tokenizer)
-
-    print("DeepSeek Response:", response)
-
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)
