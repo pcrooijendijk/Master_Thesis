@@ -150,7 +150,7 @@ class Client:
 
         old_weights = get_peft_model_state_dict(self.model, self.old_params, "default")
         set_peft_model_state_dict(self.model, old_weights, "default")
-        selected_clients = selected_clients | set({self.client_id})
+        # selected_clients = selected_clients | set({self.client_id})
         last_client_id = self.client_id
 
         return self.model, dataset_length, selected_clients, last_client_id
