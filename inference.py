@@ -7,6 +7,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, Genera
 
 from peft import (
     PeftModel,
+    LoraConfig,
     prepare_model_for_kbit_training,
     set_peft_model_state_dict,
 )
@@ -16,7 +17,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def run(
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
     lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
-    # lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
+    lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
     prompt_template: str = 'utils/prompt_template.json', # Prompt template for LLM
 ):
     prompter = PromptHelper(prompt_template)
@@ -31,6 +32,7 @@ def run(
 
     model = prepare_model_for_kbit_training(model)
     lora_weights = torch.load(lora_weights_path)
+    config_peft = LoraConfig.from_pretrained(lora_config_path)
     model = PeftModel(model, config)
     set_peft_model_state_dict(model, lora_weights, "default")
 
