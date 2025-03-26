@@ -20,7 +20,7 @@ def run(
     prompt_template: str = 'utils/prompt_template.json', # Prompt template for LLM
 ):
     prompter = PromptHelper(prompt_template)
-    
+    config = AutoConfig.from_pretrained(ori_model, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
         ori_model,
         config=config,
@@ -30,7 +30,6 @@ def run(
     )
 
     model = prepare_model_for_kbit_training(model)
-    config = AutoConfig.from_pretrained(ori_model, trust_remote_code=True)
     lora_weights = torch.load(lora_weights_path)
     model = PeftModel(model, config)
     set_peft_model_state_dict(model, lora_weights, "default")
