@@ -14,7 +14,7 @@ from peft import (
     set_peft_model_state_dict,
 )
 
-from transformers import GenerationConfig, AutoTokenizer, AutoModelForCausalLM
+from transformers import GenerationConfig, AutoTokenizer, AutoModelForCausalLM, AutoConfig
 from utils.callbacks import Iteratorize, Stream
 from utils.prompt_template import PromptHelper
 if torch.cuda.is_available():
@@ -31,7 +31,7 @@ except:
 
 def main(
     load_8bit: bool = False,
-    base_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B',
+    base_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
     lora_weights_path: str = "FL_output/pytorch_model.bin",
     lora_config_path: str= "FL_output",
     prompt_template: str = 'utils/prompt_template.json',  
@@ -40,8 +40,10 @@ def main(
 ):
 
     prompter = PromptHelper(prompt_template)
+    config = AutoConfig.from_pretrained(base_model, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
+        config=config,
         load_in_8bit=True,
         torch_dtype=torch.float16,
         device_map="auto",
@@ -223,7 +225,7 @@ def main(
         description="Shepherd is a LLM that has been fine-tuned in a federated manner ",
     ).queue()
 
-    sherpherd_UI.launch(share=True)
+    sherpherd_UI.launch(share=True, server_port=7860)
 
 if __name__ == "__main__":
     fire.Fire(main)
