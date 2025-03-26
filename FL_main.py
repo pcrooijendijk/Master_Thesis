@@ -23,6 +23,7 @@ documents = load_dataset("json", data_files="utils/documents.json")
 space_names = ["mark", "new", "dev", "HR"]
 space_keys = [0, 1, 2, 3]
 
+# Making the users object to get the users and clients from
 users = Users(space_keys)
 
 # Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
