@@ -33,7 +33,7 @@ def run(
     model = prepare_model_for_kbit_training(model)
     lora_weights = torch.load(lora_weights_path)
     config_peft = LoraConfig.from_pretrained(lora_config_path)
-    model = PeftModel(model, config)
+    model = PeftModel(model, config_peft)
     set_peft_model_state_dict(model, lora_weights, "default")
 
     tokenizer = AutoTokenizer.from_pretrained(ori_model)    
