@@ -34,11 +34,11 @@ class Metadata:
 class Processor:
     def __init__(self):
         self.supported_extensions = {
-            'pdf': self._process_pdf,
-            'docx': self._process_docx,
-            'txt': self._process_text,
-            'md': self._process_text,
-            'csv': self._process_text
+            'pdf': self.process_pdf,
+            'docx': self.process_docx,
+            'txt': self.process_text,
+            'md': self.process_text,
+            'csv': self.process_text
         }
 
     def process_docx(self, document) -> str:
@@ -270,7 +270,7 @@ def run(
 
     def evaluate(
         question: str, # The question to be asked
-        document: str = None, # The corresponding document(s)
+        uploaded_documents: str = None, # The corresponding document(s)
         temp: float = 0.1, # Temperature to module the next token probabilities
         top_p: float = 0.75, # Only the smallest set of the most probable tokens with probabilities that add up to top_p or higher are kept for generation
         top_k: int = 40, # Number of highest probability vocabulary tokens to keep for top-k-filtering
@@ -278,27 +278,17 @@ def run(
         max_new_tokens: int = 128,
         **kwargs,
     ):
-        prompt_input = deepseek.prompter.generate_prompt(question, document)
-        inputs = deepseek.tokenizer(prompt_input, return_tensors="pt")
-        input_ids = inputs["input_ids"].to(device)
-        config_gen = GenerationConfig(
-            temperature=temp,
-            top_p=top_p,
-            top_k=top_k,
-            num_beams=num_beams
-        )
+        if uploaded_documents: 
+            documents = []
+            metadata = {}
+            for file in uploaded_documents: 
+                content, metadata_doc = deepseek.doc_processor.process_file(file)
+                documents.append(content)
+                metadata[file.name] = metadata_doc
 
-        with torch.no_grad():
-            generation_output = deepseek.model.generate(
-                input_ids=input_ids,
-                generation_config=config_gen,
-                return_dict_in_generate=True,
-                output_scores=True,
-                max_new_tokens=max_new_tokens,
-            )
-        seq = generation_output.sequences[0]
-        output = deepseek.tokenizer.decode(seq)
-        yield deepseek.prompter.get_response(output)
+        deepseek.load_documents(documents, metadata)
+        response = deepseek.generate_response(question)
+        return response, metadata
 
     UI = gr.Interface(
         fn=evaluate,
