@@ -243,7 +243,7 @@ class DeepSeekApplication:
                     num_beams=num_beams
                 )
                 with torch.no_grad():
-                    generated_output = deepseek.generate(
+                    generated_output = deepseek.model.generate(
                         input_ids=input_ids,
                         generation_config=generation_config,
                         return_dict_in_generate=True,
@@ -283,7 +283,6 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
-                print("TEST REPONSE")
                 return self.prompter.get_response(output)
             
         except Exception as e:
@@ -314,7 +313,6 @@ def run(
     prompt_template: str = 'utils/prompt_template.json', # Prompt template for LLM
 ):
     deepseek = DeepSeekApplication()
-
 
     def evaluate(
         question: str, # The question to be asked
