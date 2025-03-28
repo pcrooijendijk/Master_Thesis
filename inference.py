@@ -334,7 +334,7 @@ def run(
                 metadata[file.name] = metadata_doc
 
             deepseek.load_documents(documents, metadata)
-            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp)
+            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, context=True)
         else:
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, context=False)
         return response, metadata
