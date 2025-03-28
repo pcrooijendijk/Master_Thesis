@@ -326,6 +326,7 @@ def run(
         **kwargs,
     ):  
         documents = []
+        print("test")
         metadata = {}
         if uploaded_documents['files']: 
             for file in uploaded_documents: 
