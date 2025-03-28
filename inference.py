@@ -292,9 +292,9 @@ def run(
         max_new_tokens: int = 128,
         **kwargs,
     ):  
+        documents = []
+        metadata = {}
         if uploaded_documents['files']: 
-            documents = []
-            metadata = {}
             for file in uploaded_documents: 
                 content, metadata_doc = deepseek.doc_processor.process_file(file)
                 documents.append(content)
