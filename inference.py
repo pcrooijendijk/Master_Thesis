@@ -219,7 +219,7 @@ class DeepSeekApplication:
         max_new_tokens: int,
         similarity_threshold: float,
         temp: float,
-        context: bool = True,
+        context: bool,
         max_context_length: int = 2000
     ):
         start_time = time.time()
@@ -328,8 +328,6 @@ def run(
         documents = []
         metadata = {}
         if uploaded_documents['files']: 
-            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, context=False)
-        else:
             for file in uploaded_documents: 
                 content, metadata_doc = deepseek.doc_processor.process_file(file)
                 documents.append(content)
@@ -337,6 +335,8 @@ def run(
 
             deepseek.load_documents(documents, metadata)
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp)
+        else:
+            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, context=False)
         return response, metadata
 
     UI = gr.Interface(
