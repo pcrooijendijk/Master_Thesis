@@ -10,7 +10,8 @@ def evaluate(
     num_beams: int = 4, # Number of beams for beam search
     max_new_tokens: int = 128,
     **kwargs,
-):
+):  
+    print(document)
     return "test test", document
 
 UI = gr.Interface(
@@ -22,7 +23,7 @@ UI = gr.Interface(
             info="Upload documents below to ask questions about the content.",
         ),
         gr.MultimodalTextbox(
-            file_types=['txt', 'pdf', 'docx'],
+            # file_types=['txt', 'pdf', 'docx', 'PDF'],
             file_count='multiple',
             placeholder="Upload your documents here.",
             label="📁 Document Input",
