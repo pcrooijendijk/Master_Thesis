@@ -265,7 +265,6 @@ class DeepSeekApplication:
             else: 
                 # If there is no context construct a "normal" prompt
                 prompt = self.prompter.generate_prompt(query, "")
-                prompt = self.construct_prompt(query, combined_context)
                 inputs = deepseek.tokenizer(prompt, return_tensors="pt")
                 input_ids = inputs["input_ids"].to(device)
                 generation_config = GenerationConfig(
