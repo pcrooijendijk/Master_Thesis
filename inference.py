@@ -225,27 +225,27 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-                            # If there is no context construct a "normal" prompt
-                prompt = self.prompter.generate_prompt(query, "")
-                inputs = deepseek.tokenizer(prompt, return_tensors="pt")
-                input_ids = inputs["input_ids"].to(device)
-                generation_config = GenerationConfig(
-                    temperature=temp,
-                    top_p=top_p,
-                    top_k=top_k,
-                    num_beams=num_beams
+            # If there is no context construct a "normal" prompt
+            prompt = self.prompter.generate_prompt(query, "")
+            inputs = deepseek.tokenizer(prompt, return_tensors="pt")
+            input_ids = inputs["input_ids"].to(device)
+            generation_config = GenerationConfig(
+                temperature=temp,
+                top_p=top_p,
+                top_k=top_k,
+                num_beams=num_beams
+            )
+            with torch.no_grad():
+                generated_output = deepseek.model.generate(
+                    input_ids=input_ids,
+                    generation_config=generation_config,
+                    return_dict_in_generate=True,
+                    output_scores=True,
+                    max_new_tokens=max_new_tokens,
                 )
-                with torch.no_grad():
-                    generated_output = deepseek.generate(
-                        input_ids=input_ids,
-                        generation_config=generation_config,
-                        return_dict_in_generate=True,
-                        output_scores=True,
-                        max_new_tokens=max_new_tokens,
-                    )
-                s = generated_output.sequences[0]
-                output = deepseek.tokenizer.decode(s)
-                return [self.prompter.get_response(output), "test"]
+            s = generated_output.sequences[0]
+            output = deepseek.tokenizer.decode(s)
+            return [self.prompter.get_response(output), "test"]
             # if context:
             #     context = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
                 
