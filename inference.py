@@ -283,7 +283,8 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
-                yield self.prompter.get_response(output)
+                print("TEST REPONSE")
+                return self.prompter.get_response(output)
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
