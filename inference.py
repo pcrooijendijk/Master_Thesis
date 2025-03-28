@@ -246,7 +246,7 @@ class DeepSeekApplication:
                     generated_output = deepseek.model.generate(
                         input_ids=input_ids,
                         generation_config=generation_config,
-                        return_dict_in_generate=1,
+                        return_dict_in_generate=True,
                         output_scores=True,
                         max_new_tokens=max_new_tokens,
                     )
@@ -283,7 +283,7 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
-                return self.prompter.get_response(output)
+                return [self.prompter.get_response(output), "test"]
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
