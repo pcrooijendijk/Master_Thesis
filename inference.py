@@ -230,18 +230,26 @@ class DeepSeekApplication:
                 
                 prompt = self.construct_prompt(query, combined_context)
                 response = self.prompter.get_response(prompt)
+                answer = {
+                    'content': response,
+                    'metadata': {
+                        'processing_time': time.time() - start_time,
+                        'context_length': len(combined_context),
+                        'query_length': len(query)
+                    }
+                }
             else: 
                 prompt = self.construct_prompt(query, "")
                 response = self.prompter.get_response(prompt)
-
-            return {
-                'content': response,
-                'metadata': {
-                    'processing_time': time.time() - start_time,
-                    'context_length': len(combined_context),
-                    'query_length': len(query)
+                answer = {
+                    'content': response,
+                    'metadata': {
+                        'processing_time': time.time() - start_time,
+                        'query_length': len(query)
+                    }
                 }
-            }
+
+            return answer
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
