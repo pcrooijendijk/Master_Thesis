@@ -222,15 +222,18 @@ class DeepSeekApplication:
         try:
             if context:
                 context = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-            
-            # Truncate context if too long
-            combined_context = ' '.join(context)
-            if len(combined_context) > max_context_length:
-                combined_context = combined_context[:max_context_length] + "..."
-            
-            prompt = self._construct_prompt(query, combined_context)
-            response = self.prompter.get_response(prompt)
-            
+                
+                # Truncate context if too long
+                combined_context = ' '.join(context)
+                if len(combined_context) > max_context_length:
+                    combined_context = combined_context[:max_context_length] + "..."
+                
+                prompt = self.construct_prompt(query, combined_context)
+                response = self.prompter.get_response(prompt)
+            else: 
+                prompt = self.construct_prompt(query, "")
+                response = self.prompter.get_response(prompt)
+
             return {
                 'content': response,
                 'metadata': {
@@ -244,7 +247,7 @@ class DeepSeekApplication:
             logger.error(f"Error generating response: {str(e)}")
             raise
 
-    def _construct_prompt(self, query: str, context: str) -> str:
+    def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
         return f"""
         Context Information:
