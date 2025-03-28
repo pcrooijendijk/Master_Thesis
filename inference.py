@@ -212,8 +212,8 @@ class DeepSeekApplication:
     def generate_response(
         self,
         query: str,
-	top_k: int,
-	similarity_threshold: float,
+        top_k: int,
+        similarity_threshold: float,
         context: Optional[List[str]] = None,
         max_context_length: int = 2000
     ) -> Dict:
@@ -273,7 +273,7 @@ def run(
     def evaluate(
         question: str, # The question to be asked
         uploaded_documents: str = None, # The corresponding document(s)
-	custom_text: str = None,
+	    custom_text: str = None,
         temp: float = 0.1, # Temperature to module the next token probabilities
         top_p: float = 0.75, # Only the smallest set of the most probable tokens with probabilities that add up to top_p or higher are kept for generation
         top_k: int = 40, # Number of highest probability vocabulary tokens to keep for top-k-filtering
@@ -281,7 +281,6 @@ def run(
         max_new_tokens: int = 128,
         **kwargs,
     ):  
-        print(uploaded_documents)
         if uploaded_documents['files']: 
             documents = []
             metadata = {}
@@ -290,7 +289,7 @@ def run(
                 documents.append(content)
                 metadata[file.name] = metadata_doc
 
-       	    deepseek.load_documents(documents, metadata)
+            deepseek.load_documents(documents, metadata)
         response = deepseek.generate_response(question, top_k, 0.0)
         return response, metadata
 
