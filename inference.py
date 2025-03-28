@@ -225,7 +225,7 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            if context:
+            if context is True:
                 context = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
                 
                 # Truncate context if too long
@@ -262,7 +262,7 @@ class DeepSeekApplication:
                     }
                 }
                 yield self.prompter.get_response(output)
-            else: 
+            elif context is False: 
                 # If there is no context construct a "normal" prompt
                 prompt = self.prompter.generate_prompt(query, "")
                 inputs = deepseek.tokenizer(prompt, return_tensors="pt")
