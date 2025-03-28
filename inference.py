@@ -283,7 +283,6 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
-                response = self.prompter.get_response(prompt)
                 yield self.prompter.get_response(output)
             
         except Exception as e:
