@@ -62,7 +62,7 @@ class Processor:
             logger.error(f"Error processing DOCX: {str(e)}")
             raise ValueError(f"Failed to process DOCX: {str(e)}")
 
-    def process_PDF(self, document) -> str:
+    def process_pdf(self, document) -> str:
         try: 
             pdf_reader = PyPDF2.PdfReader(document)
             return '\n'.join(
@@ -212,6 +212,8 @@ class DeepSeekApplication:
     def generate_response(
         self,
         query: str,
+	top_k: int,
+	similarity_threshold: float,
         context: Optional[List[str]] = None,
         max_context_length: int = 2000
     ) -> Dict:
@@ -219,7 +221,7 @@ class DeepSeekApplication:
         
         try:
             if context is None:
-                context = self.retrieve_relevant_docs(query)
+                context = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
             
             # Truncate context if too long
             combined_context = ' '.join(context)
@@ -271,6 +273,7 @@ def run(
     def evaluate(
         question: str, # The question to be asked
         uploaded_documents: str = None, # The corresponding document(s)
+	custom_text: str = None,
         temp: float = 0.1, # Temperature to module the next token probabilities
         top_p: float = 0.75, # Only the smallest set of the most probable tokens with probabilities that add up to top_p or higher are kept for generation
         top_k: int = 40, # Number of highest probability vocabulary tokens to keep for top-k-filtering
@@ -287,8 +290,8 @@ def run(
                 documents.append(content)
                 metadata[file.name] = metadata_doc
 
-        deepseek.load_documents(documents, metadata)
-        response = deepseek.generate_response(question)
+       	    deepseek.load_documents(documents, metadata)
+        response = deepseek.generate_response(question, top_k, 0.0)
         return response, metadata
 
     UI = gr.Interface(
