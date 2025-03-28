@@ -337,8 +337,7 @@ def run(
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp)
         else:
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, context=False)
-        # return response, metadata
-        return uploaded_documents['files']
+        return uploaded_documents['files'], metadata
 
     UI = gr.Interface(
         fn=evaluate,
