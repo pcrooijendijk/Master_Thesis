@@ -214,13 +214,13 @@ class DeepSeekApplication:
         query: str,
         top_k: int,
         similarity_threshold: float,
-        context: Optional[List[str]] = None,
+        context: bool = True,
         max_context_length: int = 2000
     ) -> Dict:
         start_time = time.time()
         
         try:
-            if context is None:
+            if context:
                 context = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
             
             # Truncate context if too long
@@ -290,7 +290,9 @@ def run(
                 metadata[file.name] = metadata_doc
 
             deepseek.load_documents(documents, metadata)
-        response = deepseek.generate_response(question, top_k, 0.0)
+            response = deepseek.generate_response(question, top_k, 0.0)
+        else:
+            response = deepseek.generate_response(question, top_k, 0.0, False)
         return response, metadata
 
     UI = gr.Interface(
