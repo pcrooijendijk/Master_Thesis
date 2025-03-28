@@ -125,7 +125,7 @@ class DeepSeekApplication:
         self.lora_config_path = lora_config_path
         self.prompt_template = prompt_template
 
-        self.init_model()
+        # self.init_model()
         self.doc_processor = Processor()
         self.document_store = None
         self.document_metadata = {}
