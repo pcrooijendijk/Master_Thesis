@@ -278,7 +278,8 @@ def run(
         num_beams: int = 4, # Number of beams for beam search
         max_new_tokens: int = 128,
         **kwargs,
-    ):
+    ):  
+        print(uploaded_documents)
         if uploaded_documents: 
             documents = []
             metadata = {}
