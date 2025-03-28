@@ -246,7 +246,7 @@ class DeepSeekApplication:
                     generated_output = deepseek.model.generate(
                         input_ids=input_ids,
                         generation_config=generation_config,
-                        return_dict_in_generate=True,
+                        return_dict_in_generate=1,
                         output_scores=True,
                         max_new_tokens=max_new_tokens,
                     )
@@ -326,7 +326,6 @@ def run(
         **kwargs,
     ):  
         documents = []
-        print("test")
         metadata = {}
         if uploaded_documents['files']: 
             for file in uploaded_documents: 
