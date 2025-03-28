@@ -280,7 +280,7 @@ def run(
         **kwargs,
     ):  
         print(uploaded_documents)
-        if uploaded_documents['files']: 
+        if uploaded_documents: 
             documents = []
             metadata = {}
             for file in uploaded_documents: 
@@ -301,6 +301,7 @@ def run(
                 info="Upload documents below to ask questions about the content.",
             ),
             gr.MultimodalTextbox(
+                file_types=['txt', 'pdf', 'docx'],
                 file_count='multiple',
                 placeholder="Upload your documents here.",
                 label="📁 Document Input",
