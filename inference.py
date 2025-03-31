@@ -3,7 +3,7 @@ import gradio as gr
 import fire
 import logging
 
-from DeepSeek import DeepSeekApplication
+from DeepSeek import DeepSeekApplication, Metadata
 
 def run(
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
@@ -42,11 +42,21 @@ def run(
 
             deepseek.load_documents(documents, metadata)
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
-        # elif custom_text:  
-
+        # If there is manual input from the user, treat it as if it is a document and append to the total list of documents
+        elif custom_text:  
+            content_custom = custom_text.strip()
+            if content_custom: 
+                documents.append(content_custom)
+                metadata['custom_input'] = Metadata(
+                    filename='custom_input',
+                    chunk_count=len(content_custom.split('\n')), 
+                    total_tokens=len(content_custom.split()),
+                    processing_time=0.0
+                )
+            deepseek.load_documents(documents, metadata)
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
+        # If there are no documents uploaded, generate a prompt without extra context
         else:
-            # If there are no documents uploaded, generate a prompt without extra context
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
         print("RESPONSE", response)
         return response['content'], metadata
