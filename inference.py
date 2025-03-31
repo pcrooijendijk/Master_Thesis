@@ -13,6 +13,8 @@ from dataclasses import dataclass
 
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import OllamaEmbeddings
 
 from peft import (
     PeftModel,
@@ -122,12 +124,16 @@ class DeepSeekApplication:
         ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
         lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
         lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
-        prompt_template: str = 'utils/prompt_template.json', # Prompt template for LLM
+        prompt_template: str = 'Master_Thesis/utils/prompt_template.json', # Prompt template for LLM
+        chunk_size: int = 500, # Chunk size
+        chunk_overlap: int = 50, # Chunk overlap
     ):
         self.ori_model = ori_model
         self.lora_weights_path = lora_weights_path
         self.lora_config_path = lora_config_path
         self.prompt_template = prompt_template
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
 
         self.init_model()
         self.doc_processor = Processor()
@@ -143,6 +149,18 @@ class DeepSeekApplication:
             load_in_8bit=True,
             torch_dtype=torch.float16,
             device_map="auto",
+        )
+
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self.chunk_size, 
+            chunk_overlap=self.chunk_overlap,
+            length_function=len,
+            seperators=["\n\n", "\n", ". ", " ", ""]
+        )
+
+        self.embeddings = OllamaEmbeddings(
+            model=self.ori_model,
+            base_url="http://127.0.0.1:7860"
         )
 
         # Loading the model
