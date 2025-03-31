@@ -271,10 +271,9 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
-                print("OUTPUT", output)
 
                 answer = {
-                    'content': output.split("Answer:")[1],
+                    'content': output.split("Answer:")[1].split("</think>")[1],
                     'metadata': {
                         'processing_time': time.time() - start_time,
                         'context_length': len(combined_context),

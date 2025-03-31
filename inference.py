@@ -5,11 +5,6 @@ import logging
 
 from DeepSeek import DeepSeekApplication
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 def run(
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
     lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
@@ -34,10 +29,11 @@ def run(
         top_k: int = 40, # Number of highest probability vocabulary tokens to keep for top-k-filtering
         num_beams: int = 4, # Number of beams for beam search
         max_new_tokens: int = 128,
-        **kwargs,
     ):  
         documents = []
         metadata = {}
+
+        # If there are documents uploaded, then the documents are processed and used for generating the prompt
         if uploaded_documents['files']:
             for file in uploaded_documents['files']: 
                 content, metadata_doc, file_name = deepseek.doc_processor.process_file(file)
@@ -46,7 +42,11 @@ def run(
 
             deepseek.load_documents(documents, metadata)
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
+        # elif custom_text:  
+
+            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         else:
+            # If there are no documents uploaded, generate a prompt without extra context
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
         print("RESPONSE", response)
         return response['content'], metadata
