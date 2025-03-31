@@ -261,7 +261,7 @@ class DeepSeekApplication:
                         'query_length': len(query)
                     }
                 }
-                yield self.prompter.get_response(output)
+                return self.prompter.get_response(output)
             elif context is False: 
                 # If there is no context construct a "normal" prompt
                 prompt = self.prompter.generate_prompt(query, "")
