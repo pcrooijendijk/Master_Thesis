@@ -273,9 +273,11 @@ class DeepSeekApplication:
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
                 fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
+                print("OUTPUT 1", fin_output.group(1).strip("</think>")[1])
+                print("OUTPUT 2", fin_output.group(1).strip())
 
                 answer = {
-                    'content': fin_output.group(1).strip().strip("</think>")[1],
+                    'content': fin_output.group(1).strip(),
                     'metadata': {
                         'processing_time': time.time() - start_time,
                         'context_length': len(combined_context),
@@ -283,7 +285,7 @@ class DeepSeekApplication:
                     }
                 }
                 return answer
-            elif context is False: 
+            elif context is False: # TODO: make this better if-else clause: context should be empty and can be given to generating prompt
                 # If there is no context construct a "normal" prompt
                 prompt = self.prompter.generate_prompt(query, "")
                 inputs = deepseek.tokenizer(prompt, return_tensors="pt")
