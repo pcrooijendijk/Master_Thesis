@@ -232,9 +232,9 @@ class DeepSeekApplication:
 
     def generate_response(
         self,
-        query: str,
-        deepseek,
-        top_k: int,
+        query: str, # The question to be asked
+        deepseek, # DeepSeekApplication instance for processing documents
+        top_k: int, # 
         top_p: int,
         num_beams: int,
         max_new_tokens: int,
@@ -365,7 +365,7 @@ def run(
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         else:
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
-        return response, metadata
+        return response['content'], metadata
 
     UI = gr.Interface(
         fn=evaluate,
