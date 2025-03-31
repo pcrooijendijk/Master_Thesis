@@ -191,7 +191,7 @@ class DeepSeekApplication:
             print("SCORES", scores)
 
             relevant_docs = [
-                document.page_conent for document, score in scores if score >= sim_threshold
+                document.page_content for document, score in scores if score >= sim_threshold
             ]
 
             return relevant_docs
