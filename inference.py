@@ -188,8 +188,6 @@ class DeepSeekApplication:
                 k=top_k
             )
 
-            print("SCORES", scores)
-
             relevant_docs = [
                 document.page_content for document, score in scores if score >= sim_threshold
             ]
@@ -275,6 +273,7 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
+                print("OUTPUT", output)
                 response = self.prompter.get_response(prompt)
                 answer = {
                     'content': response,
