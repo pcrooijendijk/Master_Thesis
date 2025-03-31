@@ -59,6 +59,7 @@ def run(
         print("RESPONSE", response)
         return response['content'], metadata
 
+    # The Gradio interface for fetching the question, documents, custom input and parameters
     UI = gr.Interface(
         fn=evaluate,
         inputs=[

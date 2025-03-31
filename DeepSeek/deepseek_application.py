@@ -5,6 +5,7 @@ import PyPDF2
 import chardet
 import time
 import os
+import re
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
@@ -271,10 +272,10 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
-                print("OUTPUT", output)
+                fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
 
                 answer = {
-                    'content': output.split("Answer:")[1].split("</think>")[1],
+                    'content': fin_output.group(1).strip(),
                     'metadata': {
                         'processing_time': time.time() - start_time,
                         'context_length': len(combined_context),
