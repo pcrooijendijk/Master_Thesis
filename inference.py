@@ -226,10 +226,10 @@ class DeepSeekApplication:
         
         try:
             if context is True:
-                context = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
+                context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
                 
-                # Truncate context if too long
-                combined_context = ' '.join(context)
+                # Truncate context if it is too long
+                combined_context = ' '.join(context_documents)
                 if len(combined_context) > max_context_length:
                     combined_context = combined_context[:max_context_length] + "..."
                 
@@ -261,7 +261,7 @@ class DeepSeekApplication:
                         'query_length': len(query)
                     }
                 }
-                return self.prompter.get_response(output)
+                return answer
             elif context is False: 
                 # If there is no context construct a "normal" prompt
                 prompt = self.prompter.generate_prompt(query, "")
@@ -283,7 +283,7 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
-                return self.prompter.get_response(output), "test"
+                return self.prompter.get_response(output)
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
