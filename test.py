@@ -2,12 +2,15 @@ import torch
 import gradio as gr
 import fire
 import logging
+import os
 import docx
 import PyPDF2
+import pymupdf
 import chardet
 import time
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
+from dataclasses import dataclass
 
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
@@ -24,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+@dataclass
 class Metadata:
     """Metadata for processed documents"""
     filename: str
@@ -92,25 +96,26 @@ class Processor:
         
     def process_file(self, document) -> Tuple[str, Metadata]:
         start_time = time.time()
-            
-        filename = document.name
-        file_ext = filename.split('.')[-1].lower()
-
-        if file_ext not in self.supported_extensions:
-            raise ValueError(f"Unsupported file type: {file_ext}")
         
-        processor = self.supported_extensions[file_ext]
+        # Extract the file extension and name
+        file_extension = os.path.splitext(document)[1].lower().lstrip('.')
+        file_name = os.path.splitext(document)[0].split('/')[-1]
+
+        if file_extension not in self.supported_extensions:
+            raise ValueError(f"Unsupported file type: {file_extension}")
+        
+        processor = self.supported_extensions[file_extension]
         content = processor(document)
         
         # Calculate basic metrics
         metadata = Metadata(
-            filename=filename,
+            filename=file_name,
             chunk_count=len(content.split('\n')),
             total_tokens=len(content.split()),
             processing_time=time.time() - start_time
         )
         
-        return content, metadata
+        return content, metadata, file_name
 
 class DeepSeekApplication:
     def __init__(
@@ -273,11 +278,11 @@ def run(
     ):  
         documents = []
         metadata = {}
-        if uploaded_documents['files']: 
-            for file in uploaded_documents: 
-                content, metadata_doc = deepseek.doc_processor.process_file(file)
+        if uploaded_documents['files']:
+            for file in uploaded_documents['files']: 
+                content, metadata_doc, file_name = deepseek.doc_processor.process_file(file)
                 documents.append(content)
-                metadata[file.name] = metadata_doc
+                metadata[file_name] = metadata_doc
 
             deepseek.load_documents(documents, metadata)
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
