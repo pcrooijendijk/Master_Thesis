@@ -273,7 +273,7 @@ class DeepSeekApplication:
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
                 fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
-                _, _, fin_output = fin_output.partition("</think>").strip()
+                _, _, fin_output = fin_output.group(1).strip().partition("</think>").strip()
 
                 answer = {
                     'content': fin_output,
