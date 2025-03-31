@@ -9,6 +9,7 @@ import time
 import os
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
+from dataclasses import dataclass
 
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+@dataclass
 class Metadata:
     """Metadata for processed documents"""
     filename: str
