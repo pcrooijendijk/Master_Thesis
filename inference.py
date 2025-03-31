@@ -155,7 +155,7 @@ class DeepSeekApplication:
             chunk_size=self.chunk_size, 
             chunk_overlap=self.chunk_overlap,
             length_function=len,
-            seperators=["\n\n", "\n", ". ", " ", ""]
+            separators=["\n\n", "\n", ". ", " ", ""]
         )
 
         self.embeddings = OllamaEmbeddings(
