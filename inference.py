@@ -334,7 +334,7 @@ def run(
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
     lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
     lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
-    prompt_template: str = 'utils/prompt_template.json', # Prompt template for LLM
+    prompt_template: str = 'Master_Thesis/utils/prompt_template.json', # Prompt template for LLM
 ):
     
     # Initalize a DeepSeek application for processing documents
