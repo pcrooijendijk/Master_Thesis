@@ -1,5 +1,5 @@
 import gradio as gr
-# from pdf2image import convert_from_path
+from pdf2image import convert_from_path
 import fire
 
 from DeepSeek import DeepSeekApplication, Metadata
@@ -57,7 +57,7 @@ def run(
         # If there are no documents uploaded, generate a prompt without extra context
         else:
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
-        return response, metadata
+        return response['content'], metadata
 
     # The Gradio interface for fetching the question, documents, custom input and parameters
     UI = gr.Interface(
