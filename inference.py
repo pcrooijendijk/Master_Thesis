@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 from peft import (
     PeftModel,
@@ -158,9 +158,8 @@ class DeepSeekApplication:
             separators=["\n\n", "\n", ". ", " ", ""]
         )
 
-        self.embeddings = OllamaEmbeddings(
-            model=self.ori_model,
-            base_url="http://127.0.0.1:7860"
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name=self.ori_model
         )
 
         # Loading the model
