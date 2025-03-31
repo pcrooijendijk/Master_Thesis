@@ -234,14 +234,14 @@ class DeepSeekApplication:
         self,
         query: str, # The question to be asked
         deepseek, # DeepSeekApplication instance for processing documents
-        top_k: int, # 
-        top_p: int,
-        num_beams: int,
+        top_k: int, # Number of highest probability vocabulary tokens to keep for top-k filtering
+        top_p: int, # The smallest set of most probable tokens with probabilities that add up to top_p or higher are kept for generation
+        num_beams: int, # Number of beams for beam search
         max_new_tokens: int,
         similarity_threshold: float,
         temp: float,
-        context: bool,
-        max_context_length: int = 2000
+        context: bool, # Boolean to check if there are documents for context
+        max_context_length: int = 2000 # The maximum tokens for the input context 
     ):
         start_time = time.time()
         
@@ -365,6 +365,7 @@ def run(
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         else:
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
+        print("RESPONSE", response)
         return response['content'], metadata
 
     UI = gr.Interface(
