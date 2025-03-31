@@ -275,7 +275,7 @@ class DeepSeekApplication:
                 fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
 
                 answer = {
-                    'content': fin_output.group(1).strip(),
+                    'content': fin_output.group(1).strip().strip("</think>")[1],
                     'metadata': {
                         'processing_time': time.time() - start_time,
                         'context_length': len(combined_context),
