@@ -1,7 +1,5 @@
-import torch
 import gradio as gr
 import fire
-import logging
 
 from DeepSeek import DeepSeekApplication, Metadata
 

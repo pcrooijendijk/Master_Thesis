@@ -271,6 +271,7 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
+                print("OUTPUT", output)
 
                 answer = {
                     'content': output.split("Answer:")[1].split("</think>")[1],
