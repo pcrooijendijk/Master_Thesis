@@ -218,7 +218,7 @@ class DeepSeekApplication:
             if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
             
-            self.vector_store = FAISS.from_texts(
+            self.document_store = FAISS.from_texts(
                 texts=doc_chunks,
                 embedding=self.embeddings
             )
