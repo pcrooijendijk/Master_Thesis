@@ -1,5 +1,5 @@
-from fed_utils import Client, client_selection, Server
-from utils import Dataset, Document, SpaceManagement, PromptHelper, Users
+from fed_utils import client_selection, Server
+from utils import SpaceManagement, PromptHelper, Users
 
 import torch
 import fire
@@ -17,6 +17,7 @@ global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 output_dir = 'FL_output/'
 
+# Loading the documents
 documents = load_dataset("json", data_files="utils/documents.json")
 
 # Intialize the spaces
@@ -54,9 +55,10 @@ def federated_privacy_learning(
     template: str = 'utils/prompt_template.json', # Prompt template 
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-    gradient_steps = batch_size // micro_batch_size
+
     device_map = "auto"
 
+    # Loading the model and tokenizer
     model = AutoModelForCausalLM.from_pretrained(
         global_model,
         load_in_8bit=True,
