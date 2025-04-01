@@ -2,18 +2,16 @@
 
 from perm_utils import Permission
 from perm_utils.UserPermissionManagement import UserPermissionsResource
-from DeepSeek import main as DeepSeek
 
 import os
 import torch
 import copy
 import numpy as np
 import transformers
-import subprocess
-from streamlit import runtime
 import logging
 from typing import List
 from collections import OrderedDict
+from torch.utils.data import DataLoader
 
 from sklearn.model_selection import train_test_split
 from opacus import PrivacyEngine
@@ -72,18 +70,17 @@ class Client:
         )
         self.local_train_dataset = list(map(generate_and_tokenize_prompt, X_train))
         self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))
+        self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
         self.delta = 1 / len(self.local_train_dataset)
         print("delta 1", self.delta)
     
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
-        print("delta", self.delta)
-        print(len(self.local_train_dataset))
-        self.model, self.optimizer, self.local_train_dataset = self.privacy_engine.make_private_with_epsilon(
+        self.model, self.optimizer, self.local_train_dataloader = self.privacy_engine.make_private_with_epsilon(
             module=self.model,
             optimizer=optimizer,
-            data_loader=list(self.local_train_dataset),
+            data_loader=self.local_train_dataloader,
             target_delta=self.delta,
             target_epsilon=7.5,
             epochs=epochs,
