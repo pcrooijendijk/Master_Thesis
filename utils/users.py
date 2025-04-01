@@ -79,7 +79,7 @@ class Users():
     def set_clients(self, user_permissions_resource: UserPermissionsResource, model) -> None:
         for user in self.users:
             self.clients.append(
-                Client.Client(
+                Client(
                     client_id=self.users[user]['id'], 
                     name=user, 
                     user_permissions_resource=user_permissions_resource, 
