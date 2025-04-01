@@ -57,7 +57,6 @@ def run(
         # If there are no documents uploaded, generate a prompt without extra context
         else:
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
-        print("RESPONSE", response)
         return response['content'], metadata
 
     # The Gradio interface for fetching the question, documents, custom input and parameters
