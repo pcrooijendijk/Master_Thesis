@@ -1,6 +1,6 @@
 from perm_utils import Role
 from typing import List
-from fed_utils.Client import Client
+from fed_utils import Client
 from perm_utils.UserPermissionManagement import UserPermissionsResource
 
 class Users():

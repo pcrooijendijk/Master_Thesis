@@ -16,7 +16,7 @@ from typing import List
 from collections import OrderedDict
 
 from sklearn.model_selection import train_test_split
-from opacus import PrivacyEngine
+# from opacus import PrivacyEngine
 from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,

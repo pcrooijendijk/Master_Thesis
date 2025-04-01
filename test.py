@@ -1,125 +1,99 @@
-import gradio as gr
-from pdf2image import convert_from_path
-import fire
+import pymupdf
+import random
+from pathlib import Path
 
-from DeepSeek import DeepSeekApplication, Metadata
+import perm_utils.Space as Space
+import perm_utils.Permission as Permission
+from perm_utils.TransactionTemplate import TransactionTemplate
+from fed_utils.Client import Client
+from perm_utils.UserPermissions import UserAccessor
+from perm_utils.SpacePermissions import SpaceManager
+from perm_utils.SpacePermissions import SpacePermissionManager
+from perm_utils.UserPermissions import UserManager
+from perm_utils.UserPermissionManagement import UserPermissionsResource
+from datasets import load_dataset
+from utils import SpaceManagement, Users
 
-def run(
-    ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
-    lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
-    lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
-    prompt_template: str = 'Master_Thesis/utils/prompt_template.json', # Prompt template for LLM
-):
-    
-    # Initalize a DeepSeek application for processing documents
-    deepseek = DeepSeekApplication(
-        ori_model,
-        lora_weights_path,
-        lora_config_path,
-        prompt_template,
-    )
+file_path = Path("data_DocBench_test")
+texts = []
 
-    def evaluate(
-        question: str, # The question to be asked
-        uploaded_documents: str = None, # The corresponding document(s)
-	    custom_text: str = None, # User can give custum text as input instead of document(s)
-        temp: float = 0.1, # Temperature to module the next token probabilities
-        top_p: float = 0.75, # Only the smallest set of the most probable tokens with probabilities that add up to top_p or higher are kept for generation
-        top_k: int = 40, # Number of highest probability vocabulary tokens to keep for top-k-filtering
-        num_beams: int = 4, # Number of beams for beam search
-        max_new_tokens: int = 128,
-    ):  
-        documents = []
-        metadata = {}
+# Append the documents to texts lists to get the content of the documents
+for pdf in file_path.rglob("*.pdf"): # Use rglob to find all PDFs
+    with pymupdf.open(pdf) as file: 
+        space_key_index = random.randint(0, 3)  # For the space key
+        texts.append(
+            [
+                chr(12).join([page.get_text() for page in file]),
+                file.metadata,
+                space_key_index,
+            ]
+        )
 
-        # If there are documents uploaded, then the documents are processed and used for generating the prompt
-        # if uploaded_documents['files']:
-        #     for file in uploaded_documents['files']: 
-        #         content, metadata_doc, file_name = deepseek.doc_processor.process_file(file)
-        #         documents.append(content)
-        #         metadata[file_name] = metadata_doc
+# Template for role permissions (not mandatory to use these)
+role_permissions = {
+    "admin": list(Permission),  # Full access with all permissions
+    "editor": [Permission.VIEWSPACE_PERMISSION, Permission.CREATEEDIT_PAGE_PERMISSION, Permission.COMMENT_PERMISSION],
+    "viewer": [Permission.VIEWSPACE_PERMISSION],
+    "restricted_user": []  # No permissions
+}
 
-        #     deepseek.load_documents(documents, metadata)
-        #     response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
-        # # If there is manual input from the user, treat it as if it is a document and append to the total list of documents
-        # elif custom_text:  
-        #     content_custom = custom_text.strip()
-        #     if content_custom: 
-        #         documents.append(content_custom)
-        #         metadata['custom_input'] = Metadata(
-        #             filename='custom_input',
-        #             chunk_count=len(content_custom.split('\n')), 
-        #             total_tokens=len(content_custom.split()),
-        #             processing_time=0.0
-        #         )
-        #     deepseek.load_documents(documents, metadata)
-        #     response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
-        # # If there are no documents uploaded, generate a prompt without extra context
-        # else:
-        #     response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
-        return convert_from_path(uploaded_documents['files'][0]), "hoi", "olla"
+# Making a space, space keys are defined (for now) as integers
+space = Space('mark', 0)
+space_new = Space('new', 1)
+space_3 = Space("lol", 2)
 
-    # The Gradio interface for fetching the question, documents, custom input and parameters
-    UI = gr.Interface(
-        fn=evaluate,
-        inputs=[
-            gr.components.Textbox(
-                lines=2,
-                label="❓Question",
-                info="Upload documents below to ask questions about the content.",
-            ),
-            gr.MultimodalTextbox(
-                file_count='multiple',
-                placeholder="Upload your documents here.",
-                label="📁 Document Input",
-                show_label=True,
-                info="Supported formats: PDF, DOCX, TXT"
-            ),
-            gr.components.Textbox(
-                lines=1,
-                label="📃 Or paste text",
-                info="Enter text directly. Each paragraph will be processed seperately."
-            ),
-            gr.components.Slider(
-                minimum=0, maximum=1, value=0.6, label="🌡️ Temperature"
-            ),
-            gr.components.Slider(
-                minimum=0, maximum=1, value=0.75, label="Top p"
-            ),
-            gr.components.Slider(
-                minimum=0, maximum=100, step=1, value=40, label="Top k"
-            ),
-            gr.components.Slider(
-                minimum=1, maximum=4, step=1, value=4, label="Beams"
-            ),
-            gr.components.Slider(
-                minimum=1, maximum=2000, step=1, value=500, label="Max tokens"
-            ),
-        ],
-        outputs=[
-            gr.Textbox(),
-            gr.Textbox(
-                lines=10,
-                label="🔮 Output",
-                info="Output of the DeepSeek model."
-            ),
-            gr.Textbox(
-                lines=10, 
-                label="📊 Document Info",
-                info="Meta Data of the input documents."
-            )
-        ],
-        title="🔎 DeepSeek Q&A",
-        description=""" 
-            ### Document Analysis and Question Answering.
-            # Upload documents or paste text to ask questions about the content.
-        """ ,
-        theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.blue),
-        submit_btn="Generate Response",
-        flagging_mode="never"
-    ).queue()
+# Adding two documents to the space
+space.add_document(texts[0]) 
+space.add_document(texts[1])
+space_new.add_document(texts[2])
+space_new.add_document(texts[3])
+space_3.add_document(texts[2])
 
-    UI.launch(share=True, server_port=7860)
+# Make a space manager
+space_manager = SpaceManager()
+# Adding the spaces
+space_manager.add_space(space) 
+space_manager.add_space(space_new) 
+space_manager.add_space(space_3)
 
-if __name__ == "__main__":
-    fire.Fire(run)
+# Adding users
+user_accessor = UserAccessor()
+user_accessor.add_user("admin")
+user_accessor.add_user("user1")
+
+# Adding the admin
+user_manager = UserManager(user_accessor)
+user_manager.add_admin("admin")
+
+# Make a space permission manager
+space_permission_manager = SpacePermissionManager()
+
+# Adding permissions for admin (space, username, permission type)
+space_permission_manager.save_permission(space, 'admin', role_permissions["admin"])
+space_permission_manager.save_permission(space_new, 'user1', role_permissions["viewer"])
+# space_permission_manager.save_permission(space_3, 'admin', role_permissions["editor"])
+
+# Getting the permissions for user with admin permissions
+user_permissions_resource = UserPermissionsResource(user_manager, TransactionTemplate(), user_accessor, space_manager, space_permission_manager)
+
+# Get the permissions for user admin (target username, request)
+print(user_permissions_resource.get_permissions('admin', {"Username": "admin"}))
+print("----------------------------------------------------------")
+print(user_permissions_resource.get_permissions('user1', {"Username": "user1"}))
+
+global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
+local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
+output_dir = 'FL_output/'
+
+documents = load_dataset("json", data_files="utils/documents.json")
+
+# Intialize the spaces
+space_names = ["mark", "new", "dev", "HR"]
+space_keys = [0, 1, 2, 3]
+
+# Making the users object to get the users and clients from
+users = Users(space_keys)
+
+# Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
+management = SpaceManagement(space_names, space_keys, documents, users.get_users())
+user_permissions_resource = management.get_user_permissions_resource()
