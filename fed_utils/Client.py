@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader
 
 from sklearn.model_selection import train_test_split
 from opacus import PrivacyEngine
+from opacus.utils.batch_memory_manager import BatchMemoryManager
 from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,
@@ -119,10 +120,29 @@ class Client:
             target_epsilon=10,  
             epochs=epochs,
             max_grad_norm=MAX_GRAD_NORM,
-        )        
-    
+        )     
+
     def train(self) -> None:
+        train_dataloader = self.local_trainer.get_train_dataloader()
+        max_physical_batch_size = self.train_args.per_device_train_batch_size
+
+        with BatchMemoryManager(
+            data_loader=train_dataloader,
+            max_physical_batch_size=max_physical_batch_size,
+            optimizer=self.optimizer
+        ) as memory_safe_data_loader:
+            
+            for step, batch in enumerate(memory_safe_data_loader):
+                outputs = self.model(**batch)
+                loss = outputs.loss
+                loss.backward()
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+        
         self.local_trainer.train()
+    
+    # def train(self) -> None:
+    #     self.local_trainer.train()
     
     def local_training(self) -> None:
         # self.model.config.use_cache = False
