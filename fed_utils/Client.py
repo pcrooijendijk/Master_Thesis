@@ -128,7 +128,7 @@ class Client:
         max_physical_batch_size = self.train_args.per_device_train_batch_size
 
         self.model.to(self.device)
-        # self.optimizer.to(self.device)
+        self.optimizer.to(self.device)
 
         with BatchMemoryManager(
             data_loader=train_dataloader,
