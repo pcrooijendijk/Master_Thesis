@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+torch.cuda.empty_cache()
+
 @dataclass
 class Metadata:
     """Metadata for processed documents"""
@@ -217,7 +219,9 @@ class DeepSeekApplication:
             
             self.document_store = FAISS.from_texts(
                 texts=doc_chunks,
-                embedding=self.embeddings
+                embedding=self.embeddings,
+                normalize_L2=True,
+                use_gpu=False,
             )
             
             if metadata:
