@@ -72,6 +72,7 @@ class Client:
         )
         self.local_train_dataset = map(generate_and_tokenize_prompt, X_train)
         self.local_eval_dataset = map(generate_and_tokenize_prompt, y_test)
+        print("length 1", len(list(self.local_train_dataset)))
         self.delta = 1 / len(list(self.local_train_dataset))
     
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
