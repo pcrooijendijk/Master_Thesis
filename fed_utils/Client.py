@@ -44,6 +44,7 @@ class Client:
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
         self.documents = []
         self.privacy_engine = PrivacyEngine()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.spaces_permissions_init()
         self.filter_documents()
@@ -125,6 +126,9 @@ class Client:
     def train(self) -> None:
         train_dataloader = self.local_trainer.get_train_dataloader()
         max_physical_batch_size = self.train_args.per_device_train_batch_size
+
+        self.model.to(self.device)
+        self.optimizer.to(self.device)
 
         with BatchMemoryManager(
             data_loader=train_dataloader,
