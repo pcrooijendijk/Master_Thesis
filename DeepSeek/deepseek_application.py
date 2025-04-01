@@ -158,8 +158,17 @@ class DeepSeekApplication:
             separators=["\n\n", "\n", ". ", " ", ""]
         )
 
+        model_kwargs = {
+            'device': device
+        }
+        encode_kwargs = {
+            'normalize_embeddings': True, 
+            'batch_size': 8
+        }
         self.embeddings = HuggingFaceEmbeddings(
-            model_name=self.ori_model
+            model_name=self.ori_model, 
+            model_kwargs=model_kwargs,
+            encode_kwargs=encode_kwargs
         )
 
         # Loading the model
