@@ -78,6 +78,7 @@ class Client:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
         print("delta", self.delta)
+        print(len(list(self.local_train_dataset)))
         self.model, self.optimizer, self.local_train_dataset = self.privacy_engine.make_private_with_epsilon(
             module=self.model,
             optimizer=optimizer,
