@@ -219,8 +219,6 @@ class DeepSeekApplication:
             self.document_store = FAISS.from_texts(
                 texts=doc_chunks,
                 embedding=self.embeddings,
-                normalize_L2=True,
-                use_gpu=False,
             )
             
             if metadata:
