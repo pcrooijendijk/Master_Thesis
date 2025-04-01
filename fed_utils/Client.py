@@ -70,16 +70,16 @@ class Client:
         X_train, y_test = train_test_split(
             self.documents, test_size=0.7, shuffle=True
         )
-        self.local_train_dataset = map(generate_and_tokenize_prompt, X_train)
-        self.local_eval_dataset = map(generate_and_tokenize_prompt, y_test)
-        self.delta = 1 / len(list(self.local_train_dataset))
+        self.local_train_dataset = list(map(generate_and_tokenize_prompt, X_train))
+        self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))
+        self.delta = 1 / len(self.local_train_dataset)
         print("delta 1", self.delta)
     
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
         print("delta", self.delta)
-        print(len(list(self.local_train_dataset)))
+        print(len(self.local_train_dataset))
         self.model, self.optimizer, self.local_train_dataset = self.privacy_engine.make_private_with_epsilon(
             module=self.model,
             optimizer=optimizer,
@@ -113,8 +113,8 @@ class Client:
         
         self.local_trainer = transformers.Trainer(
             model=self.model,
-            train_dataset=list(self.local_train_dataset),
-            eval_dataset=list(self.local_eval_dataset),
+            train_dataset=self.local_train_dataset,
+            eval_dataset=self.local_eval_dataset,
             args=self.train_args,
             data_collator=transformers.DataCollatorForSeq2Seq(
                 tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
