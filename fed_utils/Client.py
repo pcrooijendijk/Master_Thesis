@@ -44,7 +44,6 @@ class Client:
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
         self.documents = []
         self.privacy_engine = PrivacyEngine()
-        self.delta = 1 / len()
 
         self.spaces_permissions_init()
         self.filter_documents()
