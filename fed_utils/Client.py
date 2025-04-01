@@ -113,7 +113,7 @@ class Client:
 
         self.model, self.optimizer, self.data_loader = self.privacy_engine.make_private_with_epsilon(
             module=self.model,
-            optimizer=self.local_trainer.optimizer,
+            optimizer=optimizer,
             data_loader=self.local_trainer.get_train_dataloader(),
             target_delta=self.delta,
             target_epsilon=10,  
