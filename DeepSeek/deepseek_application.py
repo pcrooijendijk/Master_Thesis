@@ -161,7 +161,8 @@ class DeepSeekApplication:
         model_kwargs = {
             'device': device
         }
-        encode_kwargs = {
+        # Ensure that there are no out of memory issues
+        encode_kwargs = { 
             'normalize_embeddings': True, 
             'batch_size': 8
         }
