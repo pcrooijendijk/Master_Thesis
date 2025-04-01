@@ -115,6 +115,7 @@ class Client:
             module=self.model,
             optimizer=self.local_trainer.optimizer,
             data_loader=self.local_trainer.get_train_dataloader(),
+            target_delta=self.delta,
             target_epsilon=10,  
             epochs=epochs,
             max_grad_norm=MAX_GRAD_NORM,
