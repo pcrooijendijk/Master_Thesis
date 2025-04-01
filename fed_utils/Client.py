@@ -128,7 +128,7 @@ class Client:
         max_physical_batch_size = self.train_args.per_device_train_batch_size
 
         self.model.to(self.device)
-        self.optimizer.to(self.device)
+        # self.optimizer.to(self.device)
 
         with BatchMemoryManager(
             data_loader=train_dataloader,
@@ -137,6 +137,8 @@ class Client:
         ) as memory_safe_data_loader:
             
             for step, batch in enumerate(memory_safe_data_loader):
+                batch = {key: val.to(self.device) for key, val in batch.items()}
+
                 outputs = self.model(**batch)
                 loss = outputs.loss
                 loss.backward()
