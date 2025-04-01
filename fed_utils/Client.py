@@ -137,7 +137,7 @@ class Client:
         self.local_trainer.train()
     
     def local_training(self) -> None:
-        self.model.config.use_cache = False
+        # self.model.config.use_cache = False
         self.old_params = copy.deepcopy(
             OrderedDict(
                 (name, param.detach()) for name, param in self.model.named_parameters() if "default" in name
