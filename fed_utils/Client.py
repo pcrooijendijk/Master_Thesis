@@ -86,7 +86,7 @@ class Client:
             warmup_steps=0,
             num_train_epochs=epochs,
             learning_rate=learning_rate,
-            fp16=True,
+            fp16=False,
             logging_steps=1,
             optim="adamw_torch",
             evaluation_strategy="steps",
