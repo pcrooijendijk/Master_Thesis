@@ -73,6 +73,8 @@ class Client:
         self.local_train_dataset = map(generate_and_tokenize_prompt, X_train)
         self.local_eval_dataset = map(generate_and_tokenize_prompt, y_test)
         print("length 1", len(list(self.local_train_dataset)))
+        length_local_train_dataset = len(list(self.local_train_dataset))
+        print("length 1", length_local_train_dataset)
         self.delta = 1 / len(list(self.local_train_dataset))
         print("delta 1", self.delta)
     
