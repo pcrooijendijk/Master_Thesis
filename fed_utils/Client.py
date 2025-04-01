@@ -5,6 +5,7 @@ from perm_utils.UserPermissionManagement import UserPermissionsResource
 
 import os
 import torch
+import torch.nn as nn
 import copy
 import numpy as np
 import transformers
@@ -77,14 +78,28 @@ class Client:
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
-        self.model, self.optimizer, self.local_train_dataloader = self.privacy_engine.make_private_with_epsilon(
-            module=self.model,
-            optimizer=optimizer,
-            data_loader=self.local_train_dataloader,
-            target_delta=self.delta,
-            target_epsilon=7.5,
-            epochs=epochs,
-            max_grad_norm=MAX_GRAD_NORM,
+        criterion = nn.CrossEntropyLoss(reduction="mean")
+        # self.model, self.optimizer, self.local_train_dataloader = self.privacy_engine.make_private_with_epsilon(
+        #     module=self.model,
+        #     optimizer=optimizer,
+        #     data_loader=self.local_train_dataloader,
+        #     target_delta=self.delta,
+        #     target_epsilon=7.5,
+        #     epochs=epochs,
+        #     max_grad_norm=MAX_GRAD_NORM,
+        # )
+        self.model, self.optimizer, criterion_lora, train_dataloader = (
+            self.privacy_engine.make_private_with_epsilon(
+                module=self.model,
+                optimizer=optimizer,
+                data_loader=train_dataloader,
+                criterion=criterion,
+                target_delta=self.delta,
+                target_epsilon=7.5,
+                epochs=epochs,
+                max_grad_norm=MAX_GRAD_NORM,
+                grad_sample_mode="ghost",
+            )
         )
         
         self.train_args = transformers.TrainingArguments(
