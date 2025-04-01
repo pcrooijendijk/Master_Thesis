@@ -92,7 +92,7 @@ class Client:
             self.privacy_engine.make_private_with_epsilon(
                 module=self.model,
                 optimizer=optimizer,
-                data_loader=train_dataloader,
+                data_loader=self.local_train_dataloader,
                 criterion=criterion,
                 target_delta=self.delta,
                 target_epsilon=7.5,
