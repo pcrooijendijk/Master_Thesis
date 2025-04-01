@@ -97,3 +97,5 @@ users = Users(space_keys)
 # Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
 management = SpaceManagement(space_names, space_keys, documents, users.get_users())
 user_permissions_resource = management.get_user_permissions_resource()
+
+users.set_clients(user_permissions_resource, "model")
