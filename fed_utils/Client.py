@@ -81,6 +81,7 @@ class Client:
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
         criterion = nn.CrossEntropyLoss(reduction="mean")
 
+        print(self.model.type)
         # self.model.train()
         self.model, optimizer, train_dataloader = self.privacy_engine.make_private_with_epsilon(
             module=self.model,
@@ -92,19 +93,7 @@ class Client:
             max_grad_norm=MAX_GRAD_NORM,
         )
 
-        # self.model, self.optimzer, criterion, train_dataloader = (
-        #     self.privacy_engine.make_private_with_epsilon(
-        #         module=self.model,
-        #         optimizer=optimizer,
-        #         data_loader=self.local_train_dataloader,
-        #         criterion=criterion,
-        #         target_delta=self.delta,
-        #         target_epsilon=7.5,
-        #         epochs=epochs,
-        #         max_grad_norm=MAX_GRAD_NORM,
-        #         grad_sample_mode="ghost",
-        #     )
-        # )
+        print(self.model.type)
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
