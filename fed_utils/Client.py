@@ -94,6 +94,7 @@ class Client:
         )
 
         print(self.model.type)
+        print(self.model.m)
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
