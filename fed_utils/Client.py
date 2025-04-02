@@ -81,7 +81,7 @@ class Client:
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
         criterion = nn.CrossEntropyLoss(reduction="mean")
 
-        self.model.train()
+        # self.model.train()
 
         self.model, self.optimzer, criterion, train_dataloader = (
             self.privacy_engine.make_private_with_epsilon(
@@ -96,7 +96,6 @@ class Client:
                 grad_sample_mode="ghost",
             )
         )
-
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
