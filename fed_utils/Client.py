@@ -82,20 +82,29 @@ class Client:
         criterion = nn.CrossEntropyLoss(reduction="mean")
 
         # self.model.train()
-
-        self.model, self.optimzer, criterion, train_dataloader = (
-            self.privacy_engine.make_private_with_epsilon(
-                module=self.model,
-                optimizer=optimizer,
-                data_loader=self.local_train_dataloader,
-                criterion=criterion,
-                target_delta=self.delta,
-                target_epsilon=7.5,
-                epochs=epochs,
-                max_grad_norm=MAX_GRAD_NORM,
-                grad_sample_mode="ghost",
-            )
+        self.model, optimizer, train_dataloader = self.privacy_engine.make_private_with_epsilon(
+            module=self.model,
+            optimizer=optimizer,
+            data_loader=self.local_train_dataloader,
+            target_delta=self.delta,
+            target_epsilon=7.5,
+            epochs=epochs,
+            max_grad_norm=MAX_GRAD_NORM,
         )
+
+        # self.model, self.optimzer, criterion, train_dataloader = (
+        #     self.privacy_engine.make_private_with_epsilon(
+        #         module=self.model,
+        #         optimizer=optimizer,
+        #         data_loader=self.local_train_dataloader,
+        #         criterion=criterion,
+        #         target_delta=self.delta,
+        #         target_epsilon=7.5,
+        #         epochs=epochs,
+        #         max_grad_norm=MAX_GRAD_NORM,
+        #         grad_sample_mode="ghost",
+        #     )
+        # )
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
@@ -126,17 +135,7 @@ class Client:
             data_collator=transformers.DataCollatorForSeq2Seq(
                 tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
             )
-        )
-
-        self.model, self.optimizer, self.data_loader = self.privacy_engine.make_private_with_epsilon(
-            module=self.model,
-            optimizer=optimizer,
-            data_loader=self.local_trainer.get_train_dataloader(),
-            target_delta=self.delta,
-            target_epsilon=10,  
-            epochs=epochs,
-            max_grad_norm=MAX_GRAD_NORM,
-        )     
+        )   
 
     def train(self) -> None:
         self.local_trainer.train()
