@@ -75,7 +75,6 @@ class Client:
         self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))
         self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
         self.delta = 1 / len(self.local_train_dataset)
-        print("delta 1", self.delta)
     
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
@@ -148,7 +147,7 @@ class Client:
         self.local_trainer.train()
     
     def local_training(self) -> None:
-        # self.model.config.use_cache = False
+        self.model.config.use_cache = False
         self.old_params = copy.deepcopy(
             OrderedDict(
                 (name, param.detach()) for name, param in self.model.named_parameters() if "default" in name

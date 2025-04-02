@@ -17,7 +17,7 @@ global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 output_dir = 'FL_output/'
 
-documents = load_dataset("json", data_files="utils/documents.json")
+documents = load_dataset("json", data_files="Master_Thesis/utils/documents.json")
 
 # Intialize the spaces
 space_names = ["mark", "new", "dev", "HR"]
@@ -51,7 +51,7 @@ def federated_privacy_learning(
     ],
     training_on_inputs: bool = True, 
     group_by_length: bool = False,
-    template: str = 'utils/prompt_template.json', # Prompt template 
+    template: str = 'Master_Thesis/utils/prompt_template.json', # Prompt template 
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     gradient_steps = batch_size // micro_batch_size
