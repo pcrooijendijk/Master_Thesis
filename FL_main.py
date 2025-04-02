@@ -138,7 +138,7 @@ def federated_privacy_learning(
 
         for client_id in selected_clients_index: 
             client = clients[client_id] 
-            print("\nPreparing the local dataset and trainter for client {}".format(client_id))
+            print("\nPreparing the local dataset and trainer for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)
             client.trainer_init(
                 tokenizer, 

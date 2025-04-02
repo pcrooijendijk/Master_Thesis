@@ -132,7 +132,7 @@ class Client:
 
         with BatchMemoryManager(
             data_loader=train_dataloader,
-            max_physical_batch_size=max_physical_batch_size,
+            max_physical_batch_size=4,
             optimizer=self.optimizer
         ) as memory_safe_data_loader:
             
@@ -146,9 +146,6 @@ class Client:
                 self.optimizer.zero_grad()
         
         self.local_trainer.train()
-    
-    # def train(self) -> None:
-    #     self.local_trainer.train()
     
     def local_training(self) -> None:
         # self.model.config.use_cache = False
