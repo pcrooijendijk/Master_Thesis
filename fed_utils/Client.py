@@ -16,7 +16,6 @@ from torch.utils.data import DataLoader
 
 from sklearn.model_selection import train_test_split
 from opacus import PrivacyEngine
-from opacus.utils.batch_memory_manager import BatchMemoryManager
 from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,
@@ -79,9 +78,10 @@ class Client:
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
-        criterion = nn.CrossEntropyLoss(reduction="mean")
 
-        self.model, optimizer, train_dataloader = self.privacy_engine.make_private_with_epsilon(
+        # Use differential privacy to ensure a DP algorithm where adding or removing a given element from the dataset, the answer 
+        # from our algorithm will not change. This is done by adding Gaussian noise.
+        self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
             module=self.model,
             optimizer=optimizer,
             data_loader=self.local_train_dataloader,
@@ -126,7 +126,6 @@ class Client:
         self.local_trainer.train()
     
     def local_training(self) -> None:
-        # self.model.config.use_cache = False
         self.old_params = copy.deepcopy(
             OrderedDict(
                 (name, param.detach()) for name, param in self.model.named_parameters() if "default" in name
@@ -135,11 +134,6 @@ class Client:
         self.new_params = OrderedDict(
             (name, param.detach()) for name, param in self.model.named_parameters() if "default" in name
         )
-        # self.model.state_dict = (
-        #     lambda instance, *_, **__: get_peft_model_state_dict(
-        #         instance, self.new_params, "default"
-        #     )
-        # ).__get__(self.model, type(self.model))
     
     def end_local_training(self, epoch, dataset_length, selected_clients, output_dir):
         dataset_length[self.client_id] = len(self.documents)
