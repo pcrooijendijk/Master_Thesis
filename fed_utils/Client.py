@@ -80,6 +80,23 @@ class Client:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
         criterion = nn.CrossEntropyLoss(reduction="mean")
+
+        self.model.train()
+
+        self.model, self.optimzer, criterion, train_dataloader = (
+            self.privacy_engine.make_private_with_epsilon(
+                module=self.model,
+                optimizer=optimizer,
+                data_loader=self.local_train_dataloader,
+                criterion=criterion,
+                target_delta=self.delta,
+                target_epsilon=7.5,
+                epochs=epochs,
+                max_grad_norm=MAX_GRAD_NORM,
+                grad_sample_mode="ghost",
+            )
+        )
+
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
@@ -123,28 +140,7 @@ class Client:
         )     
 
     def train(self) -> None:
-        train_dataloader = self.local_trainer.get_train_dataloader()
-        max_physical_batch_size = self.train_args.per_device_train_batch_size
-
-        self.model.to(self.device)
-        # self.optimizer.to(self.device)
-
-        with BatchMemoryManager(
-            data_loader=train_dataloader,
-            max_physical_batch_size=1,
-            optimizer=self.optimizer
-        ) as memory_safe_data_loader:
-            
-            for step, batch in enumerate(memory_safe_data_loader):
-                batch = {key: val.to(self.device) for key, val in batch.items()}
-
-                outputs = self.model(**batch)
-                loss = outputs.loss
-                loss.backward()
-                self.optimizer.step()
-                self.optimizer.zero_grad()
-        
-        # self.local_trainer.train()
+        self.local_trainer.train()
     
     def local_training(self) -> None:
         # self.model.config.use_cache = False
