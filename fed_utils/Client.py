@@ -81,8 +81,6 @@ class Client:
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
         criterion = nn.CrossEntropyLoss(reduction="mean")
 
-        print(self.model.type)
-        # self.model.train()
         self.model, optimizer, train_dataloader = self.privacy_engine.make_private_with_epsilon(
             module=self.model,
             optimizer=optimizer,
@@ -92,8 +90,6 @@ class Client:
             epochs=epochs,
             max_grad_norm=MAX_GRAD_NORM,
         )
-
-        print(self.model.type)
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
@@ -139,11 +135,11 @@ class Client:
         self.new_params = OrderedDict(
             (name, param.detach()) for name, param in self.model.named_parameters() if "default" in name
         )
-        self.model.state_dict = (
-            lambda instance, *_, **__: get_peft_model_state_dict(
-                instance, self.new_params, "default"
-            )
-        ).__get__(self.model, type(self.model))
+        # self.model.state_dict = (
+        #     lambda instance, *_, **__: get_peft_model_state_dict(
+        #         instance, self.new_params, "default"
+        #     )
+        # ).__get__(self.model, type(self.model))
     
     def end_local_training(self, epoch, dataset_length, selected_clients, output_dir):
         dataset_length[self.client_id] = len(self.documents)
