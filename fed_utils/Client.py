@@ -144,7 +144,7 @@ class Client:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
         
-        self.local_trainer.train()
+        # self.local_trainer.train()
     
     def local_training(self) -> None:
         # self.model.config.use_cache = False
