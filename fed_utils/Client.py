@@ -131,7 +131,7 @@ class Client:
 
         with BatchMemoryManager(
             data_loader=train_dataloader,
-            max_physical_batch_size=4,
+            max_physical_batch_size=1,
             optimizer=self.optimizer
         ) as memory_safe_data_loader:
             
