@@ -142,7 +142,7 @@ class Client:
         os.makedirs(output_dir, exist_ok=True)
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
 
-        old_weights = get_peft_model_state_dict(self.model, self.old_params, "default")
+        old_weights = get_peft_model_state_dict(self.model._module, self.old_params, "default")
         set_peft_model_state_dict(self.model, old_weights, "default")
         last_client_id = self.client_id
 
