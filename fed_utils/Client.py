@@ -37,7 +37,6 @@ class Client:
         self.name = name
         self.user_permissions_resource = user_permissions_resource
         self.local_model = local_model
-        self.model_init()
 
         self.permissions = set()
         self.spaces = set()
