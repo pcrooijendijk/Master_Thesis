@@ -46,7 +46,7 @@ class Server:
         # Get the PEFT model using LoRA
         self.model = get_peft_model(self.model, lora_config)
     
-    def FedAvg(self, model, selected_clients, dataset_length, epoch, output_dir):
+    def FedAvg(self, selected_clients, dataset_length, epoch, output_dir):
         # Normalizing the weights of each client
         # TODO: change the following to the pytorch implementation
         self.model_init()

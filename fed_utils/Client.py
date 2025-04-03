@@ -193,7 +193,11 @@ class Client:
         set_peft_model_state_dict(self.model._module, old_weights, "default")
         last_client_id = self.client_id
 
-        return self.model, dataset_length, selected_clients, last_client_id
+        # Clear CUDA cache
+        torch.cuda.empty_cache()
+        del self.model
+
+        return dataset_length, selected_clients, last_client_id
 
     def get_parameters(self) -> List[np.ndarray]:
         return [val.cpu().numpy() for _, val in self.model.state_dict().items()]
