@@ -20,6 +20,8 @@ from opacus import PrivacyEngine
 from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,
+    prepare_model_for_kbit_training,
+    LoraConfig,
 )
 
 np.random.seed(42)
@@ -62,6 +64,24 @@ class Client:
             0
         )
         self.tokenizer.padding_side = "left"
+
+        # Using this technique to reduce memory-usage and accelarting inference
+        self.model = prepare_model_for_kbit_training(self.model) 
+
+        # Initialize LoRA
+        lora_config = LoraConfig(
+            r=16, 
+            lora_alpha=16, 
+            target_modules=[ # The layers which need to be finetuned
+                "q_proj",
+            ], 
+            lora_dropout=0.05, 
+            bias="none",
+            task_type="CAUSAL_LM"
+        )
+
+        # Get the PEFT model using LoRA
+        model = get_peft_model(model, lora_config)
     
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
