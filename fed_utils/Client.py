@@ -113,7 +113,7 @@ class Client:
         self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
         self.delta = 1 / len(self.local_train_dataset)
     
-    def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
+    def trainer_init(self, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
 
@@ -156,7 +156,7 @@ class Client:
             eval_dataset=self.local_eval_dataset,
             args=self.train_args,
             data_collator=transformers.DataCollatorForSeq2Seq(
-                tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
+                tokenizer=self.tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
             )
         )   
 
