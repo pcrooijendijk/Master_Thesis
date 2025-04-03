@@ -160,6 +160,8 @@ def federated_privacy_learning(
             model, dataset_length, selected_clients, last_client = client.end_local_training(
                 epoch, dataset_length, selected_clients, output_dir
                 )
+            # Clear CUDA cache
+            torch.cuda.empty_cache()
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
         model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
