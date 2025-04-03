@@ -52,12 +52,21 @@ class Client:
         self.spaces_permissions_init()
         self.filter_documents()
     
-    def model_init(self) -> None:
+    def model_init(
+        self, 
+        lora_rank: int = 16 , # Lora attention dimension 
+        lora_alpha: int = 16, # The alpha parameter for Lora scaling
+        lora_dropout: float = 0.05, # The dropout probability for Lora layers
+        lora_module: List[str] = [ # The layers which need to be finetuned
+            "q_proj",
+        ],
+    )-> None:
         self.model = AutoModelForCausalLM.from_pretrained(
             self.local_model,
             load_in_8bit=True,
             torch_dtype=torch.float16,
             device_map="auto",
+            llm_int8_enable_fp32_cpu_offload=True,
         )
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.local_model)
@@ -71,12 +80,10 @@ class Client:
 
         # Initialize LoRA
         lora_config = LoraConfig(
-            r=16, 
-            lora_alpha=16, 
-            target_modules=[ # The layers which need to be finetuned
-                "q_proj",
-            ], 
-            lora_dropout=0.05, 
+            r=lora_rank, 
+            lora_alpha=lora_alpha, 
+            target_modules=lora_module, 
+            dropout=lora_dropout, 
             bias="none",
             task_type="CAUSAL_LM"
         )
