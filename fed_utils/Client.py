@@ -35,11 +35,11 @@ def client_selection(num_clients, client_frac):
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
 class Client:
-    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, local_model) -> None:
+    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model) -> None:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
-        self.local_model = local_model
+        self.model = model
 
         self.permissions = set()
         self.spaces = set()
@@ -52,44 +52,44 @@ class Client:
         self.spaces_permissions_init()
         self.filter_documents()
     
-    def model_init(
-        self, 
-        lora_rank: int = 16 , # Lora attention dimension 
-        lora_alpha: int = 16, # The alpha parameter for Lora scaling
-        lora_dropout: float = 0.05, # The dropout probability for Lora layers
-        lora_module: List[str] = [ # The layers which need to be finetuned
-            "q_proj",
-        ],
-    )-> None:
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.local_model,
-            load_in_8bit=True,
-            torch_dtype=torch.float16,
-            device_map="auto",
-            llm_int8_enable_fp32_cpu_offload=True,
-        )
+    # def model_init(
+    #     self, 
+    #     lora_rank: int = 16 , # Lora attention dimension 
+    #     lora_alpha: int = 16, # The alpha parameter for Lora scaling
+    #     lora_dropout: float = 0.05, # The dropout probability for Lora layers
+    #     lora_module: List[str] = [ # The layers which need to be finetuned
+    #         "q_proj",
+    #     ],
+    # )-> None:
+    #     self.model = AutoModelForCausalLM.from_pretrained(
+    #         self.local_model,
+    #         load_in_8bit=True,
+    #         torch_dtype=torch.float16,
+    #         device_map="auto",
+    #         llm_int8_enable_fp32_cpu_offload=True,
+    #     )
 
-        self.tokenizer = AutoTokenizer.from_pretrained(self.local_model)
-        self.tokenizer.pad_token_id = (
-            0
-        )
-        self.tokenizer.padding_side = "left"
+    #     self.tokenizer = AutoTokenizer.from_pretrained(self.local_model)
+    #     self.tokenizer.pad_token_id = (
+    #         0
+    #     )
+    #     self.tokenizer.padding_side = "left"
 
-        # Using this technique to reduce memory-usage and accelarting inference
-        self.model = prepare_model_for_kbit_training(self.model) 
+    #     # Using this technique to reduce memory-usage and accelarting inference
+    #     self.model = prepare_model_for_kbit_training(self.model) 
 
-        # Initialize LoRA
-        lora_config = LoraConfig(
-            r=lora_rank, 
-            lora_alpha=lora_alpha, 
-            target_modules=lora_module, 
-            lora_dropout=lora_dropout, 
-            bias="none",
-            task_type="CAUSAL_LM"
-        )
+    #     # Initialize LoRA
+    #     lora_config = LoraConfig(
+    #         r=lora_rank, 
+    #         lora_alpha=lora_alpha, 
+    #         target_modules=lora_module, 
+    #         lora_dropout=lora_dropout, 
+    #         bias="none",
+    #         task_type="CAUSAL_LM"
+    #     )
 
-        # Get the PEFT model using LoRA
-        self.model = get_peft_model(self.model, lora_config)
+        # # Get the PEFT model using LoRA
+        # self.model = get_peft_model(self.model, lora_config)
     
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
