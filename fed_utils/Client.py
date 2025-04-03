@@ -113,14 +113,14 @@ class Client:
         X_train, y_test = train_test_split(
             self.documents, test_size=0.7, shuffle=True
         )
-        self.local_train_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), X_train))
-        self.local_eval_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), y_test))
-        # self.local_train_dataset = list(map(generate_and_tokenize_prompt, X_train))
-        # self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))
+        # self.local_train_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), X_train))
+        # self.local_eval_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), y_test))
+        self.local_train_dataset = list(map(generate_and_tokenize_prompt, X_train))
+        self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))
         self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
         self.delta = 1 / len(self.local_train_dataset)
     
-    def trainer_init(self, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
+    def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
 
@@ -163,7 +163,7 @@ class Client:
             eval_dataset=self.local_eval_dataset,
             args=self.train_args,
             data_collator=transformers.DataCollatorForSeq2Seq(
-                tokenizer=self.tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
+                tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
             )
         )   
 

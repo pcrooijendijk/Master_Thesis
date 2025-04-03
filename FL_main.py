@@ -91,13 +91,13 @@ def federated_privacy_learning(
 
             return result
 
-    def generate_and_tokenize_prompt(document: dict, tokenizer):
+    def generate_and_tokenize_prompt(document: dict):
             prompt_helper = PromptHelper(template)
             full_prompt = prompt_helper.generate_prompt(
                 document["question"],
                 document["context"]
             )
-            tokenized_full_prompt = tokenizer_init(full_prompt, tokenizer)
+            tokenized_full_prompt = tokenizer_init(full_prompt)
             return tokenized_full_prompt
 
     # Using this technique to reduce memory-usage and accelarting inference
@@ -142,6 +142,7 @@ def federated_privacy_learning(
             print("\nPreparing the local dataset and trainer for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)
             client.trainer_init(
+                tokenizer, 
                 micro_batch_size, 
                 batch_size, 
                 epochs, 
