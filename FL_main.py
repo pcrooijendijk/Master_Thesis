@@ -115,6 +115,8 @@ def federated_privacy_learning(
 
     # Get the PEFT model using LoRA
     model = get_peft_model(model, lora_config)
+    model.is_parallelizable = True
+    model.model_parallel = True
 
     # Initialize before the federated learning starts
     selected_clients = set()
