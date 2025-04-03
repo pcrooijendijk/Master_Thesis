@@ -57,21 +57,21 @@ def federated_privacy_learning(
     gradient_steps = batch_size // micro_batch_size
     device_map = "auto"
 
-    model = AutoModelForCausalLM.from_pretrained(
-        global_model,
-        load_in_8bit=True,
-        torch_dtype=torch.float16,
-        device_map=device_map,
-    )
+    # model = AutoModelForCausalLM.from_pretrained(
+    #     global_model,
+    #     load_in_8bit=True,
+    #     torch_dtype=torch.float16,
+    #     device_map=device_map,
+    # )
 
-    tokenizer = AutoTokenizer.from_pretrained(global_model)
-    tokenizer.pad_token_id = (
-        0
-    )
-    tokenizer.padding_side = "left"
+    # tokenizer = AutoTokenizer.from_pretrained(global_model)
+    # tokenizer.pad_token_id = (
+    #     0
+    # )
+    # tokenizer.padding_side = "left"
 
     # Helper functions for the training process
-    def tokenizer_init(prompt: str, add_eos_token: bool=True):
+    def tokenizer_init(prompt: str,  tokenizer, add_eos_token: bool=True):
             result = tokenizer(
                 prompt,
                 truncation=True,
@@ -91,17 +91,17 @@ def federated_privacy_learning(
 
             return result
 
-    def generate_and_tokenize_prompt(document: dict):
+    def generate_and_tokenize_prompt(document: dict, tokenizer):
             prompt_helper = PromptHelper(template)
             full_prompt = prompt_helper.generate_prompt(
                 document["question"],
                 document["context"]
             )
-            tokenized_full_prompt = tokenizer_init(full_prompt)
+            tokenized_full_prompt = tokenizer_init(full_prompt, tokenizer)
             return tokenized_full_prompt
 
     # Using this technique to reduce memory-usage and accelarting inference
-    model = prepare_model_for_kbit_training(model) 
+    # model = prepare_model_for_kbit_training(model) 
 
     # Initialize LoRA
     lora_config = LoraConfig(
@@ -114,7 +114,7 @@ def federated_privacy_learning(
     )
 
     # Get the PEFT model using LoRA
-    model = get_peft_model(model, lora_config)
+    # model = get_peft_model(model, lora_config)
 
     # Initialize before the federated learning starts
     selected_clients = set()
@@ -142,7 +142,6 @@ def federated_privacy_learning(
             print("\nPreparing the local dataset and trainer for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)
             client.trainer_init(
-                tokenizer, 
                 micro_batch_size, 
                 batch_size, 
                 epochs, 
