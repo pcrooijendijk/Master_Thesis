@@ -21,6 +21,7 @@ from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,
     prepare_model_for_kbit_training,
+    get_peft_model,
     LoraConfig,
 )
 
