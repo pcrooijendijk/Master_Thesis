@@ -159,6 +159,7 @@ class Client:
         )   
 
     def train(self) -> None:
+        torch.cuda.empty_cache()
         self.local_trainer.train()
     
     def local_training(self) -> None:
