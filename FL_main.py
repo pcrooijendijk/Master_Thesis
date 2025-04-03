@@ -71,7 +71,7 @@ def federated_privacy_learning(
     tokenizer.padding_side = "left"
 
     # Helper functions for the training process
-    def tokenizer_init(prompt: str,  tokenizer, add_eos_token: bool=True):
+    def tokenizer_init(prompt: str, add_eos_token: bool=True):
             result = tokenizer(
                 prompt,
                 truncation=True,
