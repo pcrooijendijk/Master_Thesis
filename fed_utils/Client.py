@@ -82,7 +82,7 @@ class Client:
         )
 
         # Get the PEFT model using LoRA
-        model = get_peft_model(model, lora_config)
+        self.model = get_peft_model(self.model, lora_config)
     
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
