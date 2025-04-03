@@ -13,6 +13,7 @@ import logging
 from typing import List
 from collections import OrderedDict
 from torch.utils.data import DataLoader
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from sklearn.model_selection import train_test_split
 from opacus import PrivacyEngine
@@ -31,11 +32,12 @@ def client_selection(num_clients, client_frac):
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
 class Client:
-    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model) -> None:
+    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, local_model) -> None:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
-        self.model = model
+        self.local_model = local_model
+        self.model_init()
 
         self.permissions = set()
         self.spaces = set()
@@ -47,6 +49,20 @@ class Client:
 
         self.spaces_permissions_init()
         self.filter_documents()
+    
+    def model_init(self) -> None:
+        self.model = AutoModelForCausalLM.from_pretrained(
+            self.local_model,
+            load_in_8bit=True,
+            torch_dtype=torch.float16,
+            device_map="auto",
+        )
+
+        self.tokenizer = AutoTokenizer.from_pretrained(self.local_model)
+        self.tokenizer.pad_token_id = (
+            0
+        )
+        self.tokenizer.padding_side = "left"
     
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})

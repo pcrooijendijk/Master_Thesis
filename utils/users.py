@@ -83,7 +83,7 @@ class Users():
                     client_id=self.users[user]['id'], 
                     name=user, 
                     user_permissions_resource=user_permissions_resource, 
-                    model=model
+                    local_model=model
                 )
             )
     
