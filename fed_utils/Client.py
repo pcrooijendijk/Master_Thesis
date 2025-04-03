@@ -83,7 +83,7 @@ class Client:
             r=lora_rank, 
             lora_alpha=lora_alpha, 
             target_modules=lora_module, 
-            dropout=lora_dropout, 
+            lora_dropout=lora_dropout, 
             bias="none",
             task_type="CAUSAL_LM"
         )
