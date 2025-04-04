@@ -17,6 +17,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from sklearn.model_selection import train_test_split
 from opacus import PrivacyEngine
+from opacus.grad_sample.grad_sample_module import GradSampleModule
 from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,
@@ -126,15 +127,16 @@ class Client:
 
         # Use differential privacy to ensure a DP algorithm where adding or removing a given element from the dataset, the answer 
         # from our algorithm will not change. This is done by adding Gaussian noise.
-        self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
-            module=self.model,
-            optimizer=optimizer,
-            data_loader=self.local_train_dataloader,
-            target_delta=self.delta,
-            target_epsilon=7.5,
-            epochs=epochs,
-            max_grad_norm=MAX_GRAD_NORM,
-        )
+        if not isinstance(self.model, GradSampleModule):
+            self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
+                module=self.model,
+                optimizer=optimizer,
+                data_loader=self.local_train_dataloader,
+                target_delta=self.delta,
+                target_epsilon=7.5,
+                epochs=epochs,
+                max_grad_norm=MAX_GRAD_NORM,
+            )
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
