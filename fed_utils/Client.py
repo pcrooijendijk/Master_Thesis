@@ -133,6 +133,7 @@ class Client:
 
         # Use differential privacy to ensure a DP algorithm where adding or removing a given element from the dataset, the answer 
         # from our algorithm will not change. This is done by adding Gaussian noise.
+        self.model.train()
         self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
             module=self.model,
             optimizer=optimizer,
@@ -154,7 +155,7 @@ class Client:
         )
 
         # Get the PEFT model using LoRA
-        model = get_peft_model(model, lora_config)
+        self.model = get_peft_model(self.model, lora_config)
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
