@@ -36,11 +36,11 @@ def client_selection(num_clients, client_frac):
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
 class Client:
-    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model) -> None:
+    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource) -> None:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
-        self.model = model
+        # self.model = model
 
         self.permissions = set()
         self.spaces = set()
@@ -219,3 +219,6 @@ class Client:
     
     def get_client_id(self) -> int:
         return self.client_id
+    
+    def set_model(self, model) -> None: 
+        self.model = model

@@ -117,7 +117,7 @@ def federated_privacy_learning(
         selected_clients_index = client_selection(num_clients, client_frac)
 
         # Setting and getting all the clients
-        users.set_clients(user_permissions_resource, model)
+        users.set_clients(user_permissions_resource)
         clients = users.get_clients()
 
         # Get the correct client IDs from all the clients
@@ -142,6 +142,7 @@ def federated_privacy_learning(
 
 
             client = clients[client_id] 
+            client.set_model(model)
             # client.model_init(lora_rank, lora_alpha, lora_dropout, lora_module)
             print("\nPreparing the local dataset and trainer for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)
