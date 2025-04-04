@@ -87,25 +87,6 @@ def federated_privacy_learning(
             tokenized_full_prompt = tokenizer_init(full_prompt)
             return tokenized_full_prompt
 
-    # Using this technique to reduce memory-usage and accelarting inference
-    model = prepare_model_for_kbit_training(model) 
-
-    # Initialize LoRA
-    lora_config = LoraConfig(
-        r=lora_rank, 
-        lora_alpha=lora_alpha, 
-        target_modules=lora_module, 
-        lora_dropout=lora_dropout, 
-        bias="none",
-        task_type="CAUSAL_LM"
-    )
-
-    # Get the PEFT model using LoRA
-    model = get_peft_model(model, lora_config)
-    
-    model.is_parallelizable = True
-    model.model_parallel = True
-
     # Initialize before the federated learning starts
     selected_clients = set()
     last_client = None
@@ -140,6 +121,24 @@ def federated_privacy_learning(
             )
             tokenizer.padding_side = "left"
 
+            # Using this technique to reduce memory-usage and accelarting inference
+            model = prepare_model_for_kbit_training(model) 
+
+            # Initialize LoRA
+            lora_config = LoraConfig(
+                r=lora_rank, 
+                lora_alpha=lora_alpha, 
+                target_modules=lora_module, 
+                lora_dropout=lora_dropout, 
+                bias="none",
+                task_type="CAUSAL_LM"
+            )
+
+            # Get the PEFT model using LoRA
+            model = get_peft_model(model, lora_config)
+            
+            model.is_parallelizable = True
+            model.model_parallel = True
 
             client = clients[client_id] 
             client.set_model(model)
