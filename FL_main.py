@@ -57,19 +57,6 @@ def federated_privacy_learning(
     gradient_steps = batch_size // micro_batch_size
     device_map = "auto"
 
-    model = AutoModelForCausalLM.from_pretrained(
-        global_model,
-        load_in_8bit=True,
-        torch_dtype=torch.float16,
-        device_map=device_map,
-    )
-
-    tokenizer = AutoTokenizer.from_pretrained(global_model)
-    tokenizer.pad_token_id = (
-        0
-    )
-    tokenizer.padding_side = "left"
-
     # Helper functions for the training process
     def tokenizer_init(prompt: str, add_eos_token: bool=True):
             result = tokenizer(
@@ -140,6 +127,20 @@ def federated_privacy_learning(
         server = Server(num_clients=len(clients), global_model=global_model)
 
         for client_id in selected_clients_index: 
+            model = AutoModelForCausalLM.from_pretrained(
+                global_model,
+                load_in_8bit=True,
+                torch_dtype=torch.float16,
+                device_map=device_map,
+            )
+
+            tokenizer = AutoTokenizer.from_pretrained(global_model)
+            tokenizer.pad_token_id = (
+                0
+            )
+            tokenizer.padding_side = "left"
+
+
             client = clients[client_id] 
             # client.model_init(lora_rank, lora_alpha, lora_dropout, lora_module)
             print("\nPreparing the local dataset and trainer for client {}".format(client_id))
@@ -166,6 +167,7 @@ def federated_privacy_learning(
                 )
             
             del client # Ensuring that there is enough space on GPU
+            del model 
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
         model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
