@@ -167,6 +167,8 @@ def federated_privacy_learning(
                 )
             
             del client # Ensuring that there is enough space on GPU
+            # Model to cpu?
+            model.to("cpu")
             del model 
             import gc 
             gc.collect()
