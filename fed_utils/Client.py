@@ -155,7 +155,7 @@ class Client:
         )
 
         # Get the PEFT model using LoRA
-        self.model = get_peft_model(self.model, lora_config)
+        self.model = get_peft_model(self.model._module, lora_config)
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
