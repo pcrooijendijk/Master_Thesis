@@ -183,11 +183,11 @@ class Client:
         self.new_params = OrderedDict(
             (name, param.detach()) for name, param in self.model.named_parameters() if "default" in name
         )
-        self.model.state_dict = (
-            lambda instance, *_, **__: get_peft_model_state_dict(
-                instance, self.new_params, "default"
-            )
-        ).__get__(self.model, type(self.model))
+        # self.model.state_dict = (
+        #     lambda instance, *_, **__: get_peft_model_state_dict(
+        #         instance, self.new_params, "default"
+        #     )
+        # ).__get__(self.model, type(self.model))
     
     def end_local_training(self, epoch, dataset_length, selected_clients, output_dir):
         dataset_length[self.client_id] = len(self.documents)
