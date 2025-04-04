@@ -127,6 +127,7 @@ class Client:
 
         # Use differential privacy to ensure a DP algorithm where adding or removing a given element from the dataset, the answer 
         # from our algorithm will not change. This is done by adding Gaussian noise.
+        print(self.model)
         if not isinstance(self.model, GradSampleModule):
             self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
                 module=self.model,
