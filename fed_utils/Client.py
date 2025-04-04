@@ -121,23 +121,40 @@ class Client:
         self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
         self.delta = 1 / len(self.local_train_dataset)
     
-    def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
+    def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir, 
+        lora_rank: int = 16 , # Lora attention dimension 
+        lora_alpha: int = 16, # The alpha parameter for Lora scaling
+        lora_dropout: float = 0.05, # The dropout probability for Lora layers
+        lora_module: List[str] = [ # The layers which need to be finetuned
+            "q_proj",
+        ],) -> None:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
 
         # Use differential privacy to ensure a DP algorithm where adding or removing a given element from the dataset, the answer 
         # from our algorithm will not change. This is done by adding Gaussian noise.
-        print(self.model)
-        if not isinstance(self.model, GradSampleModule):
-            self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
-                module=self.model,
-                optimizer=optimizer,
-                data_loader=self.local_train_dataloader,
-                target_delta=self.delta,
-                target_epsilon=7.5,
-                epochs=epochs,
-                max_grad_norm=MAX_GRAD_NORM,
-            )
+        self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
+            module=self.model,
+            optimizer=optimizer,
+            data_loader=self.local_train_dataloader,
+            target_delta=self.delta,
+            target_epsilon=7.5,
+            epochs=epochs,
+            max_grad_norm=MAX_GRAD_NORM,
+        )
+
+        # Initialize LoRA
+        lora_config = LoraConfig(
+            r=lora_rank, 
+            lora_alpha=lora_alpha, 
+            target_modules=lora_module, 
+            lora_dropout=lora_dropout, 
+            bias="none",
+            task_type="CAUSAL_LM"
+        )
+
+        # Get the PEFT model using LoRA
+        model = get_peft_model(model, lora_config)
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
