@@ -181,10 +181,15 @@ class Client:
         self.new_params = OrderedDict(
             (name, param.detach()) for name, param in self.model.named_parameters() if "default" in name
         )
+        self.model.state_dict = (
+            lambda instance, *_, **__: get_peft_model_state_dict(
+                instance, self.new_params, "default"
+            )
+        ).__get__(self.model, type(self.model))
     
     def end_local_training(self, epoch, dataset_length, selected_clients, output_dir):
         dataset_length[self.client_id] = len(self.documents)
-        new_weight = self.model.state_dict()
+        new_weight = self.model._module.state_dict()
         output_dir = os.path.join(output_dir, str(epoch), "local_output_{}".format(self.client_id))
         os.makedirs(output_dir, exist_ok=True)
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
