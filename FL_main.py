@@ -102,6 +102,20 @@ def federated_privacy_learning(
 
     # Using this technique to reduce memory-usage and accelarting inference
     model = prepare_model_for_kbit_training(model) 
+
+    # Initialize LoRA
+    lora_config = LoraConfig(
+        r=lora_rank, 
+        lora_alpha=lora_alpha, 
+        target_modules=lora_module, 
+        lora_dropout=lora_dropout, 
+        bias="none",
+        task_type="CAUSAL_LM"
+    )
+
+    # Get the PEFT model using LoRA
+    model = get_peft_model(model, lora_config)
+    
     model.is_parallelizable = True
     model.model_parallel = True
 

@@ -121,19 +121,12 @@ class Client:
         self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
         self.delta = 1 / len(self.local_train_dataset)
     
-    def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir, 
-        lora_rank: int = 16 , # Lora attention dimension 
-        lora_alpha: int = 16, # The alpha parameter for Lora scaling
-        lora_dropout: float = 0.05, # The dropout probability for Lora layers
-        lora_module: List[str] = [ # The layers which need to be finetuned
-            "q_proj",
-        ],) -> None:
+    def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
 
         # Use differential privacy to ensure a DP algorithm where adding or removing a given element from the dataset, the answer 
         # from our algorithm will not change. This is done by adding Gaussian noise.
-        self.model.train()
         self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
             module=self.model,
             optimizer=optimizer,
@@ -143,19 +136,6 @@ class Client:
             epochs=epochs,
             max_grad_norm=MAX_GRAD_NORM,
         )
-
-        # Initialize LoRA
-        lora_config = LoraConfig(
-            r=lora_rank, 
-            lora_alpha=lora_alpha, 
-            target_modules=lora_module, 
-            lora_dropout=lora_dropout, 
-            bias="none",
-            task_type="CAUSAL_LM"
-        )
-
-        # Get the PEFT model using LoRA
-        self.model = get_peft_model(self.model._module, lora_config)
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
