@@ -3,6 +3,7 @@ from utils import SpaceManagement, PromptHelper, Users
 
 import torch
 import fire
+import json
 from typing import List
 import argparse
 from peft import (
@@ -33,6 +34,7 @@ user_permissions_resource = management.get_user_permissions_resource()
 
 # Main federated learning function
 def federated_privacy_learning(
+    selected_clients_index: int,
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
     client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
@@ -53,6 +55,7 @@ def federated_privacy_learning(
     training_on_inputs: bool = True, 
     group_by_length: bool = False,
     template: str = 'Master_Thesis/utils/prompt_template.json', # Prompt template 
+    client_selection_file: str = 'client_selection.json', # JSON file containing the selected clients for FL
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     gradient_steps = batch_size // micro_batch_size
@@ -94,21 +97,25 @@ def federated_privacy_learning(
     dataset_length = dict()
 
     for epoch in tqdm(range(comm_rounds)):
-        print("Selecting clients...")
-        # Selecting the indices of the clients which will be used for FL 
-        selected_clients_index = client_selection(num_clients, client_frac)
+        # Remove the client from the JSON file which will be used for training
+        with open(client_selection_file, 'r') as openfile:
+            selected_clients_index = json.load(openfile)
+            selected_client_index = selected_clients_index.pop()
+
+        with open(client_selection_file, 'w') as openfile:    
+            json.dump(selected_clients_index, openfile)
 
         # Setting and getting all the clients
         users.set_clients(user_permissions_resource)
         clients = users.get_clients()
 
         # Get the correct client IDs from all the clients
-        selected_clients = [clients[index].get_client_id() for index in selected_clients_index]
+        selected_clients = [clients[index].get_client_id() for index in list(selected_client_index)]
 
         # Initialize the server
         server = Server(num_clients=len(clients), global_model=global_model)
 
-        for client_id in selected_clients_index: 
+        for client_id in list(selected_client_index): 
             model = AutoModelForCausalLM.from_pretrained(
                 global_model,
                 load_in_8bit=True,
@@ -175,16 +182,16 @@ def federated_privacy_learning(
             gc.collect()
             torch.cuda.empty_cache()
         
-        print('\nGetting the weights of the clients and send it to the server for aggregation')
-        model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
-        torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
-        lora_config.save_pretrained(output_dir)
-
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--client_id", type=int, required=True)
-#     args = parser.parse_args()
-#     fire.Fire(federated_privacy_learning(args.client_id))
+        # print('\nGetting the weights of the clients and send it to the server for aggregation')
+        # model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
+        # torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
+        # lora_config.save_pretrained(output_dir)
 
 if __name__ == "__main__":
-    fire.Fire(federated_privacy_learning)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--client_id", type=int, required=True)
+    args = parser.parse_args()
+    fire.Fire(federated_privacy_learning(args.client_id))
+
+# if __name__ == "__main__":
+#     fire.Fire(federated_privacy_learning)

@@ -16,8 +16,8 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from sklearn.model_selection import train_test_split
-from opacus import PrivacyEngine
-from opacus.grad_sample.grad_sample_module import GradSampleModule
+# from opacus import PrivacyEngine
+# from opacus.grad_sample.grad_sample_module import GradSampleModule
 from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,

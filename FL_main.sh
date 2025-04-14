@@ -22,5 +22,11 @@ cd /vol/csedu-nobackup/project/prooijendijk
 
 cd /vol/csedu-nobackup/project/prooijendijk/Master_Thesis
 
+#!/bin/bash
+json_file="client_selection.json"
+
+# Get the last element from the array
+last_element=$(jq '.[-1]' "$json_file")
+
 # Commands to run your program go here, e.g.:
-python FL_main.py
+python FL_main.py --client_id $last_element
