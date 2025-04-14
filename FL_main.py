@@ -187,7 +187,4 @@ def federated_privacy_learning(
 #     fire.Fire(federated_privacy_learning(args.client_id))
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--client_id", type=int, required=True)
-    args = parser.parse_args()
-    fire.Fire(federated_privacy_learning(args.client_id))
+    fire.Fire(federated_privacy_learning)
