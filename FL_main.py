@@ -55,7 +55,7 @@ def federated_privacy_learning(
     training_on_inputs: bool = True, 
     group_by_length: bool = False,
     template: str = 'Master_Thesis/utils/prompt_template.json', # Prompt template 
-    client_selection_file: str = 'client_selection.json', # JSON file containing the selected clients for FL
+    client_selection_file: str = 'Master_Thesis/client_selection.json', # JSON file containing the selected clients for FL
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     gradient_steps = batch_size // micro_batch_size
@@ -110,77 +110,76 @@ def federated_privacy_learning(
         clients = users.get_clients()
 
         # Get the correct client IDs from all the clients
-        selected_clients = [clients[selected_client_index].get_client_id()]
+        client_id = [clients[selected_client_index].get_client_id()]
 
         # Initialize the server
         server = Server(num_clients=len(clients), global_model=global_model)
 
-        for client_id in list(selected_client_index): 
-            model = AutoModelForCausalLM.from_pretrained(
-                global_model,
-                load_in_8bit=True,
-                torch_dtype=torch.float16,
-                device_map=device_map,
+        model = AutoModelForCausalLM.from_pretrained(
+            global_model,
+            load_in_8bit=True,
+            torch_dtype=torch.float16,
+            device_map=device_map,
+        )
+
+        tokenizer = AutoTokenizer.from_pretrained(global_model)
+        tokenizer.pad_token_id = (
+            0
+        )
+        tokenizer.padding_side = "left"
+
+        # Using this technique to reduce memory-usage and accelarting inference
+        model = prepare_model_for_kbit_training(model) 
+
+        # Initialize LoRA
+        lora_config = LoraConfig(
+            r=lora_rank, 
+            lora_alpha=lora_alpha, 
+            target_modules=lora_module, 
+            lora_dropout=lora_dropout, 
+            bias="none",
+            task_type="CAUSAL_LM"
+        )
+
+        # Get the PEFT model using LoRA
+        model = get_peft_model(model, lora_config)
+        
+        model.is_parallelizable = True
+        model.model_parallel = True
+
+        client = clients[client_id] 
+        client.set_model(model)
+        # client.model_init(lora_rank, lora_alpha, lora_dropout, lora_module)
+        print("\nPreparing the local dataset and trainer for client {}".format(client_id))
+        client.local_dataset_init(generate_and_tokenize_prompt)
+        client.trainer_init(
+            tokenizer, 
+            micro_batch_size, 
+            batch_size, 
+            epochs, 
+            lr, 
+            group_by_length,
+            output_dir
+        )
+
+        print("\nInitializing the local training of client {}".format(client_id))
+        client.local_training()
+
+        print("\nStarting local training...")
+        client.train()
+
+        print("\nEnding the local training of client {}".format(client_id))
+        dataset_length, selected_clients, last_client = client.end_local_training(
+            epoch, dataset_length, selected_clients, output_dir
             )
-
-            tokenizer = AutoTokenizer.from_pretrained(global_model)
-            tokenizer.pad_token_id = (
-                0
-            )
-            tokenizer.padding_side = "left"
-
-            # Using this technique to reduce memory-usage and accelarting inference
-            model = prepare_model_for_kbit_training(model) 
-
-            # Initialize LoRA
-            lora_config = LoraConfig(
-                r=lora_rank, 
-                lora_alpha=lora_alpha, 
-                target_modules=lora_module, 
-                lora_dropout=lora_dropout, 
-                bias="none",
-                task_type="CAUSAL_LM"
-            )
-
-            # Get the PEFT model using LoRA
-            model = get_peft_model(model, lora_config)
-            
-            model.is_parallelizable = True
-            model.model_parallel = True
-
-            client = clients[client_id] 
-            client.set_model(model)
-            # client.model_init(lora_rank, lora_alpha, lora_dropout, lora_module)
-            print("\nPreparing the local dataset and trainer for client {}".format(client_id))
-            client.local_dataset_init(generate_and_tokenize_prompt)
-            client.trainer_init(
-                tokenizer, 
-                micro_batch_size, 
-                batch_size, 
-                epochs, 
-                lr, 
-                group_by_length,
-                output_dir
-            )
-
-            print("\nInitializing the local training of client {}".format(client_id))
-            client.local_training()
-
-            print("\nStarting local training...")
-            client.train()
-
-            print("\nEnding the local training of client {}".format(client_id))
-            dataset_length, selected_clients, last_client = client.end_local_training(
-                epoch, dataset_length, selected_clients, output_dir
-                )
-            
-            del client # Ensuring that there is enough space on GPU
-            # Model to cpu?
-            model.to("cpu")
-            del model 
-            import gc 
-            gc.collect()
-            torch.cuda.empty_cache()
+        
+        del client # Ensuring that there is enough space on GPU
+        # Model to cpu?
+        model.to("cpu")
+        del model 
+        import gc 
+        gc.collect()
+        torch.cuda.empty_cache()
         
         # print('\nGetting the weights of the clients and send it to the server for aggregation')
         # model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
