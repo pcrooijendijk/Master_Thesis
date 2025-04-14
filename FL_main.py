@@ -4,6 +4,7 @@ from utils import SpaceManagement, PromptHelper, Users
 import torch
 import fire
 from typing import List
+import argparse
 from peft import (
     LoraConfig,
     get_peft_model,
@@ -32,6 +33,7 @@ user_permissions_resource = management.get_user_permissions_resource()
 
 # Main federated learning function
 def federated_privacy_learning(
+    client_id: int,      
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
     client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
@@ -180,4 +182,7 @@ def federated_privacy_learning(
         lora_config.save_pretrained(output_dir)
 
 if __name__ == "__main__":
-    fire.Fire(federated_privacy_learning)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--client_id", type=int, required=True)
+    args = parser.parse_args()
+    fire.Fire(federated_privacy_learning(args.client_id))
