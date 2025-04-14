@@ -18,7 +18,7 @@ global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 output_dir = 'FL_output/'
 
-documents = load_dataset("json", data_files="utils/documents.json")
+documents = load_dataset("json", data_files="Master_Thesis/utils/documents.json")
 
 # Intialize the spaces
 space_names = ["mark", "new", "dev", "HR"]
@@ -33,7 +33,6 @@ user_permissions_resource = management.get_user_permissions_resource()
 
 # Main federated learning function
 def federated_privacy_learning(
-    client_id: int,      
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
     client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
@@ -53,7 +52,7 @@ def federated_privacy_learning(
     ],
     training_on_inputs: bool = True, 
     group_by_length: bool = False,
-    template: str = 'utils/prompt_template.json', # Prompt template 
+    template: str = 'Master_Thesis/utils/prompt_template.json', # Prompt template 
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     gradient_steps = batch_size // micro_batch_size
@@ -180,6 +179,12 @@ def federated_privacy_learning(
         model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
+
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--client_id", type=int, required=True)
+#     args = parser.parse_args()
+#     fire.Fire(federated_privacy_learning(args.client_id))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
