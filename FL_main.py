@@ -110,7 +110,7 @@ def federated_privacy_learning(
         clients = users.get_clients()
 
         # Get the correct client IDs from all the clients
-        client_id = [clients[selected_client_index].get_client_id()]
+        client_id = clients[selected_client_index].get_client_id()
 
         # Initialize the server
         server = Server(num_clients=len(clients), global_model=global_model)
