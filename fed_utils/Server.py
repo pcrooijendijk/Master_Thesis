@@ -39,6 +39,9 @@ class Server:
             gc.collect()
             torch.cuda.empty_cache()
 
+        for k, v in weighted_weights.items():
+            print(k, v.dtype, v.device)
+
         for key in weighted_weights:
             weighted_weights[key] = weighted_weights[key].float().cpu()
 
