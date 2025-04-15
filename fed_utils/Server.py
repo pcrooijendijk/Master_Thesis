@@ -21,6 +21,8 @@ class Server:
             total_output_dir = os.path.join(
                 output_dir, str(epoch), "local_output_{}".format(client_id), "pytorch_model.bin"
             )
+            with torch.no_grad():
+                torch.cuda.empty_cache()
             # Get the weights from the client from the output directory
             weights = torch.load(total_output_dir)
             if k == 0:
@@ -29,7 +31,6 @@ class Server:
             else:
                 weighted_weights = {key: weighted_weights[key] + weights[key] * (weights_array[k])
                                         for key in weights.keys()}
-            torch.cuda.empty_cache()
 
         set_peft_model_state_dict(self.model, weighted_weights, "default")
 
