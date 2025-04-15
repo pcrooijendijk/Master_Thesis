@@ -34,7 +34,6 @@ user_permissions_resource = management.get_user_permissions_resource()
 
 # Main federated learning function
 def federated_privacy_learning(
-    communication_rounds: int,
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
     client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
@@ -183,7 +182,10 @@ def federated_privacy_learning(
         torch.cuda.empty_cache()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--com_rounds", type=int, required=True)
-    args = parser.parse_args()
-    fire.Fire(federated_privacy_learning(args.com_rounds))
+    fire.Fire(federated_privacy_learning)
+
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--com_rounds", type=int, required=True)
+#     args = parser.parse_args()
+#     fire.Fire(federated_privacy_learning(args.com_rounds))
