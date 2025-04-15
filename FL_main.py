@@ -36,7 +36,7 @@ user_permissions_resource = management.get_user_permissions_resource()
 def federated_privacy_learning(
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
-    client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
+    client_frac: float = 0.2, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
     num_clients: int = 10, # Number of clients
     batch_size = 2, # Batch size for the local models
