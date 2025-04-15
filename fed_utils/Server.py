@@ -19,7 +19,7 @@ class Server:
     def setting_peft_model(self) -> None:
         model = AutoModelForCausalLM.from_pretrained(
             self.global_model,
-            load_in_8bit=True,
+            load_in_8bit=False,
             torch_dtype=torch.float16,
             device_map="auto",
             )
