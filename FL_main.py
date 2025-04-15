@@ -100,7 +100,7 @@ def federated_privacy_learning(
         selected_clients_index = client_selection(num_clients, client_frac)
 
         # Setting and getting all the clients
-        users.set_clients(user_permissions_resource, model)
+        users.set_clients(user_permissions_resource)
         clients = users.get_clients()
 
         # Get the correct client IDs from all the clients
