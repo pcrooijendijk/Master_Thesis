@@ -24,7 +24,7 @@ class Server:
             )
 
             # Load weights on CPU, not GPU
-            weights = torch.load(total_output_dir)
+            weights = torch.load(total_output_dir, map_location=torch.device("cpu"))
 
             if k == 0:
                 weighted_weights = {key: weights[key] * weights_array[k] for key in weights}
