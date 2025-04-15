@@ -96,67 +96,54 @@ def federated_privacy_learning(
     last_client = None
     dataset_length = dict()
 
-    # Remove the client from the JSON file which will be used for training
-    with open(client_selection_file, 'r') as openfile:
-        selected_clients_index = json.load(openfile)
-        if not selected_client_index: 
-            aggregate = True
-        else:
-            selected_client_index = selected_clients_index.pop()
+    for epoch in tqdm(range(comm_rounds)):
+        print("Selecting clients...")
+        # Selecting the indices of the clients which will be used for FL 
+        selected_clients_index = client_selection(num_clients, client_frac)
 
-            with open(client_selection_file, 'w') as openfile:    
-                json.dump(selected_clients_index, openfile)
+        # Setting and getting all the clients
+        users.set_clients(user_permissions_resource, model)
+        clients = users.get_clients()
 
-    if aggregate: 
-        print('\nGetting the weights of the clients and send it to the server for aggregation')
-        model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
-        torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
-        lora_config.save_pretrained(output_dir) 
-    
-    else:
-        for epoch in tqdm(range(comm_rounds)):
-            # Setting and getting all the clients
-            users.set_clients(user_permissions_resource)
-            clients = users.get_clients()
+        # Get the correct client IDs from all the clients
+        selected_clients = [clients[index].get_client_id() for index in selected_clients_index]
 
-            # Get the correct client IDs from all the clients
-            client_id = clients[selected_client_index].get_client_id()
+        # Initialize the server
+        server = Server(num_clients=len(clients), global_model=global_model)
 
-            # Initialize the server
-            server = Server(num_clients=len(clients), global_model=global_model)
+        model = AutoModelForCausalLM.from_pretrained(
+            global_model,
+            load_in_8bit=True,
+            torch_dtype=torch.float16,
+            device_map=device_map,
+        )
 
-            model = AutoModelForCausalLM.from_pretrained(
-                global_model,
-                load_in_8bit=True,
-                torch_dtype=torch.float16,
-                device_map=device_map,
-            )
+        tokenizer = AutoTokenizer.from_pretrained(global_model)
+        tokenizer.pad_token_id = (
+            0
+        )
+        tokenizer.padding_side = "left"
 
-            tokenizer = AutoTokenizer.from_pretrained(global_model)
-            tokenizer.pad_token_id = (
-                0
-            )
-            tokenizer.padding_side = "left"
+        # Using this technique to reduce memory-usage and accelarting inference
+        model = prepare_model_for_kbit_training(model) 
 
-            # Using this technique to reduce memory-usage and accelarting inference
-            model = prepare_model_for_kbit_training(model) 
+        # Initialize LoRA
+        lora_config = LoraConfig(
+            r=lora_rank, 
+            lora_alpha=lora_alpha, 
+            target_modules=lora_module, 
+            lora_dropout=lora_dropout, 
+            bias="none",
+            task_type="CAUSAL_LM"
+        )
 
-            # Initialize LoRA
-            lora_config = LoraConfig(
-                r=lora_rank, 
-                lora_alpha=lora_alpha, 
-                target_modules=lora_module, 
-                lora_dropout=lora_dropout, 
-                bias="none",
-                task_type="CAUSAL_LM"
-            )
+        # Get the PEFT model using LoRA
+        model = get_peft_model(model, lora_config)
+        
+        model.is_parallelizable = True
+        model.model_parallel = True
 
-            # Get the PEFT model using LoRA
-            model = get_peft_model(model, lora_config)
-            
-            model.is_parallelizable = True
-            model.model_parallel = True
-
+        for client_id in selected_clients_index:
             client = clients[client_id] 
             client.set_model(model)
             # client.model_init(lora_rank, lora_alpha, lora_dropout, lora_module)
@@ -182,14 +169,19 @@ def federated_privacy_learning(
             dataset_length, selected_clients, last_client = client.end_local_training(
                 epoch, dataset_length, selected_clients, output_dir
                 )
-            
-            del client # Ensuring that there is enough space on GPU
-            # Model to cpu?
-            model.to("cpu")
-            del model 
-            import gc 
-            gc.collect()
-            torch.cuda.empty_cache()
+        
+        print('\nGetting the weights of the clients and send it to the server for aggregation')
+        model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
+        torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
+        lora_config.save_pretrained(output_dir) 
+        
+        del client # Ensuring that there is enough space on GPU
+        # Model to cpu?
+        model.to("cpu")
+        del model 
+        import gc 
+        gc.collect()
+        torch.cuda.empty_cache()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
