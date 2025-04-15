@@ -30,9 +30,6 @@ class Server:
         )
         tokenizer.padding_side = "left"
 
-        # Using this technique to reduce memory-usage and accelarting inference
-        model = prepare_model_for_kbit_training(model) 
-
         # Initialize LoRA
         lora_config = LoraConfig(
             r=16, 
