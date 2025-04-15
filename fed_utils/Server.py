@@ -55,7 +55,7 @@ class Server:
             torch.tensor([dataset_length[int(client_id)] for client_id in selected_clients],
                         dtype=torch.float32), p=1, dim=0)
 
-        for k, client_id in enumerate(selected_clients):
+        for index, client_id in enumerate(selected_clients):
             total_output_dir = os.path.join(
                 output_dir, str(epoch), f"local_output_{client_id}", "pytorch_model.bin"
             )
@@ -66,7 +66,7 @@ class Server:
             for k in weights: 
                 weights[k] = weights[k].float()
 
-            if k == 0:
+            if index == 0:
                 weighted_weights = {key: weights[key] * weights_array[k] for key in weights}
             else:
                 weighted_weights = {
@@ -78,9 +78,6 @@ class Server:
             del weights
             gc.collect()
             torch.cuda.empty_cache()
-
-        for k, v in weighted_weights.items():
-            print(k, v.dtype, v.device)
 
         for key in weighted_weights:
             weighted_weights[key] = weighted_weights[key].float().cpu()
