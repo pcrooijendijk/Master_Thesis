@@ -22,6 +22,7 @@ class Server:
             load_in_8bit=False,
             torch_dtype=torch.float16,
             device_map="auto",
+            llm_int8_enable_fp32_cpu_offload=True,
             )
 
         tokenizer = AutoTokenizer.from_pretrained(self.global_model)
