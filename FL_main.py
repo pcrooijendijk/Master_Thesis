@@ -96,15 +96,15 @@ def federated_privacy_learning(
     last_client = None
     dataset_length = dict()
 
+    # Remove the client from the JSON file which will be used for training
+    with open(client_selection_file, 'r') as openfile:
+        selected_clients_index = json.load(openfile)
+        selected_client_index = selected_clients_index.pop()
+
+    with open(client_selection_file, 'w') as openfile:    
+        json.dump(selected_clients_index, openfile)
+
     for epoch in tqdm(range(comm_rounds)):
-        # Remove the client from the JSON file which will be used for training
-        with open(client_selection_file, 'r') as openfile:
-            selected_clients_index = json.load(openfile)
-            selected_client_index = selected_clients_index.pop()
-
-        with open(client_selection_file, 'w') as openfile:    
-            json.dump(selected_clients_index, openfile)
-
         # Setting and getting all the clients
         users.set_clients(user_permissions_resource)
         clients = users.get_clients()
