@@ -39,6 +39,8 @@ class Server:
             gc.collect()
             torch.cuda.empty_cache()
 
+        for key in weighted_weights:
+            weighted_weights[key] = weighted_weights[key].float().cpu()
 
         set_peft_model_state_dict(model, weighted_weights, "default")
 
