@@ -11,7 +11,7 @@ class Server:
         self.global_model = global_model
         self.num_clients = num_clients
     
-    def FedAvg(self, selected_clients, dataset_length, epoch, output_dir):
+    def FedAvg(self, model, selected_clients, dataset_length, epoch, output_dir):
         # Normalizing the weights of each client
         # TODO: change the following to the pytorch implementation
         weights_array = normalize(
@@ -40,6 +40,6 @@ class Server:
             torch.cuda.empty_cache()
 
 
-        set_peft_model_state_dict(self.model, weighted_weights, "default")
+        set_peft_model_state_dict(model, weighted_weights, "default")
 
-        return self.model
+        return model

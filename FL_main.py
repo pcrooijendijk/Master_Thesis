@@ -168,15 +168,12 @@ def federated_privacy_learning(
                 )
             
             del client # Ensuring that there is enough space on GPU
-            # Model to cpu?
-            model.to("cpu")
-            del model 
             import gc 
             gc.collect()
             torch.cuda.empty_cache()
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
-        model = server.FedAvg(selected_clients, dataset_length, epoch, output_dir)
+        model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir) 
 
