@@ -1,5 +1,6 @@
 import torch
 import os
+import gc
 from torch.nn.functional import normalize
 from peft import (
     set_peft_model_state_dict,
@@ -19,18 +20,25 @@ class Server:
 
         for k, client_id in enumerate(selected_clients):
             total_output_dir = os.path.join(
-                output_dir, str(epoch), "local_output_{}".format(client_id), "pytorch_model.bin"
+                output_dir, str(epoch), f"local_output_{client_id}", "pytorch_model.bin"
             )
-            with torch.no_grad():
-                torch.cuda.empty_cache()
-            # Get the weights from the client from the output directory
-            weights = torch.load(total_output_dir)
+
+            # Load weights on CPU, not GPU
+            weights = torch.load(total_output_dir, map_location='cpu')
+
             if k == 0:
-                weighted_weights = {key: weights[key] * (weights_array[k]) for key in
-                                        weights.keys()}
+                weighted_weights = {key: weights[key] * weights_array[k] for key in weights}
             else:
-                weighted_weights = {key: weighted_weights[key] + weights[key] * (weights_array[k])
-                                        for key in weights.keys()}
+                weighted_weights = {
+                    key: weighted_weights[key] + weights[key] * weights_array[k]
+                    for key in weights
+                }
+
+            # Clean up to avoid GPU memory issues
+            del weights
+            gc.collect()
+            torch.cuda.empty_cache()
+
 
         set_peft_model_state_dict(self.model, weighted_weights, "default")
 
