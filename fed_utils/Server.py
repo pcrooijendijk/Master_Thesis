@@ -82,7 +82,7 @@ class Server:
         for key in weighted_weights:
             weighted_weights[key] = weighted_weights[key].float().cpu()
 
-        self.setting_peft_model()    
+        # self.setting_peft_model()    
 
         set_peft_model_state_dict(self.model, weighted_weights, "default")
 
