@@ -112,7 +112,7 @@ def federated_privacy_learning(
         for client_id in selected_clients_index:
             model = AutoModelForCausalLM.from_pretrained(
             global_model,
-            load_in_8bit=True,
+            load_in_8bit=False,
             torch_dtype=torch.float16,
             device_map=device_map,
             )
