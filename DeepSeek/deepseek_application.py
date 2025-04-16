@@ -6,7 +6,7 @@ import chardet
 import time
 import os
 import re
-import numpy as np
+import pickle
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
@@ -122,6 +122,7 @@ class Processor:
 class DeepSeekApplication:
     def __init__(
         self,
+        client_id: int, 
         ori_model,
         lora_weights_path,
         lora_config_path,
@@ -129,6 +130,7 @@ class DeepSeekApplication:
         chunk_size: int = 500, # Chunk size
         chunk_overlap: int = 50, # Chunk overlap
     ):
+        self.client_id = client_id
         self.ori_model = ori_model
         self.lora_weights_path = lora_weights_path
         self.lora_config_path = lora_config_path
@@ -140,6 +142,9 @@ class DeepSeekApplication:
         self.doc_processor = Processor()
         self.document_store = None
         self.document_metadata = {}
+        
+        with open(self.lora_config_path + "client_{}.pkl".format(self.client_id), "rb") as f:
+            self.client = pickle.load(f)
     
     def init_model(self):
         self.prompter = PromptHelper(self.prompt_template)
@@ -194,8 +199,6 @@ class DeepSeekApplication:
             raise ValueError("There are no documents uploaded.")
         
         try: 
-            question_embedding = self.embeddings.embed_query(question)
-
             scores = self.document_store.similarity_search_with_score(
                 query=question, 
                 k=top_k
@@ -218,52 +221,32 @@ class DeepSeekApplication:
     
     def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None) -> None:
         try:
-            self.doc_chunks = []
-            embedding_vectors = []
+            doc_chunks = []
+
+            def get_doc_chunks(documents: List[str], doc_chunks: List) -> List:
+                for doc in documents:
+                    cleaned_doc = self.preprocess_file(doc)
+                    if cleaned_doc:
+                        chunks = self.text_splitter.split_text(cleaned_doc)
+                        doc_chunks.extend(chunks)
+                    return doc_chunks
             
-            for doc in documents:
-                cleaned_doc = self.preprocess_file(doc)
-                if cleaned_doc:
-                    chunks = self.text_splitter.split_text(cleaned_doc)
-                    self.doc_chunks.extend(chunks)
+            get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
+            get_doc_chunks(self.client.get_documents(), doc_chunks) # Adding the documents of the clients they have access to
 
-                embedding = self.embeddings.embed_query(self.doc_chunks)
-                space_value = 0
-
-                # Adding a binary representation to the embeddings of the spaces
-                if doc['space_key_index'] == 0: 
-                    space_value += 0
-                elif doc['space_key_index'] == 1: 
-                    space_value += 1
-                elif doc['space_key_index'] == 2: 
-                    space_value += 2
-                elif doc['space_key_index'] == 3:
-                    space_value += 3 
-
-                # Adding the binary space representation to the embedding
-                space_vector = np.concatenate([embedding, [space_value]])   
-                embedding_vectors.append(space_vector)
-
-            embedding_list = np.array(embedding_vectors)
-            dim_embeddings = len(embedding_vectors[0]) - 1
-            self.index = FAISS.IndexFlatL2(dim_embeddings + 1)
-            self.index.add(embedding_list)
- 
-            if not self.doc_chunks:
+            if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
             
-            # TODO implement access control via the embeddings
-            
-            # self.document_store = FAISS.from_texts(
-            #     texts=doc_chunks,
-            #     embedding=self.embeddings,
-            #     normalize_L2=True,
-            # )
+            self.document_store = FAISS.from_texts(
+                texts=doc_chunks,
+                embedding=self.embeddings,
+                normalize_L2=True,
+            )
             
             if metadata:
                 self.document_metadata.update(metadata)
             
-            logger.info(f"Successfully loaded {len(self.doc_chunks)} chunks from {len(documents)} documents")
+            logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
             
         except Exception as e:
             logger.error(f"Error loading documents: {str(e)}")

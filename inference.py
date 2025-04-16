@@ -5,6 +5,7 @@ import fire
 from DeepSeek import DeepSeekApplication, Metadata
 
 def run(
+    client_id: int = 1,    
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
     lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
     lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
@@ -13,6 +14,7 @@ def run(
     
     # Initalize a DeepSeek application for processing documents
     deepseek = DeepSeekApplication(
+        client_id, 
         ori_model,
         lora_weights_path,
         lora_config_path,
