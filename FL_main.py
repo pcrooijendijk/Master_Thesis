@@ -1,9 +1,11 @@
-from fed_utils import Client, client_selection, Server
-from utils import Dataset, Document, SpaceManagement, PromptHelper, Users
+from fed_utils import client_selection, Server
+from utils import SpaceManagement, PromptHelper, Users
 
 import torch
 import fire
+import json
 from typing import List
+import argparse
 from peft import (
     LoraConfig,
     get_peft_model,
@@ -34,10 +36,10 @@ user_permissions_resource = management.get_user_permissions_resource()
 def federated_privacy_learning(
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
-    client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
+    client_frac: float = 0.2, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
     num_clients: int = 10, # Number of clients
-    batch_size = 4, # Batch size for the local models
+    batch_size = 2, # Batch size for the local models
     micro_batch_size: int = 1, # Micro batch size for the local models
     epochs: int = 1, # Number of total epochs for the local models to train on
     lr: float = 1e-2, # Learning rate for the local models
@@ -56,19 +58,6 @@ def federated_privacy_learning(
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     gradient_steps = batch_size // micro_batch_size
     device_map = "auto"
-
-    model = AutoModelForCausalLM.from_pretrained(
-        global_model,
-        load_in_8bit=True,
-        torch_dtype=torch.float16,
-        device_map=device_map,
-    )
-
-    tokenizer = AutoTokenizer.from_pretrained(global_model)
-    tokenizer.pad_token_id = (
-        0
-    )
-    tokenizer.padding_side = "left"
 
     # Helper functions for the training process
     def tokenizer_init(prompt: str, add_eos_token: bool=True):
@@ -100,6 +89,24 @@ def federated_privacy_learning(
             tokenized_full_prompt = tokenizer_init(full_prompt)
             return tokenized_full_prompt
 
+    # Initialize before the federated learning starts
+    selected_clients = set()
+    last_client = None
+    dataset_length = dict()
+
+    model = AutoModelForCausalLM.from_pretrained(
+    global_model,
+    load_in_8bit=True,
+    torch_dtype=torch.float16,
+    device_map=device_map,
+    )
+
+    tokenizer = AutoTokenizer.from_pretrained(global_model)
+    tokenizer.pad_token_id = (
+        0
+    )
+    tokenizer.padding_side = "left"
+
     # Using this technique to reduce memory-usage and accelarting inference
     model = prepare_model_for_kbit_training(model) 
 
@@ -115,11 +122,9 @@ def federated_privacy_learning(
 
     # Get the PEFT model using LoRA
     model = get_peft_model(model, lora_config)
-
-    # Initialize before the federated learning starts
-    selected_clients = set()
-    last_client = None
-    dataset_length = dict()
+    
+    model.is_parallelizable = True
+    model.model_parallel = True
 
     for epoch in tqdm(range(comm_rounds)):
         print("Selecting clients...")
@@ -127,7 +132,7 @@ def federated_privacy_learning(
         selected_clients_index = client_selection(num_clients, client_frac)
 
         # Setting and getting all the clients
-        users.set_clients(user_permissions_resource, model)
+        users.set_clients(user_permissions_resource)
         clients = users.get_clients()
 
         # Get the correct client IDs from all the clients
@@ -136,9 +141,11 @@ def federated_privacy_learning(
         # Initialize the server
         server = Server(num_clients=len(clients), global_model=global_model)
 
-        for client_id in selected_clients_index: 
+        for client_id in selected_clients_index:
             client = clients[client_id] 
-            print("\nPreparing the local dataset and trainter for client {}".format(client_id))
+            client.set_model(model)
+            # client.model_init(lora_rank, lora_alpha, lora_dropout, lora_module)
+            print("\nPreparing the local dataset and trainer for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)
             client.trainer_init(
                 tokenizer, 
@@ -157,14 +164,19 @@ def federated_privacy_learning(
             client.train()
 
             print("\nEnding the local training of client {}".format(client_id))
-            model, dataset_length, selected_clients, last_client = client.end_local_training(
+            dataset_length, selected_clients, last_client = client.end_local_training(
                 epoch, dataset_length, selected_clients, output_dir
                 )
+            
+            del client # Ensuring that there is enough space on GPU
+            import gc 
+            gc.collect()
+            torch.cuda.empty_cache()
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
         model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
-        lora_config.save_pretrained(output_dir)
+        lora_config.save_pretrained(output_dir) 
 
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)

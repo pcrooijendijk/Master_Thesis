@@ -1,3 +1,4 @@
+import copy
 from perm_utils import Role
 from typing import List
 from fed_utils import Client
@@ -76,14 +77,14 @@ class Users():
         }
         self.users_names = list(self.users.keys()) # Make a list of the keys 
 
-    def set_clients(self, user_permissions_resource: UserPermissionsResource, model) -> None:
+    def set_clients(self, user_permissions_resource: UserPermissionsResource) -> None:
         for user in self.users:
+            # model_copy = copy.deepcopy(model)
             self.clients.append(
                 Client(
                     client_id=self.users[user]['id'], 
                     name=user, 
-                    user_permissions_resource=user_permissions_resource, 
-                    model=model
+                    user_permissions_resource=user_permissions_resource
                 )
             )
     

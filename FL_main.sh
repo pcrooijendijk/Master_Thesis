@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --account=cseduproject
-#SBATCH --partition=csedu-prio,csedu
-#SBATCH --qos=csedu-small
+#SBATCH --partition=csedu
+#SBATCH --qos=csedu-normal
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=15G
+#SBATCH --mem=30G
 #SBATCH --gres=gpu:1
 #SBATCH --time=2:00:00
 #SBATCH --output=FL-%j.out
@@ -23,4 +23,4 @@ cd /vol/csedu-nobackup/project/prooijendijk
 cd /vol/csedu-nobackup/project/prooijendijk/Master_Thesis
 
 # Commands to run your program go here, e.g.:
-python FL_main.py
+python FL_main.py 

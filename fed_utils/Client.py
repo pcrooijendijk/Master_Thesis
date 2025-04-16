@@ -2,27 +2,32 @@
 
 from perm_utils import Permission
 from perm_utils.UserPermissionManagement import UserPermissionsResource
-from DeepSeek import main as DeepSeek
 
 import os
 import torch
+import torch.nn as nn
 import copy
 import numpy as np
 import transformers
-import subprocess
-from streamlit import runtime
 import logging
 from typing import List
 from collections import OrderedDict
+from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from sklearn.model_selection import train_test_split
+from opacus import PrivacyEngine
+from opacus.grad_sample.grad_sample_module import GradSampleModule
 from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,
+    prepare_model_for_kbit_training,
+    get_peft_model,
+    LoraConfig,
 )
 
 np.random.seed(42)
+MAX_GRAD_NORM = 0.1
 
 logger = logging.getLogger(__name__)
 
@@ -31,22 +36,23 @@ def client_selection(num_clients, client_frac):
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
 class Client:
-    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource, model) -> None:
+    def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource) -> None:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
-        self.model = model
+        # self.model = model
 
         self.permissions = set()
         self.spaces = set()
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
         self.documents = []
+        self.privacy_engine = PrivacyEngine()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.spaces_permissions_init()
         self.filter_documents()
-        # self.intialize_model()
-    
+
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
         for perm in permissions:
@@ -65,25 +71,32 @@ class Client:
             if Permission.VIEWSPACE_PERMISSION.value in self.permissions:
                 self.documents = self.space_manager.get_space(space_key).get_documents()
 
-    def intialize_model(self) -> None:
-        if self.model.lower().contains("deepseek"):
-            if runtime.exists():
-                DeepSeek()
-            else: 
-                # Start a subprocess to start the streamlit interface
-                process = subprocess.Popen(["streamlit", "run", "DeepSeek/run.py"])
-        else: 
-            print("Please indicate a valid model name.")
-
     def local_dataset_init(self, generate_and_tokenize_prompt) -> None:
         X_train, y_test = train_test_split(
             self.documents, test_size=0.7, shuffle=True
         )
-        self.local_train_dataset = map(generate_and_tokenize_prompt, X_train)
-        self.local_eval_dataset = map(generate_and_tokenize_prompt, y_test)
+        # self.local_train_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), X_train))
+        # self.local_eval_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), y_test))
+        self.local_train_dataset = list(map(generate_and_tokenize_prompt, X_train))
+        self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))
+        self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
+        self.delta = 1 / len(self.local_train_dataset)
     
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
+
+        # Use differential privacy to ensure a DP algorithm where adding or removing a given element from the dataset, the answer 
+        # from our algorithm will not change. This is done by adding Gaussian noise.
+        # self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
+        #     module=self.model,
+        #     optimizer=optimizer,
+        #     data_loader=self.local_train_dataloader,
+        #     target_delta=self.delta,
+        #     target_epsilon=7.5,
+        #     epochs=epochs,
+        #     max_grad_norm=MAX_GRAD_NORM,
+        # )
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
@@ -91,7 +104,7 @@ class Client:
             warmup_steps=0,
             num_train_epochs=epochs,
             learning_rate=learning_rate,
-            fp16=True,
+            fp16=False,
             logging_steps=1,
             optim="adamw_torch",
             evaluation_strategy="steps",
@@ -108,21 +121,17 @@ class Client:
         
         self.local_trainer = transformers.Trainer(
             model=self.model,
-            train_dataset=list(self.local_train_dataset),
-            eval_dataset=list(self.local_eval_dataset),
+            train_dataset=self.local_train_dataset,
+            eval_dataset=self.local_eval_dataset,
             args=self.train_args,
             data_collator=transformers.DataCollatorForSeq2Seq(
                 tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
             )
-        )
-    
+        )   
+
     def train(self) -> None:
-        # logger.info("Receiving weights from server.")
-        # parameters = self.server.get_weights()
-        # if not self.documents:
-        #     print(f"Client {self.client_id} has no access to any documents to train the model on.")
-        #     return self.model
-        
+        # Clear CUDA cache
+        torch.cuda.empty_cache()
         self.local_trainer.train()
     
     def local_training(self) -> None:
@@ -150,18 +159,16 @@ class Client:
 
         old_weights = get_peft_model_state_dict(self.model, self.old_params, "default")
         set_peft_model_state_dict(self.model, old_weights, "default")
-        # selected_clients = selected_clients | set({self.client_id})
         last_client_id = self.client_id
 
-        return self.model, dataset_length, selected_clients, last_client_id
+        # Clear CUDA cache
+        torch.cuda.empty_cache()
+        del self.model
 
-    
+        return dataset_length, selected_clients, last_client_id
+
     def get_parameters(self) -> List[np.ndarray]:
         return [val.cpu().numpy() for _, val in self.model.state_dict().items()]
-    
-    def send_update(self):
-        # Encrypt the weights and send them to the global server
-        pass
 
     def get_permissions(self):
         return self.permissions
@@ -174,3 +181,6 @@ class Client:
     
     def get_client_id(self) -> int:
         return self.client_id
+    
+    def set_model(self, model) -> None: 
+        self.model = model
