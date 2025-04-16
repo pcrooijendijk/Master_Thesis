@@ -168,7 +168,7 @@ def federated_privacy_learning(
                 epoch, dataset_length, selected_clients, output_dir
                 )
             
-            with open("client_{}.pkl".format(client_id), "wb") as f:
+            with open(output_dir + "client_{}.pkl".format(client_id), "wb") as f:
                 pickle.dump(client, f)
 
             del client # Ensuring that there is enough space on GPU
