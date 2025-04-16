@@ -220,11 +220,11 @@ class Client:
         self.space_manager = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def __reduce__(self):
-        # Only save safe data, and reinit cleanly
-        return (self.__class__, (self.client_id, self.name, self.documents))
+    # def __reduce__(self):
+    #     # Only save safe data, and reinit cleanly
+    #     return (self.__class__, (self.client_id, self.name, self.documents))
 
-    def reload_resources(self, user_permissions_resource):
-        self.user_permissions_resource = user_permissions_resource
-        self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
-        self.space_manager = self.rest_user_permission_manager.get_space_manager()
+    # def reload_resources(self, user_permissions_resource):
+    #     self.user_permissions_resource = user_permissions_resource
+    #     self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
+    #     self.space_manager = self.rest_user_permission_manager.get_space_manager()
