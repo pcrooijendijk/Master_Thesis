@@ -135,6 +135,7 @@ class Client:
         self.local_trainer.train()
     
     def local_training(self) -> None:
+        self.model.config.use_cache = False
         self.old_params = copy.deepcopy(
             OrderedDict(
                 (name, param.detach()) for name, param in self.model.named_parameters() if "default" in name
@@ -143,16 +144,21 @@ class Client:
         self.new_params = OrderedDict(
             (name, param.detach()) for name, param in self.model.named_parameters() if "default" in name
         )
+        self.model.state_dict = (
+            lambda instance, *_, **__: get_peft_model_state_dict(
+                instance, self.new_params, "default"
+            )
+        ).__get__(self.model, type(self.model))
     
     def end_local_training(self, epoch, dataset_length, selected_clients, output_dir):
         dataset_length[self.client_id] = len(self.documents)
-        new_weight = self.model._module.state_dict()
+        new_weight = self.model.state_dict()
         output_dir = os.path.join(output_dir, str(epoch), "local_output_{}".format(self.client_id))
         os.makedirs(output_dir, exist_ok=True)
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
 
-        old_weights = get_peft_model_state_dict(self.model._module, self.old_params, "default")
-        set_peft_model_state_dict(self.model._module, old_weights, "default")
+        old_weights = get_peft_model_state_dict(self.model, self.old_params, "default")
+        set_peft_model_state_dict(self.model, old_weights, "default")
         last_client_id = self.client_id
 
         # Clear CUDA cache
