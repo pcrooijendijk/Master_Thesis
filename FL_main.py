@@ -32,6 +32,9 @@ users = Users(space_keys)
 management = SpaceManagement(space_names, space_keys, documents, users.get_users())
 user_permissions_resource = management.get_user_permissions_resource()
 
+with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
+    pickle.dump(user_permissions_resource, f)
+
 # Main federated learning function
 def federated_privacy_learning(
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
@@ -181,5 +184,5 @@ def federated_privacy_learning(
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir) 
 
-if __name__ == "__main__":
-    fire.Fire(federated_privacy_learning)
+# if __name__ == "__main__":
+#     fire.Fire(federated_privacy_learning)
