@@ -58,7 +58,8 @@ class Server:
             )
 
             # Load weights on CPU, not GPU
-            weights = torch.load(total_output_dir, map_location=torch.device("cpu"))
+            # weights = torch.load(total_output_dir, map_location=torch.device("cpu"))
+            weights = torch.load(total_output_dir)
 
             # for k in weights: 
             #     weights[k] = weights[k].float()
