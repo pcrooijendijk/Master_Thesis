@@ -82,6 +82,6 @@ class Server:
 
         # self.setting_peft_model()    
 
-        set_peft_model_state_dict(self.model, weighted_weights, "default")
+        set_peft_model_state_dict(model, weighted_weights, "default")
 
         return model
