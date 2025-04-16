@@ -198,3 +198,24 @@ class Client:
     
     def set_model(self, model) -> None: 
         self.model = model
+
+def __getstate__(self):
+    return {
+        "client_id": self.client_id,
+        "name": self.name,
+        "permissions": self.permissions,
+        "spaces": self.spaces,
+        "documents": self.documents,
+    }
+
+def __setstate__(self, state):
+    self.client_id = state["client_id"]
+    self.name = state["name"]
+    self.permissions = state["permissions"]
+    self.spaces = state["spaces"]
+    self.documents = state["documents"]
+    
+    self.user_permissions_resource = None
+    self.rest_user_permission_manager = None
+    self.space_manager = None
+    self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
