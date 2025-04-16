@@ -198,6 +198,10 @@ class Client:
     
     def set_model(self, model) -> None: 
         self.model = model
+    
+    def set_managers(self, user_permissions_resource) -> None: 
+        self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
+        self.space_manager = self.rest_user_permission_manager.get_space_manager()
 
     def __getstate__(self):
         return {

@@ -145,6 +145,11 @@ class DeepSeekApplication:
         
         with open(self.lora_config_path + "/client_{}.pkl".format(self.client_id), "rb") as f:
             self.client = pickle.load(f)
+        
+        with open(self.lora_config_path + "/user_permission_resource.pkl", "rb") as f:
+            user_permissions_resource = pickle.load(f)
+        
+        self.client.set_managers(user_permissions_resource)
     
     def init_model(self):
         self.prompter = PromptHelper(self.prompt_template)
