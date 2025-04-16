@@ -176,6 +176,10 @@ def federated_privacy_learning(
         model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir) 
+        
+        del model
+        gc.collect()
+        torch.cuda.empty_cache()
 
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)
