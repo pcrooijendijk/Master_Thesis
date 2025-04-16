@@ -61,8 +61,8 @@ class Server:
             # Load weights on CPU, not GPU
             weights = torch.load(total_output_dir, map_location=torch.device("cpu"))
 
-            for k in weights: 
-                weights[k] = weights[k].float()
+            # for k in weights: 
+            #     weights[k] = weights[k].float()
 
             if index == 0:
                 weighted_weights = {key: weights[key] * weights_array[index] for key in weights}
@@ -77,10 +77,10 @@ class Server:
             gc.collect()
             torch.cuda.empty_cache()
 
-        for key in weighted_weights:
-            weighted_weights[key] = weighted_weights[key].float().cpu()
+        # for key in weighted_weights:
+        #     weighted_weights[key] = weighted_weights[key].float().cpu()
 
-        self.setting_peft_model()    
+        # self.setting_peft_model()    
 
         set_peft_model_state_dict(self.model, weighted_weights, "default")
 
