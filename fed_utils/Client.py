@@ -37,11 +37,10 @@ class DifferentialPrivacyCallback(transformers.TrainerCallback):
         self.noise_multiplier = noise_multiplier
 
     def on_step_end(self, args, state, control, **kwargs):
-        # Collect valid grads
         norms = [p.grad.norm(2) ** 2 for p in self.lora_params if p.grad is not None]
 
         if not norms:
-            return  # 🔒 Skip step if no LoRA grads present
+            return  
 
         total_norm = torch.sqrt(torch.sum(torch.stack(norms)))
         clip_coef = min(1.0, self.max_grad_norm / (total_norm + 1e-6))
