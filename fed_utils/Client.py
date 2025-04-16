@@ -62,7 +62,6 @@ class Client:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
-        # self.model = model
 
         self.permissions = set()
         self.spaces = set()
@@ -96,8 +95,6 @@ class Client:
         X_train, y_test = train_test_split(
             self.documents, test_size=0.7, shuffle=True
         )
-        # self.local_train_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), X_train))
-        # self.local_eval_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), y_test))
         self.local_train_dataset = list(map(generate_and_tokenize_prompt, X_train))
         self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))
         self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
