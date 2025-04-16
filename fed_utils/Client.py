@@ -13,7 +13,7 @@ import logging
 from typing import List
 from collections import OrderedDict
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import TrainerCallback
 
 from sklearn.model_selection import train_test_split
 from opacus import PrivacyEngine
@@ -34,6 +34,29 @@ logger = logging.getLogger(__name__)
 def client_selection(num_clients, client_frac):
     selected_clients = max(int(client_frac * num_clients), 1)
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
+
+class DifferentialPrivacyCallback(TrainerCallback):
+    def __init__(self, lora_params, max_grad_norm=1.0, noise_multiplier=1.0):
+        self.lora_params = lora_params
+        self.max_grad_norm = max_grad_norm
+        self.noise_multiplier = noise_multiplier
+
+    def on_step_end(self, args, state, control, **kwargs):
+        total_norm = torch.sqrt(sum(
+            p.grad.norm(2).item() ** 2 for p in self.lora_params if p.grad is not None
+        ))
+        clip_coef = min(1.0, self.max_grad_norm / (total_norm + 1e-6))
+
+        for p in self.lora_params:
+            if p.grad is not None:
+                p.grad.data.mul_(clip_coef)
+                noise = torch.normal(
+                    mean=0,
+                    std=self.noise_multiplier * self.max_grad_norm,
+                    size=p.grad.shape,
+                    device=p.grad.device,
+                )
+                p.grad.data.add_(noise)
 
 class Client:
     def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource) -> None:
@@ -84,19 +107,6 @@ class Client:
     
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
-
-        # Use differential privacy to ensure a DP algorithm where adding or removing a given element from the dataset, the answer 
-        # from our algorithm will not change. This is done by adding Gaussian noise.
-        # self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
-        #     module=self.model,
-        #     optimizer=optimizer,
-        #     data_loader=self.local_train_dataloader,
-        #     target_delta=self.delta,
-        #     target_epsilon=7.5,
-        #     epochs=epochs,
-        #     max_grad_norm=MAX_GRAD_NORM,
-        # )
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
@@ -118,7 +128,10 @@ class Client:
             group_by_length=group_by_length,
             dataloader_drop_last=False
         )
-        
+
+        # Getting the LoRA parameters
+        lora_params = [p for n, p in self.model.named_parameters() if p.requires_grad and "lora_" in n]
+
         self.local_trainer = transformers.Trainer(
             model=self.model,
             train_dataset=self.local_train_dataset,
@@ -126,7 +139,14 @@ class Client:
             args=self.train_args,
             data_collator=transformers.DataCollatorForSeq2Seq(
                 tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
-            )
+            ),
+            callbacks=[
+                DifferentialPrivacyCallback(
+                    lora_params=lora_params,
+                    max_grad_norm=1.0,
+                    noise_multiplier=1.0,
+                )
+            ]
         )   
 
     def train(self) -> None:
