@@ -20,9 +20,8 @@ class Server:
         model = AutoModelForCausalLM.from_pretrained(
             self.global_model,
             load_in_8bit=False,
-            torch_dtype=torch.float16,
-            device_map="auto",
-            llm_int8_enable_fp32_cpu_offload=True,
+            torch_dtype=torch.float32,
+            device_map="cpu",
             )
 
         tokenizer = AutoTokenizer.from_pretrained(self.global_model)
@@ -80,8 +79,8 @@ class Server:
         # for key in weighted_weights:
         #     weighted_weights[key] = weighted_weights[key].float().cpu()
 
-        # self.setting_peft_model()    
+        self.setting_peft_model()    
 
-        set_peft_model_state_dict(model, weighted_weights, "default")
+        set_peft_model_state_dict(self.model, weighted_weights, "default")
 
         return model
