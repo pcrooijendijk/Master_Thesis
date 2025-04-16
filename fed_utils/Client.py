@@ -16,14 +16,9 @@ from torch.utils.data import DataLoader
 from transformers import TrainerCallback
 
 from sklearn.model_selection import train_test_split
-from opacus import PrivacyEngine
-from opacus.grad_sample.grad_sample_module import GradSampleModule
 from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,
-    prepare_model_for_kbit_training,
-    get_peft_model,
-    LoraConfig,
 )
 
 np.random.seed(42)
@@ -35,16 +30,20 @@ def client_selection(num_clients, client_frac):
     selected_clients = max(int(client_frac * num_clients), 1)
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
-class DifferentialPrivacyCallback(TrainerCallback):
+class DifferentialPrivacyCallback(transformers.TrainerCallback):
     def __init__(self, lora_params, max_grad_norm=1.0, noise_multiplier=1.0):
         self.lora_params = lora_params
         self.max_grad_norm = max_grad_norm
         self.noise_multiplier = noise_multiplier
 
     def on_step_end(self, args, state, control, **kwargs):
-        total_norm = torch.sqrt(torch.sum(torch.stack([
-            p.grad.norm(2) ** 2 for p in self.lora_params if p.grad is not None
-        ])))
+        # Collect valid grads
+        norms = [p.grad.norm(2) ** 2 for p in self.lora_params if p.grad is not None]
+
+        if not norms:
+            return  # 🔒 Skip step if no LoRA grads present
+
+        total_norm = torch.sqrt(torch.sum(torch.stack(norms)))
         clip_coef = min(1.0, self.max_grad_norm / (total_norm + 1e-6))
 
         for p in self.lora_params:
@@ -70,7 +69,6 @@ class Client:
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
         self.documents = []
-        self.privacy_engine = PrivacyEngine()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.spaces_permissions_init()
