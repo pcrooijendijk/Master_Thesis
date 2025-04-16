@@ -94,6 +94,38 @@ def federated_privacy_learning(
     last_client = None
     dataset_length = dict()
 
+    model = AutoModelForCausalLM.from_pretrained(
+    global_model,
+    load_in_8bit=True,
+    torch_dtype=torch.float16,
+    device_map=device_map,
+    )
+
+    tokenizer = AutoTokenizer.from_pretrained(global_model)
+    tokenizer.pad_token_id = (
+        0
+    )
+    tokenizer.padding_side = "left"
+
+    # Using this technique to reduce memory-usage and accelarting inference
+    model = prepare_model_for_kbit_training(model) 
+
+    # Initialize LoRA
+    lora_config = LoraConfig(
+        r=lora_rank, 
+        lora_alpha=lora_alpha, 
+        target_modules=lora_module, 
+        lora_dropout=lora_dropout, 
+        bias="none",
+        task_type="CAUSAL_LM"
+    )
+
+    # Get the PEFT model using LoRA
+    model = get_peft_model(model, lora_config)
+    
+    model.is_parallelizable = True
+    model.model_parallel = True
+
     for epoch in tqdm(range(comm_rounds)):
         print("Selecting clients...")
         # Selecting the indices of the clients which will be used for FL 
@@ -110,37 +142,6 @@ def federated_privacy_learning(
         server = Server(num_clients=len(clients), global_model=global_model)
 
         for client_id in selected_clients_index:
-            model = AutoModelForCausalLM.from_pretrained(
-            global_model,
-            load_in_8bit=True,
-            torch_dtype=torch.float16,
-            device_map=device_map,
-            )
-
-            tokenizer = AutoTokenizer.from_pretrained(global_model)
-            tokenizer.pad_token_id = (
-                0
-            )
-            tokenizer.padding_side = "left"
-
-            # Using this technique to reduce memory-usage and accelarting inference
-            model = prepare_model_for_kbit_training(model) 
-
-            # Initialize LoRA
-            lora_config = LoraConfig(
-                r=lora_rank, 
-                lora_alpha=lora_alpha, 
-                target_modules=lora_module, 
-                lora_dropout=lora_dropout, 
-                bias="none",
-                task_type="CAUSAL_LM"
-            )
-
-            # Get the PEFT model using LoRA
-            model = get_peft_model(model, lora_config)
-            
-            model.is_parallelizable = True
-            model.model_parallel = True
             client = clients[client_id] 
             client.set_model(model)
             # client.model_init(lora_rank, lora_alpha, lora_dropout, lora_module)
@@ -176,7 +177,7 @@ def federated_privacy_learning(
         model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir) 
-        
+
         del model
         gc.collect()
         torch.cuda.empty_cache()
