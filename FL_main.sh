@@ -13,6 +13,7 @@
 export HF_HOME="/vol/csedu-nobackup/project/prooijendijk/huggingface/cache"
 export HUGGINGFACE_HUB_CACHE="/vol/csedu-nobackup/project/prooijendijk/huggingface/cache"
 export TRITON_CACHE_DIR="vol/csedu-nobackup/project/prooijendijk/triton/cache"
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # Navigate to the project directory
 cd /vol/csedu-nobackup/project/prooijendijk
