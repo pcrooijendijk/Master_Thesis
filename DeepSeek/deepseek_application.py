@@ -143,7 +143,7 @@ class DeepSeekApplication:
         self.document_store = None
         self.document_metadata = {}
         
-        with open(self.lora_config_path + "client_{}.pkl".format(self.client_id), "rb") as f:
+        with open(self.lora_config_path + "/client_{}.pkl".format(self.client_id), "rb") as f:
             self.client = pickle.load(f)
     
     def init_model(self):
