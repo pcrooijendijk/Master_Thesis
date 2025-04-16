@@ -180,9 +180,3 @@ def federated_privacy_learning(
 
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)
-
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--com_rounds", type=int, required=True)
-#     args = parser.parse_args()
-#     fire.Fire(federated_privacy_learning(args.com_rounds))
