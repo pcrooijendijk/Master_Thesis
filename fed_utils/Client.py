@@ -43,7 +43,7 @@ class DifferentialPrivacyCallback(TrainerCallback):
 
     def on_step_end(self, args, state, control, **kwargs):
         total_norm = torch.sqrt(sum(
-            p.grad.norm(2).item() ** 2 for p in self.lora_params if p.grad is not None
+            p.grad.norm(2) ** 2 for p in self.lora_params if p.grad is not None
         ))
         clip_coef = min(1.0, self.max_grad_norm / (total_norm + 1e-6))
 
