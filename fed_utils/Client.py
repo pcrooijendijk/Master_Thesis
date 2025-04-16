@@ -199,32 +199,32 @@ class Client:
     def set_model(self, model) -> None: 
         self.model = model
 
-def __getstate__(self):
-    return {
-        "client_id": self.client_id,
-        "name": self.name,
-        "permissions": self.permissions,
-        "spaces": self.spaces,
-        "documents": self.documents,
-    }
+    def __getstate__(self):
+        return {
+            "client_id": self.client_id,
+            "name": self.name,
+            "permissions": self.permissions,
+            "spaces": self.spaces,
+            "documents": self.documents,
+        }
 
-def __setstate__(self, state):
-    self.client_id = state["client_id"]
-    self.name = state["name"]
-    self.permissions = state["permissions"]
-    self.spaces = state["spaces"]
-    self.documents = state["documents"]
+    def __setstate__(self, state):
+        self.client_id = state["client_id"]
+        self.name = state["name"]
+        self.permissions = state["permissions"]
+        self.spaces = state["spaces"]
+        self.documents = state["documents"]
 
-    self.user_permissions_resource = None
-    self.rest_user_permission_manager = None
-    self.space_manager = None
-    self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.user_permissions_resource = None
+        self.rest_user_permission_manager = None
+        self.space_manager = None
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def __reduce__(self):
-    # Only save safe data, and reinit cleanly
-    return (self.__class__, (self.client_id, self.name, self.documents))
+    def __reduce__(self):
+        # Only save safe data, and reinit cleanly
+        return (self.__class__, (self.client_id, self.name, self.documents))
 
-def reload_resources(self, user_permissions_resource):
-    self.user_permissions_resource = user_permissions_resource
-    self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
-    self.space_manager = self.rest_user_permission_manager.get_space_manager()
+    def reload_resources(self, user_permissions_resource):
+        self.user_permissions_resource = user_permissions_resource
+        self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
+        self.space_manager = self.rest_user_permission_manager.get_space_manager()
