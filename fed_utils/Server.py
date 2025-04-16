@@ -52,30 +52,31 @@ class Server:
             torch.tensor([dataset_length[int(client_id)] for client_id in selected_clients],
                         dtype=torch.float32), p=1, dim=0)
 
-        for index, client_id in enumerate(selected_clients):
-            total_output_dir = os.path.join(
-                output_dir, str(epoch), f"local_output_{client_id}", "pytorch_model.bin"
-            )
+        with torch.no_grad():
+            for index, client_id in enumerate(selected_clients):
+                total_output_dir = os.path.join(
+                    output_dir, str(epoch), f"local_output_{client_id}", "pytorch_model.bin"
+                )
 
-            # Load weights on CPU, not GPU
-            # weights = torch.load(total_output_dir, map_location=torch.device("cpu"))
-            weights = torch.load(total_output_dir)
+                # Load weights on CPU, not GPU
+                # weights = torch.load(total_output_dir, map_location=torch.device("cpu"))
+                weights = torch.load(total_output_dir)
 
-            # for k in weights: 
-            #     weights[k] = weights[k].float()
+                # for k in weights: 
+                #     weights[k] = weights[k].float()
 
-            if index == 0:
-                weighted_weights = {key: weights[key] * weights_array[index] for key in weights}
-            else:
-                weighted_weights = {
-                    key: weighted_weights[key] + weights[key] * weights_array[index]
-                    for key in weights
-                }
+                if index == 0:
+                    weighted_weights = {key: weights[key] * weights_array[index] for key in weights}
+                else:
+                    weighted_weights = {
+                        key: weighted_weights[key] + weights[key] * weights_array[index]
+                        for key in weights
+                    }
 
-            # Clean up to avoid GPU memory issues
-            del weights
-            gc.collect()
-            torch.cuda.empty_cache()
+                # Clean up to avoid GPU memory issues
+                del weights
+                gc.collect()
+                torch.cuda.empty_cache()
 
         # for key in weighted_weights:
         #     weighted_weights[key] = weighted_weights[key].float().cpu()
