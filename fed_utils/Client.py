@@ -13,17 +13,12 @@ import logging
 from typing import List
 from collections import OrderedDict
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import TrainerCallback
 
 from sklearn.model_selection import train_test_split
-from opacus import PrivacyEngine
-from opacus.grad_sample.grad_sample_module import GradSampleModule
 from peft import (
     get_peft_model_state_dict,
     set_peft_model_state_dict,
-    prepare_model_for_kbit_training,
-    get_peft_model,
-    LoraConfig,
 )
 
 np.random.seed(42)
@@ -35,19 +30,44 @@ def client_selection(num_clients, client_frac):
     selected_clients = max(int(client_frac * num_clients), 1)
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
+class DifferentialPrivacyCallback(transformers.TrainerCallback):
+    def __init__(self, lora_params, max_grad_norm=1.0, noise_multiplier=1.0):
+        self.lora_params = lora_params
+        self.max_grad_norm = max_grad_norm
+        self.noise_multiplier = noise_multiplier
+
+    def on_step_end(self, args, state, control, **kwargs):
+        # Collect valid grads
+        norms = [p.grad.norm(2) ** 2 for p in self.lora_params if p.grad is not None]
+
+        if not norms:
+            return  # 🔒 Skip step if no LoRA grads present
+
+        total_norm = torch.sqrt(torch.sum(torch.stack(norms)))
+        clip_coef = min(1.0, self.max_grad_norm / (total_norm + 1e-6))
+
+        for p in self.lora_params:
+            if p.grad is not None:
+                p.grad.data.mul_(clip_coef)
+                noise = torch.normal(
+                    mean=0,
+                    std=self.noise_multiplier * self.max_grad_norm,
+                    size=p.grad.shape,
+                    device=p.grad.device,
+                )
+                p.grad.data.add_(noise)
+
 class Client:
     def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource) -> None:
         self.client_id = client_id
         self.name = name
         self.user_permissions_resource = user_permissions_resource
-        # self.model = model
 
         self.permissions = set()
         self.spaces = set()
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
         self.documents = []
-        self.privacy_engine = PrivacyEngine()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.spaces_permissions_init()
@@ -75,8 +95,6 @@ class Client:
         X_train, y_test = train_test_split(
             self.documents, test_size=0.7, shuffle=True
         )
-        # self.local_train_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), X_train))
-        # self.local_eval_dataset = list(map(lambda x: generate_and_tokenize_prompt(x, self.tokenizer), y_test))
         self.local_train_dataset = list(map(generate_and_tokenize_prompt, X_train))
         self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))
         self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
@@ -84,19 +102,6 @@ class Client:
     
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
         # Use the transformer methods to perform the training steps
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4, eps=1e-8)
-
-        # Use differential privacy to ensure a DP algorithm where adding or removing a given element from the dataset, the answer 
-        # from our algorithm will not change. This is done by adding Gaussian noise.
-        # self.model, optimizer, _ = self.privacy_engine.make_private_with_epsilon(
-        #     module=self.model,
-        #     optimizer=optimizer,
-        #     data_loader=self.local_train_dataloader,
-        #     target_delta=self.delta,
-        #     target_epsilon=7.5,
-        #     epochs=epochs,
-        #     max_grad_norm=MAX_GRAD_NORM,
-        # )
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
@@ -118,7 +123,10 @@ class Client:
             group_by_length=group_by_length,
             dataloader_drop_last=False
         )
-        
+
+        # Getting the LoRA parameters
+        lora_params = [p for n, p in self.model.named_parameters() if p.requires_grad and "lora_" in n]
+
         self.local_trainer = transformers.Trainer(
             model=self.model,
             train_dataset=self.local_train_dataset,
@@ -126,7 +134,14 @@ class Client:
             args=self.train_args,
             data_collator=transformers.DataCollatorForSeq2Seq(
                 tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
-            )
+            ),
+            callbacks=[
+                DifferentialPrivacyCallback(
+                    lora_params=lora_params,
+                    max_grad_norm=1.0,
+                    noise_multiplier=1.0,
+                )
+            ]
         )   
 
     def train(self) -> None:
