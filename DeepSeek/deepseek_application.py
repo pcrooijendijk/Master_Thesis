@@ -209,6 +209,8 @@ class DeepSeekApplication:
                 k=top_k
             )
 
+            print("scores", scores)
+
             relevant_docs = [
                 document.page_content for document, score in scores if score >= sim_threshold
             ]
@@ -277,8 +279,6 @@ class DeepSeekApplication:
         
         try:
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-
-            print("length", len(context_documents))
             
             # Truncate context if it is too long
             combined_context = ' '.join(context_documents)
