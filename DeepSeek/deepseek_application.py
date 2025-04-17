@@ -209,12 +209,15 @@ class DeepSeekApplication:
                 k=top_k
             )
 
-            print("scores", scores)
-
-            relevant_docs = [
+            relevant_chunks = [
                 document.page_content for document, score in scores if score >= sim_threshold
             ]
-
+            
+            # Get the most similar document from the uploaded documents
+            if self.documents: 
+                relevant_docs = [document for document in self.documents for chunk in relevant_chunks if chunk in document]
+            else: # Get the most similar document from the clients documents
+                relevant_docs = [document for document in self.client.get_documents() for chunk in relevant_chunks if chunk in document]
             return relevant_docs
 
         except Exception as e: 
@@ -229,6 +232,7 @@ class DeepSeekApplication:
     def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None) -> None:
         try:
             doc_chunks = []
+            self.documents = documents
 
             def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
                 for doc in documents:
