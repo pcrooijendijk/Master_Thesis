@@ -333,6 +333,7 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
+                print(output)
                 if "end▁of▁sentence" in output:
                     # Do postprocessing on the output because the end of sentence tokens are still in the answer
                     fin_output = re.search(r"\s*(.*?)<｜end▁of▁sentence｜>", output[0], re.DOTALL)
