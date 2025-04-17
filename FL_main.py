@@ -3,7 +3,7 @@ from utils import SpaceManagement, PromptHelper, Users
 
 import torch
 import fire
-import json
+import pickle
 from typing import List
 import argparse
 from peft import (
@@ -31,6 +31,9 @@ users = Users(space_keys)
 # Initialize the spaces, space manager, user accessor, user manager and the space permission manager by using a space management
 management = SpaceManagement(space_names, space_keys, documents, users.get_users())
 user_permissions_resource = management.get_user_permissions_resource()
+
+with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
+    pickle.dump(user_permissions_resource, f)
 
 # Main federated learning function
 def federated_privacy_learning(
@@ -168,6 +171,9 @@ def federated_privacy_learning(
                 epoch, dataset_length, selected_clients, output_dir
                 )
             
+            with open(output_dir + "/client_{}.pkl".format(client_id), "wb") as f:
+                pickle.dump(client, f)
+
             del client # Ensuring that there is enough space on GPU
             import gc 
             gc.collect()

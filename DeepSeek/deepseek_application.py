@@ -6,6 +6,7 @@ import chardet
 import time
 import os
 import re
+import pickle
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
@@ -121,6 +122,7 @@ class Processor:
 class DeepSeekApplication:
     def __init__(
         self,
+        client_id: int, 
         ori_model,
         lora_weights_path,
         lora_config_path,
@@ -128,6 +130,7 @@ class DeepSeekApplication:
         chunk_size: int = 500, # Chunk size
         chunk_overlap: int = 50, # Chunk overlap
     ):
+        self.client_id = client_id
         self.ori_model = ori_model
         self.lora_weights_path = lora_weights_path
         self.lora_config_path = lora_config_path
@@ -139,6 +142,14 @@ class DeepSeekApplication:
         self.doc_processor = Processor()
         self.document_store = None
         self.document_metadata = {}
+        
+        with open(self.lora_config_path + "/client_{}.pkl".format(self.client_id), "rb") as f:
+            self.client = pickle.load(f)
+        
+        with open(self.lora_config_path + "/user_permission_resource.pkl", "rb") as f:
+            user_permissions_resource = pickle.load(f)
+        
+        self.client.set_managers(user_permissions_resource)
     
     def init_model(self):
         self.prompter = PromptHelper(self.prompt_template)
@@ -216,13 +227,18 @@ class DeepSeekApplication:
     def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None) -> None:
         try:
             doc_chunks = []
+
+            def get_doc_chunks(documents: List[str], doc_chunks: List) -> List:
+                for doc in documents:
+                    cleaned_doc = self.preprocess_file(doc)
+                    if cleaned_doc:
+                        chunks = self.text_splitter.split_text(cleaned_doc)
+                        doc_chunks.extend(chunks)
+                    return doc_chunks
             
-            for doc in documents:
-                cleaned_doc = self.preprocess_file(doc)
-                if cleaned_doc:
-                    chunks = self.text_splitter.split_text(cleaned_doc)
-                    doc_chunks.extend(chunks)
-            
+            get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
+            get_doc_chunks(self.client.get_documents(), doc_chunks) # Adding the documents of the clients they have access to
+
             if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
             
@@ -317,7 +333,11 @@ class DeepSeekApplication:
                     )
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
-                return self.prompter.get_response(output)
+                prompter_response = self.prompter.get_response(output)
+                if "end▁of▁sentence" in prompter_response:
+                    # Do postprocessing on the output because the end of sentence tokens are still in the answer
+                    prompter_response = [re.sub(r"<\｜end▁of▁sentence｜>", "", t) for t in [prompter_response]][0]
+                return prompter_response
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")

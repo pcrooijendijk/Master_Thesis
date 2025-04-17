@@ -5,6 +5,7 @@ import fire
 from DeepSeek import DeepSeekApplication, Metadata
 
 def run(
+    client_id: int = 1,    
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
     lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
     lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
@@ -13,6 +14,7 @@ def run(
     
     # Initalize a DeepSeek application for processing documents
     deepseek = DeepSeekApplication(
+        client_id, 
         ori_model,
         lora_weights_path,
         lora_config_path,
@@ -57,7 +59,7 @@ def run(
         # If there are no documents uploaded, generate a prompt without extra context
         else:
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
-        return response['content'], metadata
+        return (response['content'], metadata) if uploaded_documents['files'] or custom_text else (response, metadata)
 
     # The Gradio interface for fetching the question, documents, custom input and parameters
     UI = gr.Interface(

@@ -1,9 +1,14 @@
-import json 
-client_selection_file = 'client_selection.json'
+import re
 
-with open(client_selection_file, 'r') as openfile:
-    selected_clients_index = json.load(openfile)
-    selected_clients_index.pop()
+test = ["DeepSeek Artificial Intelligence Co., Ltd. (deepseek.com) is a Chinese company dedicated to developing and advancing AI technology. The company offers a wide range of AI-related services, including but not limited to, natural language processing, machine learning, computer vision, and robotics. With its strong focus on research and development, deepseek has established itself as a leader in the AI field. For more detailed information, please visit the official website: <https://www.deepseek.com>.<｜end▁of▁sentence｜><｜end▁of▁sentence｜><｜end▁of▁sentence｜><｜end▁of▁sentence｜>"]
+fin_output = re.search(r"\s*(.*?)<｜end▁of▁sentence｜>", test[0], re.DOTALL)
+fin_output = fin_output.group(1).strip()
 
-with open(client_selection_file, 'w') as openfile:    
-    json.dump(selected_clients_index, openfile)
+import re
+
+text = ["DeepSeek Artificial Intelligence Co., Ltd. (deepseek.com) is a Chinese company dedicated to developing and advancing AI technology. The company offers a wide range of AI-related services, including but not limited to, natural language processing, machine learning, computer vision, and robotics. With its strong focus on research and development, deepseek has established itself as a leader in the AI field. For more detailed information, please visit the official website: <https://www.deepseek.com>.<｜end▁of▁sentence｜><｜end▁of▁sentence｜><｜end▁of▁sentence｜><｜end▁of▁sentence｜>"]
+
+# Remove all occurrences of the end-of-sentence token
+cleaned_text = [re.sub(r"<\｜end▁of▁sentence｜>", "", t) for t in text]
+
+print(cleaned_text[0])
