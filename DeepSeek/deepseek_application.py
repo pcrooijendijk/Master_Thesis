@@ -276,71 +276,46 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            if context is True:
-                context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-                
-                # Truncate context if it is too long
-                combined_context = ' '.join(context_documents)
-                if len(combined_context) > max_context_length:
-                    combined_context = combined_context[:max_context_length] + "..."
-                
-                prompt = self.construct_prompt(query, combined_context)
-                inputs = deepseek.tokenizer(prompt, return_tensors="pt")
-                input_ids = inputs["input_ids"].to(device)
-                generation_config = GenerationConfig(
-                    temperature=temp,
-                    top_p=top_p,
-                    top_k=top_k,
-                    num_beams=num_beams
-                )
-                with torch.no_grad():
-                    generated_output = deepseek.model.generate(
-                        input_ids=input_ids,
-                        generation_config=generation_config,
-                        return_dict_in_generate=True,
-                        output_scores=True,
-                        max_new_tokens=max_new_tokens,
-                    )
-                s = generated_output.sequences[0]
-                output = deepseek.tokenizer.decode(s)
-                fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
-                _, _, fin_output = fin_output.group(1).strip().partition("</think>")
+            context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
 
-                answer = {
-                    'content': fin_output.strip(),
-                    'metadata': {
-                        'processing_time': time.time() - start_time,
-                        'context_length': len(combined_context),
-                        'query_length': len(query)
-                    }
-                }
-                return answer
-            elif context is False: # TODO: make this better if-else clause: context should be empty and can be given to generating prompt
-                # If there is no context construct a "normal" prompt
-                prompt = self.prompter.generate_prompt(query, "")
-                inputs = deepseek.tokenizer(prompt, return_tensors="pt")
-                input_ids = inputs["input_ids"].to(device)
-                generation_config = GenerationConfig(
-                    temperature=temp,
-                    top_p=top_p,
-                    top_k=top_k,
-                    num_beams=num_beams
+            print("length", len(context_documents))
+            
+            # Truncate context if it is too long
+            combined_context = ' '.join(context_documents)
+            if len(combined_context) > max_context_length:
+                combined_context = combined_context[:max_context_length] + "..."
+            
+            prompt = self.construct_prompt(query, combined_context)
+            inputs = deepseek.tokenizer(prompt, return_tensors="pt")
+            input_ids = inputs["input_ids"].to(device)
+            generation_config = GenerationConfig(
+                temperature=temp,
+                top_p=top_p,
+                top_k=top_k,
+                num_beams=num_beams
+            )
+            with torch.no_grad():
+                generated_output = deepseek.model.generate(
+                    input_ids=input_ids,
+                    generation_config=generation_config,
+                    return_dict_in_generate=True,
+                    output_scores=True,
+                    max_new_tokens=max_new_tokens,
                 )
-                with torch.no_grad():
-                    generated_output = deepseek.model.generate(
-                        input_ids=input_ids,
-                        generation_config=generation_config,
-                        return_dict_in_generate=True,
-                        output_scores=True,
-                        max_new_tokens=max_new_tokens,
-                    )
-                s = generated_output.sequences[0]
-                output = deepseek.tokenizer.decode(s)
-                prompter_response = self.prompter.get_response(output)
-                if "end▁of▁sentence" in prompter_response:
-                    # Do postprocessing on the output because the end of sentence tokens are still in the answer
-                    prompter_response = [re.sub(r"<\｜end▁of▁sentence｜>", "", t) for t in [prompter_response]][0]
-                return prompter_response
+            s = generated_output.sequences[0]
+            output = deepseek.tokenizer.decode(s)
+            fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
+            _, _, fin_output = fin_output.group(1).strip().partition("</think>")
+
+            answer = {
+                'content': fin_output.strip(),
+                'metadata': {
+                    'processing_time': time.time() - start_time,
+                    'context_length': len(combined_context),
+                    'query_length': len(query)
+                }
+            }
+            return answer
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
