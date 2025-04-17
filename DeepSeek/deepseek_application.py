@@ -335,9 +335,8 @@ class DeepSeekApplication:
                 output = deepseek.tokenizer.decode(s)
                 if "end▁of▁sentence" in output:
                     # Do postprocessing on the output because the end of sentence tokens are still in the answer
-                    fin_output = re.search(r"\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
-                    fin_output = fin_output.group(1).strip()
-                return self.prompter.get_response(output)
+                    cleaned_text = [re.sub(r"<\｜end▁of▁sentence｜>", "", t) for t in output]
+                return output
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
