@@ -58,6 +58,7 @@ def run(
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         # If there are no documents uploaded, generate a prompt without extra context
         else:
+            deepseek.load_documents([], metadata)
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
         return (response['content'], metadata) if uploaded_documents['files'] or custom_text else (response, metadata)
 

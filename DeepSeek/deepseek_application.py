@@ -236,7 +236,8 @@ class DeepSeekApplication:
                         doc_chunks.extend(chunks)
                     return doc_chunks
             
-            get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
+            if documents: 
+                get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
             get_doc_chunks(self.client.get_documents(), doc_chunks) # Adding the documents of the clients they have access to
 
             if not doc_chunks:
