@@ -212,6 +212,8 @@ class DeepSeekApplication:
             relevant_chunks = [
                 document.page_content for document, score in scores if score >= sim_threshold
             ]
+
+            print("chunks", relevant_chunks)
             
             # Get the most similar document from the uploaded documents
             if self.documents: 
