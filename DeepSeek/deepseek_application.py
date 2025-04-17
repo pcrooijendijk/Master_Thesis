@@ -228,9 +228,10 @@ class DeepSeekApplication:
         try:
             doc_chunks = []
 
-            def get_doc_chunks(documents: List[str], doc_chunks: List) -> List:
+            def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
                 for doc in documents:
-                    print(doc)
+                    if dict: 
+                        doc = doc['context']
                     cleaned_doc = self.preprocess_file(doc)
                     if cleaned_doc:
                         chunks = self.text_splitter.split_text(cleaned_doc)
@@ -239,7 +240,7 @@ class DeepSeekApplication:
             
             if documents: 
                 get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
-            get_doc_chunks(self.client.get_documents(), doc_chunks) # Adding the documents of the clients they have access to
+            get_doc_chunks(self.client.get_documents(), doc_chunks, dict=True) # Adding the documents of the clients they have access to
 
             if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
