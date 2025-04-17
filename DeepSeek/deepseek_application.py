@@ -334,6 +334,7 @@ class DeepSeekApplication:
                 s = generated_output.sequences[0]
                 output = deepseek.tokenizer.decode(s)
                 prompter_response = self.prompter.get_response(output)
+                print(prompter_response)
                 if "end▁of▁sentence" in prompter_response:
                     # Do postprocessing on the output because the end of sentence tokens are still in the answer
                     prompter_response = [re.sub(r"<\｜end▁of▁sentence｜>", "", t) for t in prompter_response]
