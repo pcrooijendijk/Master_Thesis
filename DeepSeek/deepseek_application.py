@@ -257,30 +257,30 @@ class DeepSeekApplication:
             print("embedding")
             print("length", len(doc_chunks))
             print("length2", len(self.documents_array))
-            embedding_list = self.embeddings.embed_documents(self.documents_array)
-            print("end embedding")
-            import numpy as np
+            # embedding_list = self.embeddings.embed_documents(self.documents_array)
+            # print("end embedding")
+            # import numpy as np
 
-            dim = len(embedding_list[0])
-            cpu_index = faiss.IndexFlatL2(dim)
-            gpu_res = faiss.StandardGpuResources()
-            gpu_index = faiss.index_cpu_to_gpu(gpu_res, 0, cpu_index)
-            gpu_index.add(np.array(embedding_list).astype("float32"))
+            # dim = len(embedding_list[0])
+            # cpu_index = faiss.IndexFlatL2(dim)
+            # gpu_res = faiss.StandardGpuResources()
+            # gpu_index = faiss.index_cpu_to_gpu(gpu_res, 0, cpu_index)
+            # gpu_index.add(np.array(embedding_list).astype("float32"))
 
-            # Step 3: (Optional) Wrap with LangChain FAISS
-            from langchain.vectorstores.faiss import FAISS as LC_FAISS
-            from langchain.schema import Document
-            print("START")
+            # # Step 3: (Optional) Wrap with LangChain FAISS
+            # from langchain.vectorstores.faiss import FAISS as LC_FAISS
+            # from langchain.schema import Document
+            # print("START")
 
-            documents = [Document(page_content=text) for text in doc_chunks]
-            self.document_store = LC_FAISS(documents, gpu_index, embedding_function=None)
+            # documents = [Document(page_content=text) for text in doc_chunks]
+            # self.document_store = LC_FAISS(documents, gpu_index, embedding_function=None)
 
-            # dimension = len()
+            # # dimension = len()
 
-            print("END")
+            # print("END")
             
             self.document_store = FAISS.from_texts(
-                texts=doc_chunks,
+                texts=self.documents_array,
                 embedding=self.embeddings,
                 normalize_L2=True,
             )
