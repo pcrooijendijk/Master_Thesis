@@ -253,7 +253,7 @@ class DeepSeekApplication:
                 raise ValueError("No valid document content found after processing.")
             
             print("embedding")
-            embedding_list = self.embeddings.embed_documents(doc_chunks)
+            embedding_list = self.embeddings.embed_documents(self.client.get_documents())
             print("end embedding")
             import numpy as np
 
