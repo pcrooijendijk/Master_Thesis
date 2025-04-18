@@ -253,6 +253,10 @@ class DeepSeekApplication:
             print("INTER")
             if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
+
+            embedding_list = self.model.encode(self.client.get_documents(), batch_size=32, show_progress_bar=True)
+
+            # dimension = len()
             
             self.document_store = FAISS.from_texts(
                 texts=doc_chunks,
