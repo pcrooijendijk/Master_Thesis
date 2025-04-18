@@ -259,6 +259,8 @@ class DeepSeekApplication:
                 embedding=self.embeddings,
                 normalize_L2=True,
             )
+
+            print("NEXT INTER")
             
             if metadata:
                 self.document_metadata.update(metadata)
