@@ -249,38 +249,15 @@ class DeepSeekApplication:
             
             if documents: 
                 get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
-            get_doc_chunks(self.client.get_documents(), doc_chunks, dict=True) # Adding the documents of the clients they have access to
+            get_doc_chunks(self.client.get_documents()[:10], doc_chunks, dict=True) # Adding the documents of the clients they have access to
 
             if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
             
             print("embedding")
-            print("length", len(doc_chunks))
-            print("length2", len(self.documents_array))
-            # embedding_list = self.embeddings.embed_documents(self.documents_array)
-            # print("end embedding")
-            # import numpy as np
-
-            # dim = len(embedding_list[0])
-            # cpu_index = faiss.IndexFlatL2(dim)
-            # gpu_res = faiss.StandardGpuResources()
-            # gpu_index = faiss.index_cpu_to_gpu(gpu_res, 0, cpu_index)
-            # gpu_index.add(np.array(embedding_list).astype("float32"))
-
-            # # Step 3: (Optional) Wrap with LangChain FAISS
-            # from langchain.vectorstores.faiss import FAISS as LC_FAISS
-            # from langchain.schema import Document
-            # print("START")
-
-            # documents = [Document(page_content=text) for text in doc_chunks]
-            # self.document_store = LC_FAISS(documents, gpu_index, embedding_function=None)
-
-            # # dimension = len()
-
-            # print("END")
             
             self.document_store = FAISS.from_texts(
-                texts=self.documents_array,
+                texts=doc_chunks,
                 embedding=self.embeddings,
                 normalize_L2=True,
             )
