@@ -7,6 +7,7 @@ import time
 import os
 import re
 import pickle
+import faiss
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
@@ -253,8 +254,21 @@ class DeepSeekApplication:
             print("INTER")
             if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
+            
+            embedding_list = self.embeddings.embed_documents(doc_chunks)
 
-            embedding_list = self.model.encode(self.client.get_documents(), batch_size=32, show_progress_bar=True)
+            dim = len(embedded_vectors[0])
+            cpu_index = faiss.IndexFlatL2(dim)
+            gpu_res = faiss.StandardGpuResources()
+            gpu_index = faiss.index_cpu_to_gpu(gpu_res, 0, cpu_index)
+            gpu_index.add(np.array(embedded_vectors).astype("float32"))
+
+            # Step 3: (Optional) Wrap with LangChain FAISS
+            from langchain.vectorstores.faiss import FAISS as LC_FAISS
+            from langchain.schema import Document
+
+            documents = [Document(page_content=text) for text in doc_chunks]
+            self.document_store = LC_FAISS(documents, gpu_index, embedding_function=None)
 
             # dimension = len()
             
