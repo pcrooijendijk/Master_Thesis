@@ -254,15 +254,11 @@ class DeepSeekApplication:
             if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
             
-            print("embedding")
-            
             self.document_store = FAISS.from_texts(
                 texts=doc_chunks,
                 embedding=self.embeddings,
                 normalize_L2=True,
             )
-
-            print("NEXT INTER")
             
             if metadata:
                 self.document_metadata.update(metadata)
@@ -290,6 +286,7 @@ class DeepSeekApplication:
         
         try:
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
+            print(context_documents)
             
             # Truncate context if it is too long
             combined_context = ' '.join(context_documents)
