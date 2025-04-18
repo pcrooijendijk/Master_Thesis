@@ -245,7 +245,7 @@ class DeepSeekApplication:
                     if cleaned_doc:
                         chunks = self.text_splitter.split_text(cleaned_doc)
                         doc_chunks.extend(chunks)
-                    return doc_chunks
+                return doc_chunks
             
             if documents: 
                 get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
