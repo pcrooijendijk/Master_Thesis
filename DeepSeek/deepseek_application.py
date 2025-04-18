@@ -267,11 +267,14 @@ class DeepSeekApplication:
             # Step 3: (Optional) Wrap with LangChain FAISS
             from langchain.vectorstores.faiss import FAISS as LC_FAISS
             from langchain.schema import Document
+            print("START")
 
             documents = [Document(page_content=text) for text in doc_chunks]
             self.document_store = LC_FAISS(documents, gpu_index, embedding_function=None)
 
             # dimension = len()
+
+            print("END")
             
             self.document_store = FAISS.from_texts(
                 texts=doc_chunks,
