@@ -238,8 +238,10 @@ class DeepSeekApplication:
             self.documents = documents
             self.documents_array = []
 
-            def get_doc_chunks(documents: List[str], doc_chunks: List) -> List:
+            def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
                 for doc in documents:
+                    if dict: 
+                        doc = doc['context']
                     cleaned_doc = self.preprocess_file(doc)
                     if cleaned_doc:
                         chunks = self.text_splitter.split_text(cleaned_doc)
