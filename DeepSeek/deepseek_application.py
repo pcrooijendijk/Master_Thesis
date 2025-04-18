@@ -234,6 +234,7 @@ class DeepSeekApplication:
         try:
             doc_chunks = []
             self.documents = documents
+            self.documents_array = []
 
             def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
                 for doc in documents:
@@ -243,17 +244,18 @@ class DeepSeekApplication:
                     if cleaned_doc:
                         chunks = self.text_splitter.split_text(cleaned_doc)
                         doc_chunks.extend(chunks)
+                    self.documents_array.append(doc)
                 return doc_chunks
             
             if documents: 
                 get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
             get_doc_chunks(self.client.get_documents(), doc_chunks, dict=True) # Adding the documents of the clients they have access to
-            print("INTER")
+
             if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
             
             print("embedding")
-            embedding_list = self.embeddings.embed_documents(self.client.get_documents())
+            embedding_list = self.embeddings.embed_documents(self.documents_array)
             print("end embedding")
             import numpy as np
 
