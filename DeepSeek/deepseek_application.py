@@ -256,12 +256,13 @@ class DeepSeekApplication:
                 raise ValueError("No valid document content found after processing.")
             
             embedding_list = self.embeddings.embed_documents(doc_chunks)
+            import numpy as np
 
-            dim = len(embedded_vectors[0])
+            dim = len(embedding_list[0])
             cpu_index = faiss.IndexFlatL2(dim)
             gpu_res = faiss.StandardGpuResources()
             gpu_index = faiss.index_cpu_to_gpu(gpu_res, 0, cpu_index)
-            gpu_index.add(np.array(embedded_vectors).astype("float32"))
+            gpu_index.add(np.array(embedding_list).astype("float32"))
 
             # Step 3: (Optional) Wrap with LangChain FAISS
             from langchain.vectorstores.faiss import FAISS as LC_FAISS
