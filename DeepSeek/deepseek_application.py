@@ -237,38 +237,20 @@ class DeepSeekApplication:
             doc_chunks = []
             self.documents = documents
 
-            # def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
-            #     for doc in documents:
-            #         if dict: 
-            #             doc = doc['context']
-            #         cleaned_doc = self.preprocess_file(doc)
-            #         if cleaned_doc:
-            #             chunks = self.text_splitter.split_text(cleaned_doc)
-            #             doc_chunks.extend(chunks)
-            #     return doc_chunks
             def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
-                for i, doc in enumerate(documents):
-                    if dict:
-                        doc = doc.get('context', '')
-                    print(f"\n[Document {i}] Raw input: {doc[:100]}")
-
+                for doc in documents:
+                    if dict: 
+                        doc = doc['context']
                     cleaned_doc = self.preprocess_file(doc)
-                    if not cleaned_doc:
-                        print(f"[Document {i}] Cleaned doc is EMPTY after preprocessing.")
-                        continue
-
-                    print(f"[Document {i}] Cleaned: {cleaned_doc[:100]}")
-                    chunks = self.text_splitter.split_text(cleaned_doc)
-                    print(f"[Document {i}] Num chunks: {len(chunks)}")
-
-                    doc_chunks.extend(chunks)
+                    if cleaned_doc:
+                        chunks = self.text_splitter.split_text(cleaned_doc)
+                        doc_chunks.extend(chunks)
                 return doc_chunks
-
             
             if documents: 
                 get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
             get_doc_chunks(self.client.get_documents(), doc_chunks, dict=True) # Adding the documents of the clients they have access to
-
+            print("INTER")
             if not doc_chunks:
                 raise ValueError("No valid document content found after processing.")
             
