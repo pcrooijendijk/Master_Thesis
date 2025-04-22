@@ -210,8 +210,7 @@ class DeepSeekApplication:
                 query=question, 
                 k=top_k
             )
-            print(scores)
-            print(scores[0].page_content)
+            print("Page content", scores[0].page_content)
 
             relevant_docs = [
                 document.page_content for document, score in scores if score >= sim_threshold
