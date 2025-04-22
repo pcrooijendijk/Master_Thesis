@@ -60,7 +60,7 @@ def run(
         else:
             deepseek.load_documents([], metadata)
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
-        return (response['content'], metadata) if uploaded_documents['files'] or custom_text else (response, metadata)
+        return (response['content'], metadata) if uploaded_documents['files'] or custom_text else (response['content'], response['metadata'])
 
     # The Gradio interface for fetching the question, documents, custom input and parameters
     UI = gr.Interface(

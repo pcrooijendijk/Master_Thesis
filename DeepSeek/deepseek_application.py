@@ -304,11 +304,9 @@ class DeepSeekApplication:
                 )
             s = generated_output.sequences[0]
             output = deepseek.tokenizer.decode(s)
-            print("output", output)
-            print("post processing", self.post_processing(output))
 
             answer = {
-                'content': output,
+                'content': self.post_processing(output),
                 'metadata': {
                     'processing_time': time.time() - start_time,
                     'context_length': len(combined_context),
