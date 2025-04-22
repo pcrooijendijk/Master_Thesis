@@ -235,7 +235,7 @@ class DeepSeekApplication:
             def loading_documents(documents: List, documents_array: List, dict: bool = False):
                 # Getting the documents content into the Document Langchain object
                 if dict: 
-                    documents_array.append(
+                    documents_array = (
                         Document(
                             page_content=doc["context"], 
                             metadata={"space_key_index": doc["space_key_index"]}
@@ -243,7 +243,7 @@ class DeepSeekApplication:
                         for doc in documents
                     )
                 else: 
-                    documents_array.append(
+                    documents_array = (
                         Document(
                             page_content=doc, 
                             metadata=metadata
