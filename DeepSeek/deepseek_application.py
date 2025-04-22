@@ -305,11 +305,11 @@ class DeepSeekApplication:
             s = generated_output.sequences[0]
             output = deepseek.tokenizer.decode(s)
             print("output", output)
-            fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
-            _, _, fin_output = fin_output.group(1).strip().partition("</think>")
+            # fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
+            # _, _, fin_output = fin_output.group(1).strip().partition("</think>")
 
             answer = {
-                'content': fin_output.strip(),
+                'content': output,
                 'metadata': {
                     'processing_time': time.time() - start_time,
                     'context_length': len(combined_context),
@@ -325,18 +325,22 @@ class DeepSeekApplication:
     def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
         return f"""
-        Context Information:
+        You are given a context document and a related question. Your task is to generate a comprehensive answer based on the context.
+
+        Context:
         {context}
 
-        Question: {query}
+        Question:
+        {query}
 
-        Please provide a comprehensive answer based on the context above. Consider:
-        1. Direct relevance to the question
-        2. Accuracy of information
-        3. Completeness of response
-        4. Clarity and coherence
+        Instructions:
+        - Answer based only on the given context if it's relevant.
+        - If the context is insufficient or empty, provide the best answer using your own knowledge.
+        - Ensure your answer is:
+        1. Directly relevant
+        2. Accurate and fact-based
+        3. Complete and informative
+        4. Clear and well-structured
 
-        If the given context does not provide enough information or is empty, then give an answer without the context.
-
-        Answer:
+        Final Answer:
         """
