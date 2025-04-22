@@ -249,6 +249,7 @@ class DeepSeekApplication:
                         doc = doc['context']
                     self.documents_array.append(Document(
                         page_content=doc,
+                        metadata,
                     ))
             
             index = faiss.IndexFlatL2(len(self.embeddings.embed_query("hello world")))
