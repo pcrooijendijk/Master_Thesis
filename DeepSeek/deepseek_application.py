@@ -285,7 +285,7 @@ class DeepSeekApplication:
             # if len(combined_context) > max_context_length:
             #     combined_context = combined_context[:max_context_length] + "..."
             
-            prompt = self.construct_prompt(query, combined_context)
+            prompt = self.construct_prompt(query, context_documents)
             print("prompt", prompt)
             inputs = deepseek.tokenizer(prompt, return_tensors="pt")
             input_ids = inputs["input_ids"].to(device)
