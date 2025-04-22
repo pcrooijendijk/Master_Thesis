@@ -16,6 +16,7 @@ from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_core.documents import Document
 
 from peft import (
     PeftModel,
@@ -179,7 +180,7 @@ class DeepSeekApplication:
             'batch_size': 8
         }
         self.embeddings = HuggingFaceEmbeddings(
-            model_name=self.ori_model, 
+            model_name="BAAI/bge-small-en-v1.5", # Embedding is different from the original model due to efficient embedding usage
             model_kwargs=model_kwargs,
             encode_kwargs=encode_kwargs
         )
@@ -211,10 +212,10 @@ class DeepSeekApplication:
             )
             print(scores)
 
-            relevant_chunks = [
+            relevant_docs = [
                 document.page_content for document, score in scores if score >= sim_threshold
             ]
-            return relevant_chunks
+            return relevant_docs
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -231,28 +232,41 @@ class DeepSeekApplication:
             self.documents = documents
             self.documents_array = []
 
-            def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
-                for doc in documents:
-                    if dict: 
-                        doc = doc['context']
-                    cleaned_doc = self.preprocess_file(doc)
-                    if cleaned_doc:
-                        chunks = self.text_splitter.split_text(cleaned_doc)
-                        doc_chunks.extend(chunks)
-                return doc_chunks
+            def loading_documents(documents: List, dict: bool = False):
+                # Getting the documents content into the Document Langchain object
+                if dict: 
+                    self.documents_array.append(
+                        Document(
+                            page_content=doc["context"], 
+                            metadata={"space_key_index": doc["space_key_index"]}
+                        )
+                        for doc in documents
+                    )
+                else: 
+                    self.documents_array.append(
+                        Document(
+                            page_content=doc, 
+                            metadata=metadata
+                        )
+                        for doc in documents
+                    )
+
+            # def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
+            #     for doc in documents:
+            #         if dict: 
+            #             doc = doc['context']
+            #         cleaned_doc = self.preprocess_file(doc)
+            #         if cleaned_doc:
+            #             chunks = self.text_splitter.split_text(cleaned_doc)
+            #             doc_chunks.extend(chunks)
+            #     return doc_chunks
             
             if documents: 
-                get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
-            get_doc_chunks(self.client.get_documents()[:10], doc_chunks, dict=True) # Adding the documents of the clients they have access to
+                loading_documents(documents) # Adding additional documents to the chunks
+            loading_documents(self.client.get_documents(), dict=True) # Adding the documents of the clients they have access to
 
-            if not doc_chunks:
-                raise ValueError("No valid document content found after processing.")
-            
-            self.document_store = FAISS.from_texts(
-                texts=doc_chunks,
-                embedding=self.embeddings,
-                normalize_L2=True,
-            )
+            splitted_docs = self.splitter.split_documents(self.documents_array)
+            self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             
             if metadata:
                 self.document_metadata.update(metadata)
