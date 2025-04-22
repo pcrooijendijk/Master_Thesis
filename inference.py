@@ -96,7 +96,7 @@ def run(
                 minimum=1, maximum=4, step=1, value=4, label="Beams"
             ),
             gr.components.Slider(
-                minimum=1, maximum=2000, step=1, value=500, label="Max tokens"
+                minimum=1, maximum=2000, step=1, value=1500, label="Max tokens"
             ),
         ],
         outputs=[

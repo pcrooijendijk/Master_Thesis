@@ -281,9 +281,8 @@ class DeepSeekApplication:
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
             
             # Truncate context if it is too long
-            combined_context = ' '.strip()
-            # if len(combined_context) > max_context_length:
-            #     combined_context = combined_context[:max_context_length] + "..."
+            if len(context_documents) > max_context_length:
+                combined_context = context_documents[:max_context_length] + "..."
             
             prompt = self.construct_prompt(query, combined_context)
             print("prompt", prompt)
@@ -305,6 +304,7 @@ class DeepSeekApplication:
                 )
             s = generated_output.sequences[0]
             output = deepseek.tokenizer.decode(s)
+            print("output", output)
             fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
             _, _, fin_output = fin_output.group(1).strip().partition("</think>")
 
