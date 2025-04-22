@@ -283,8 +283,8 @@ class DeepSeekApplication:
             
             # Truncate context if it is too long
             combined_context = ' '.join(context_documents)
-            # if len(combined_context) > max_context_length:
-            #     combined_context = combined_context[:max_context_length] + "..."
+            if len(combined_context) > max_context_length:
+                combined_context = combined_context[:max_context_length] + "..."
             
             prompt = self.construct_prompt(query, combined_context)
             print("prompt", prompt)
