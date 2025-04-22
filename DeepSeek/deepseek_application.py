@@ -265,7 +265,7 @@ class DeepSeekApplication:
                 loading_documents(documents) # Adding additional documents to the chunks
             loading_documents(self.client.get_documents(), dict=True) # Adding the documents of the clients they have access to
 
-            splitted_docs = self.splitter.split_documents(self.documents_array)
+            splitted_docs = self.text_splitter.split_documents(self.documents_array)
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             
             if metadata:
