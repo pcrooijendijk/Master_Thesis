@@ -230,12 +230,12 @@ class DeepSeekApplication:
         try:
             doc_chunks = []
             self.documents = documents
-            self.documents_array = []
+            documents_array = []
 
-            def loading_documents(documents: List, dict: bool = False):
+            def loading_documents(documents: List, documents_array: List, dict: bool = False):
                 # Getting the documents content into the Document Langchain object
                 if dict: 
-                    self.documents_array.append(
+                    documents_array.append(
                         Document(
                             page_content=doc["context"], 
                             metadata={"space_key_index": doc["space_key_index"]}
@@ -243,13 +243,14 @@ class DeepSeekApplication:
                         for doc in documents
                     )
                 else: 
-                    self.documents_array.append(
+                    documents_array.append(
                         Document(
                             page_content=doc, 
                             metadata=metadata
                         )
                         for doc in documents
                     )
+                return documents_array
 
             # def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
             #     for doc in documents:
@@ -262,10 +263,10 @@ class DeepSeekApplication:
             #     return doc_chunks
             
             if documents: 
-                loading_documents(documents) # Adding additional documents to the chunks
-            loading_documents(self.client.get_documents(), dict=True) # Adding the documents of the clients they have access to
+                documents_array = loading_documents(documents, documents_array) # Adding additional documents to the chunks
+            documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
 
-            splitted_docs = self.text_splitter.split_documents(self.documents_array)
+            splitted_docs = self.text_splitter.split_documents(documents_array)
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             
             if metadata:
