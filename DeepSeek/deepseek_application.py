@@ -222,7 +222,7 @@ class DeepSeekApplication:
                 relevant_docs = [document for document in self.documents for chunk in relevant_chunks if chunk in document]
             else: # Get the most similar document from the clients documents
                 relevant_docs = [document for document in self.client.get_documents() for chunk in relevant_chunks if chunk in document]
-            return relevant_docs
+            return relevant_chunks
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
