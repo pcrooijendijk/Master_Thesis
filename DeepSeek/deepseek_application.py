@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
@@ -129,8 +129,8 @@ class DeepSeekApplication:
         lora_weights_path,
         lora_config_path,
         prompt_template,
-        chunk_size: int = 500, # Chunk size
-        chunk_overlap: int = 50, # Chunk overlap
+        chunk_size: int = 1000, # Chunk size
+        chunk_overlap: int = 0, # Chunk overlap
     ):
         self.client_id = client_id
         self.ori_model = ori_model
@@ -164,11 +164,9 @@ class DeepSeekApplication:
             device_map="auto",
         )
 
-        self.text_splitter = RecursiveCharacterTextSplitter(
+        self.text_splitter = CharacterTextSplitter(
             chunk_size=self.chunk_size, 
             chunk_overlap=self.chunk_overlap,
-            length_function=len,
-            separators=["\n\n", "\n", ". ", " ", ""]
         )
 
         model_kwargs = {
