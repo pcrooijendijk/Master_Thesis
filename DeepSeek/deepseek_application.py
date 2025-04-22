@@ -8,10 +8,7 @@ import os
 import re
 import pickle
 import faiss
-from uuid import uuid4
 from langchain_community.vectorstores import FAISS   
-from langchain_community.docstore.in_memory import InMemoryDocstore
-from langchain_community.vectorstores import FAISS
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 
@@ -19,7 +16,6 @@ from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_core.documents import Document
 
 from peft import (
     PeftModel,
@@ -236,46 +232,21 @@ class DeepSeekApplication:
             self.documents_array = []
 
             def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
-                # for doc in documents:
-                #     if dict: 
-                #         doc = doc['context']
-                #     cleaned_doc = self.preprocess_file(doc)
-                #     if cleaned_doc:
-                #         chunks = self.text_splitter.split_text(cleaned_doc)
-                #         doc_chunks.extend(chunks)
-                # return doc_chunks
-                for doc in documents: 
+                for doc in documents:
                     if dict: 
                         doc = doc['context']
-                    self.documents_array.append(Document(
-                        page_content=doc,
-                        metadata=metadata,
-                    ))
+                    cleaned_doc = self.preprocess_file(doc)
+                    if cleaned_doc:
+                        chunks = self.text_splitter.split_text(cleaned_doc)
+                        doc_chunks.extend(chunks)
+                return doc_chunks
             
             if documents: 
                 get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
             get_doc_chunks(self.client.get_documents()[:10], doc_chunks, dict=True) # Adding the documents of the clients they have access to
 
-            # if not doc_chunks:
-            #     raise ValueError("No valid document content found after processing.")
-            
-            index = faiss.IndexFlatL2(len(self.embeddings.embed_query("hello world")))
-            vector_store = FAISS(
-                embedding_function=self.embeddings,
-                index=index,
-                docstore=InMemoryDocstore(),
-                index_to_docstore_id={},
-            )
-
-            uuids = [str(uuid4()) for _ in range(len(self.documents_array))]
-            vector_store.add_documents(documents=self.documents_array, ids=uuids)
-
-            results = vector_store.similarity_search(
-                "Are LIME and Alvarez-Melis and Jaakkola (2017) methods dependent on model properties?",
-                k=2,
-            )
-            for res in results:
-                print(f"* {res.page_content} [{res.metadata}]")
+            if not doc_chunks:
+                raise ValueError("No valid document content found after processing.")
             
             self.document_store = FAISS.from_texts(
                 texts=doc_chunks,
