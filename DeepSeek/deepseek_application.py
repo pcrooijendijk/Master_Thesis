@@ -334,11 +334,12 @@ class DeepSeekApplication:
         Instructions:
         - Answer based only on the given context if it's relevant.
         - If the context is insufficient or empty, provide the best answer using your own knowledge.
+        - Based on the context above, explain your answer in complete sentences.
         - Ensure your answer is:
         1. Directly relevant
         2. Accurate and fact-based
         3. Complete and informative
         4. Clear and well-structured
 
-        Final Answer:
+        Please answer in a full sentence without using boxed notation or letter choices.:
         """
