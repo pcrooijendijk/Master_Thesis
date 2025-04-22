@@ -305,8 +305,8 @@ class DeepSeekApplication:
             s = generated_output.sequences[0]
             output = deepseek.tokenizer.decode(s)
             print("output", output)
-            # fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
-            # _, _, fin_output = fin_output.group(1).strip().partition("</think>")
+
+            output = self.post_processing(output)
 
             answer = {
                 'content': output,
@@ -321,6 +321,18 @@ class DeepSeekApplication:
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             raise
+    
+    def post_processing(self, output):
+        cleaned = re.sub(r'<\｜.*?\｜>', '', output['content'])  
+        cleaned = re.sub(r'</.*?>', '', cleaned) # Remove the think caps        
+
+        cleaned = re.sub(r'\n+', '\n', cleaned).strip() # Remove '\n'
+
+        # Extract the final answer
+        match = re.search(r'Final Answer:\s*(.+)', cleaned)
+        final_answer = match.group(1).strip() if match else None
+
+        return final_answer
 
     def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
