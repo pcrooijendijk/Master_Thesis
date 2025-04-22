@@ -209,6 +209,7 @@ class DeepSeekApplication:
                 query=question, 
                 k=top_k
             )
+            print(scores)
 
             relevant_chunks = [
                 document.page_content for document, score in scores if score >= sim_threshold
@@ -279,7 +280,6 @@ class DeepSeekApplication:
         
         try:
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-            print(context_documents)
             
             # Truncate context if it is too long
             combined_context = ' '.join(context_documents)
@@ -336,7 +336,7 @@ class DeepSeekApplication:
         3. Completeness of response
         4. Clarity and coherence
 
-        If the given context does not provide enough information, then give an answer without the context.
+        If the given context does not provide enough information or is empty, then give an answer without the context.
 
         Answer:
         """
