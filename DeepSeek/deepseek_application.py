@@ -208,12 +208,8 @@ class DeepSeekApplication:
                 query=question, 
                 k=top_k
             )
-            print("Page content", scores[0].page_content)
 
-            relevant_docs = [
-                document.page_content for document, score in scores if score >= sim_threshold
-            ]
-            return relevant_docs
+            return scores[0].page_content
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -286,8 +282,8 @@ class DeepSeekApplication:
             
             # Truncate context if it is too long
             combined_context = ' '.join(context_documents)
-            if len(combined_context) > max_context_length:
-                combined_context = combined_context[:max_context_length] + "..."
+            # if len(combined_context) > max_context_length:
+            #     combined_context = combined_context[:max_context_length] + "..."
             
             prompt = self.construct_prompt(query, combined_context)
             print("prompt", prompt)
