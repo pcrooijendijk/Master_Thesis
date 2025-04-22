@@ -306,8 +306,6 @@ class DeepSeekApplication:
             output = deepseek.tokenizer.decode(s)
             print("output", output)
 
-            output = self.post_processing(output)
-
             answer = {
                 'content': output,
                 'metadata': {
@@ -321,18 +319,6 @@ class DeepSeekApplication:
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             raise
-    
-    def post_processing(self, output):
-        cleaned = re.sub(r'<\｜.*?\｜>', '', output['content'])  
-        cleaned = re.sub(r'</.*?>', '', cleaned) # Remove the think caps        
-
-        cleaned = re.sub(r'\n+', '\n', cleaned).strip() # Remove '\n'
-
-        # Extract the final answer
-        match = re.search(r'Final Answer:\s*(.+)', cleaned)
-        final_answer = match.group(1).strip() if match else None
-
-        return final_answer
 
     def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
