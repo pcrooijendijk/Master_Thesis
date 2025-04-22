@@ -40,7 +40,7 @@ embeddings = HuggingFaceEmbeddings(
 
 # Step 5: Build FAISS index in batches
 faiss_index = None
-batch_size = 100  # You can tweak this depending on your RAM
+batch_size = 50  # You can tweak this depending on your RAM
 
 for doc_batch in chunked(docs, batch_size):
     if faiss_index is None:
