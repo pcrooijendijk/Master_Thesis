@@ -252,22 +252,12 @@ class DeepSeekApplication:
                         for doc in documents
                     )
                 return documents_array
-
-            # def get_doc_chunks(documents: List[str], doc_chunks: List, dict: bool = False) -> List:
-            #     for doc in documents:
-            #         if dict: 
-            #             doc = doc['context']
-            #         cleaned_doc = self.preprocess_file(doc)
-            #         if cleaned_doc:
-            #             chunks = self.text_splitter.split_text(cleaned_doc)
-            #             doc_chunks.extend(chunks)
-            #     return doc_chunks
             
             if documents: 
-                documents_array = loading_documents(documents, documents_array) # Adding additional documents to the chunks
-            documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
+                self.documents_array = loading_documents(documents, documents_array) # Adding additional documents to the chunks
+            self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
 
-            splitted_docs = self.text_splitter.split_documents(documents_array)
+            splitted_docs = self.text_splitter.split_documents(self.documents_array)
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             
             if metadata:
