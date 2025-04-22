@@ -305,6 +305,7 @@ class DeepSeekApplication:
             s = generated_output.sequences[0]
             output = deepseek.tokenizer.decode(s)
             print("output", output)
+            print("post processing", self.post_processing(output))
 
             answer = {
                 'content': output,
@@ -319,6 +320,17 @@ class DeepSeekApplication:
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             raise
+
+    def post_processing(self, output: str) -> str:
+        cleaned = re.sub(r"<think>.*?</think>", "", output, flags=re.DOTALL)
+        match = re.search(r"(Both LIME.*?explanation\.)", cleaned, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        fallback_match = re.search(r"Final Answer:\s*(.*?)<", cleaned, flags=re.DOTALL)
+        if fallback_match:
+            return fallback_match.group(1).strip()
+        
+        return cleaned.strip() 
 
     def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
