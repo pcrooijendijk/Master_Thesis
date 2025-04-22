@@ -256,8 +256,8 @@ class DeepSeekApplication:
                 get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
             get_doc_chunks(self.client.get_documents()[:10], doc_chunks, dict=True) # Adding the documents of the clients they have access to
 
-            if not doc_chunks:
-                raise ValueError("No valid document content found after processing.")
+            # if not doc_chunks:
+            #     raise ValueError("No valid document content found after processing.")
             
             index = faiss.IndexFlatL2(len(self.embeddings.embed_query("hello world")))
             vector_store = FAISS(
