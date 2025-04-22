@@ -33,7 +33,7 @@ model_kwargs = {'device': device}
 encode_kwargs = {'normalize_embeddings': True, 'batch_size': 8}
 
 embeddings = HuggingFaceEmbeddings(
-    model_name="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", 
+    model_name="BAAI/bge-small-en-v1.5", 
     model_kwargs=model_kwargs,
     encode_kwargs=encode_kwargs
 )
