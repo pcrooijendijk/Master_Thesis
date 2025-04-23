@@ -217,6 +217,10 @@ class DeepSeekApplication:
                 k=top_k
             )
 
+            # Get the page content of the document which has the highest similarity score
+            resulting_page = scores[0].page_content
+            splitted_text = self.text_splitter_recursive.split_text(resulting_page)
+
             return scores[0].page_content
 
         except Exception as e: 
