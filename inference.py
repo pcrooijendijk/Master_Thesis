@@ -4,9 +4,6 @@ import fire
 
 from DeepSeek import DeepSeekApplication, Metadata
 
-# For the output history
-OUTPUT_HISTORY = []
-
 def run(
     client_id: int = 9,    
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
@@ -62,9 +59,8 @@ def run(
         # If there are no documents uploaded, generate a prompt without extra context
         else:
             deepseek.load_documents([], metadata)
-            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
-        OUTPUT_HISTORY.append(response['content'])
-        return (response['content'], metadata, OUTPUT_HISTORY) if uploaded_documents['files'] or custom_text else (response['content'], metadata['metadata'], OUTPUT_HISTORY)
+            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
+        return (response['content'], metadata) if uploaded_documents['files'] or custom_text else (response['content'], response['metadata'])
 
     # The Gradio interface for fetching the question, documents, custom input and parameters
     UI = gr.Interface(
@@ -113,12 +109,7 @@ def run(
                 lines=10, 
                 label="📊 Document Info",
                 info="Meta Data of the input documents."
-            ),
-            gr.Textbox(
-                lines=20, 
-                label="📖 Output History",
-                info="Questions and answers are displayed here."
-            ),
+            )
         ],
         title="🔎 DeepSeek Q&A",
         description=""" 
