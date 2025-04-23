@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
-from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
@@ -169,13 +169,6 @@ class DeepSeekApplication:
             chunk_overlap=self.chunk_overlap,
         )
 
-        self.text_splitter_recursive = RecursiveCharacterTextSplitter(
-            chunk_size=500, 
-            chunk_overlap=50,
-            length_function=len,
-            separators=["\n\n", "\n", ". ", " ", ""]
-        )
-
         model_kwargs = {
             'device': device
         }
@@ -211,31 +204,12 @@ class DeepSeekApplication:
             raise ValueError("There are no documents uploaded.")
         
         try: 
-            # Using the documents store from FAISS to perform similarity search on
             scores = self.document_store.similarity_search(
                 query=question, 
                 k=top_k
             )
 
-            # Get the page content of the document which has the highest similarity score
-            resulting_page = scores[0].page_content
-            splitted_text = self.text_splitter_recursive.split_text(resulting_page)
-            text_vector = FAISS.from_texts( # Getting the FAISS vector store
-                texts=splitted_text, 
-                embedding=self.embeddings,
-                normalize_L2=True,
-            )
-
-            text_scores = text_vector.similarity_search_with_score(
-                query=question,
-                k=top_k,
-            )
-
-            relevant_chunks = [
-                document.page_content for document, score in text_scores if score >= sim_threshold
-            ]
-
-            return relevant_chunks
+            return scores[0].page_content
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -304,13 +278,11 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            # Retrieve the relevant documents using the similarity threshold
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-
-            combined_context = ' '.join(context_documents)
+            
             # Truncate context if it is too long
-            if len(combined_context) > max_context_length:
-                combined_context = combined_context[:max_context_length] + "..."
+            if len(context_documents) > max_context_length:
+                combined_context = context_documents[:max_context_length] + "..."
             
             prompt = self.construct_prompt(query, combined_context)
             print("prompt", prompt)
