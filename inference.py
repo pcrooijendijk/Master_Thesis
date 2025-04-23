@@ -4,8 +4,11 @@ import fire
 
 from DeepSeek import DeepSeekApplication, Metadata
 
+# For the output history
+OUTPUT_HISTORY = []
+
 def run(
-    client_id: int = 1,    
+    client_id: int = 9,    
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
     lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
     lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
@@ -33,6 +36,7 @@ def run(
     ):  
         documents = []
         metadata = {}
+        output_history = []
 
         # If there are documents uploaded, then the documents are processed and used for generating the prompt
         if uploaded_documents['files']:
@@ -58,8 +62,10 @@ def run(
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         # If there are no documents uploaded, generate a prompt without extra context
         else:
-            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
-        return (response['content'], metadata) if uploaded_documents['files'] or custom_text else (response, metadata)
+            deepseek.load_documents([], metadata)
+            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
+        OUTPUT_HISTORY.append(response['content'])
+        return (response['content'], metadata, OUTPUT_HISTORY) if uploaded_documents['files'] or custom_text else (response['content'], response['metadata'], OUTPUT_HISTORY)
 
     # The Gradio interface for fetching the question, documents, custom input and parameters
     UI = gr.Interface(
@@ -95,7 +101,7 @@ def run(
                 minimum=1, maximum=4, step=1, value=4, label="Beams"
             ),
             gr.components.Slider(
-                minimum=1, maximum=2000, step=1, value=500, label="Max tokens"
+                minimum=1, maximum=2000, step=1, value=1500, label="Max tokens"
             ),
         ],
         outputs=[
@@ -108,7 +114,12 @@ def run(
                 lines=10, 
                 label="📊 Document Info",
                 info="Meta Data of the input documents."
-            )
+            ),
+            gr.Textbox(
+                lines=20, 
+                label="Output History",
+                info="Questions and answers are displayed here."
+            ),
         ],
         title="🔎 DeepSeek Q&A",
         description=""" 
