@@ -320,15 +320,11 @@ class DeepSeekApplication:
             raise
 
     def post_processing(self, output: str) -> str:
-        cleaned = re.sub(r"<think>.*?</think>", "", output, flags=re.DOTALL)
-        match = re.search(r"(Both LIME.*?explanation\.)", cleaned, re.DOTALL)
-        if match:
-            return match.group(1).strip()
-        fallback_match = re.search(r"Final Answer:\s*(.*?)<", cleaned, flags=re.DOTALL)
-        if fallback_match:
-            return fallback_match.group(1).strip()
+        answer = re.split(r"Answer:*?", output) # Extracting the answer
+        think_answer = re.split(r"</think>", answer[2]) # Removing the think caps
+        final_answer = re.split(r"<｜end▁of▁sentence｜>", think_answer[1]) # Removing the end of sentence token
         
-        return cleaned.strip() 
+        return final_answer[0]
 
     def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
