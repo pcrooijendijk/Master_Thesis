@@ -7,14 +7,16 @@ import time
 import os
 import re
 import pickle
+import faiss
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_core.documents import Document
 
 from peft import (
     PeftModel,
@@ -127,8 +129,8 @@ class DeepSeekApplication:
         lora_weights_path,
         lora_config_path,
         prompt_template,
-        chunk_size: int = 500, # Chunk size
-        chunk_overlap: int = 50, # Chunk overlap
+        chunk_size: int = 1000, # Chunk size
+        chunk_overlap: int = 0, # Chunk overlap
     ):
         self.client_id = client_id
         self.ori_model = ori_model
@@ -162,11 +164,9 @@ class DeepSeekApplication:
             device_map="auto",
         )
 
-        self.text_splitter = RecursiveCharacterTextSplitter(
+        self.text_splitter = CharacterTextSplitter(
             chunk_size=self.chunk_size, 
             chunk_overlap=self.chunk_overlap,
-            length_function=len,
-            separators=["\n\n", "\n", ". ", " ", ""]
         )
 
         model_kwargs = {
@@ -178,7 +178,7 @@ class DeepSeekApplication:
             'batch_size': 8
         }
         self.embeddings = HuggingFaceEmbeddings(
-            model_name=self.ori_model, 
+            model_name="BAAI/bge-small-en-v1.5", # Embedding is different from the original model due to efficient embedding usage
             model_kwargs=model_kwargs,
             encode_kwargs=encode_kwargs
         )
@@ -204,16 +204,12 @@ class DeepSeekApplication:
             raise ValueError("There are no documents uploaded.")
         
         try: 
-            scores = self.document_store.similarity_search_with_score(
+            scores = self.document_store.similarity_search(
                 query=question, 
                 k=top_k
             )
 
-            relevant_docs = [
-                document.page_content for document, score in scores if score >= sim_threshold
-            ]
-
-            return relevant_docs
+            return scores[0].page_content
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -227,26 +223,35 @@ class DeepSeekApplication:
     def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None) -> None:
         try:
             doc_chunks = []
+            self.documents = documents
+            documents_array = []
 
-            def get_doc_chunks(documents: List[str], doc_chunks: List) -> List:
-                for doc in documents:
-                    cleaned_doc = self.preprocess_file(doc)
-                    if cleaned_doc:
-                        chunks = self.text_splitter.split_text(cleaned_doc)
-                        doc_chunks.extend(chunks)
-                    return doc_chunks
+            def loading_documents(documents: List, documents_array: List, dict: bool = False):
+                # Getting the documents content into the Document Langchain object
+                if dict: 
+                    documents_array = (
+                        Document(
+                            page_content=doc["context"], 
+                            metadata={"space_key_index": doc["space_key_index"]}
+                        )
+                        for doc in documents
+                    )
+                else: 
+                    documents_array = (
+                        Document(
+                            page_content=doc, 
+                            metadata=metadata
+                        )
+                        for doc in documents
+                    )
+                return documents_array
             
-            get_doc_chunks(documents, doc_chunks) # Adding additional documents to the chunks
-            get_doc_chunks(self.client.get_documents(), doc_chunks) # Adding the documents of the clients they have access to
+            if documents: 
+                self.documents_array = loading_documents(documents, documents_array) # Adding additional documents to the chunks
+            self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
 
-            if not doc_chunks:
-                raise ValueError("No valid document content found after processing.")
-            
-            self.document_store = FAISS.from_texts(
-                texts=doc_chunks,
-                embedding=self.embeddings,
-                normalize_L2=True,
-            )
+            splitted_docs = self.text_splitter.split_documents(self.documents_array)
+            self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             
             if metadata:
                 self.document_metadata.update(metadata)
@@ -273,89 +278,74 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            if context is True:
-                context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-                
-                # Truncate context if it is too long
-                combined_context = ' '.join(context_documents)
-                if len(combined_context) > max_context_length:
-                    combined_context = combined_context[:max_context_length] + "..."
-                
-                prompt = self.construct_prompt(query, combined_context)
-                inputs = deepseek.tokenizer(prompt, return_tensors="pt")
-                input_ids = inputs["input_ids"].to(device)
-                generation_config = GenerationConfig(
-                    temperature=temp,
-                    top_p=top_p,
-                    top_k=top_k,
-                    num_beams=num_beams
+            context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
+            
+            # Truncate context if it is too long
+            if len(context_documents) > max_context_length:
+                combined_context = context_documents[:max_context_length] + "..."
+            
+            prompt = self.construct_prompt(query, combined_context)
+            print("prompt", prompt)
+            inputs = deepseek.tokenizer(prompt, return_tensors="pt")
+            input_ids = inputs["input_ids"].to(device)
+            generation_config = GenerationConfig(
+                temperature=temp,
+                top_p=top_p,
+                top_k=top_k,
+                num_beams=num_beams
+            )
+            with torch.no_grad():
+                generated_output = deepseek.model.generate(
+                    input_ids=input_ids,
+                    generation_config=generation_config,
+                    return_dict_in_generate=True,
+                    output_scores=True,
+                    max_new_tokens=max_new_tokens,
                 )
-                with torch.no_grad():
-                    generated_output = deepseek.model.generate(
-                        input_ids=input_ids,
-                        generation_config=generation_config,
-                        return_dict_in_generate=True,
-                        output_scores=True,
-                        max_new_tokens=max_new_tokens,
-                    )
-                s = generated_output.sequences[0]
-                output = deepseek.tokenizer.decode(s)
-                fin_output = re.search(r"Answer:\s*(.*?)<｜end▁of▁sentence｜>", output, re.DOTALL)
-                _, _, fin_output = fin_output.group(1).strip().partition("</think>")
+            s = generated_output.sequences[0]
+            output = deepseek.tokenizer.decode(s)
 
-                answer = {
-                    'content': fin_output.strip(),
-                    'metadata': {
-                        'processing_time': time.time() - start_time,
-                        'context_length': len(combined_context),
-                        'query_length': len(query)
-                    }
+            answer = {
+                'content': self.post_processing(output),
+                'metadata': {
+                    'processing_time': time.time() - start_time,
+                    'context_length': len(combined_context),
+                    'query_length': len(query)
                 }
-                return answer
-            elif context is False: # TODO: make this better if-else clause: context should be empty and can be given to generating prompt
-                # If there is no context construct a "normal" prompt
-                prompt = self.prompter.generate_prompt(query, "")
-                inputs = deepseek.tokenizer(prompt, return_tensors="pt")
-                input_ids = inputs["input_ids"].to(device)
-                generation_config = GenerationConfig(
-                    temperature=temp,
-                    top_p=top_p,
-                    top_k=top_k,
-                    num_beams=num_beams
-                )
-                with torch.no_grad():
-                    generated_output = deepseek.model.generate(
-                        input_ids=input_ids,
-                        generation_config=generation_config,
-                        return_dict_in_generate=True,
-                        output_scores=True,
-                        max_new_tokens=max_new_tokens,
-                    )
-                s = generated_output.sequences[0]
-                output = deepseek.tokenizer.decode(s)
-                prompter_response = self.prompter.get_response(output)
-                if "end▁of▁sentence" in prompter_response:
-                    # Do postprocessing on the output because the end of sentence tokens are still in the answer
-                    prompter_response = [re.sub(r"<\｜end▁of▁sentence｜>", "", t) for t in [prompter_response]][0]
-                return prompter_response
+            }
+            return answer
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             raise
 
+    def post_processing(self, output: str) -> str:
+        answer = re.split(r"Answer:*?", output) # Extracting the answer
+        think_answer = re.split(r"</think>", answer[2]) # Removing the think caps
+        final_answer = re.split(r"<｜end▁of▁sentence｜>", think_answer[1]) # Removing the end of sentence token
+        
+        return final_answer[0].split('\n')[-1]
+
     def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
         return f"""
-        Context Information:
+        You are given a context document and a related question. Your task is to generate a comprehensive answer based on the context.
+
+        Context:
         {context}
 
-        Question: {query}
+        Question:
+        {query}
 
-        Please provide a comprehensive answer based on the context above. Consider:
-        1. Direct relevance to the question
-        2. Accuracy of information
-        3. Completeness of response
-        4. Clarity and coherence
+        Instructions:
+        - Answer based only on the given context if it's relevant.
+        - If the context is insufficient or empty, provide the best answer using your own knowledge.
+        - Based on the context above, explain your answer in complete sentences.
+        - Ensure your answer is:
+        1. Directly relevant
+        2. Accurate and fact-based
+        3. Complete and informative
+        4. Clear and well-structured
 
-        Answer:
+        Please answer in a full sentence without using boxed notation or letter choices.:
         """
