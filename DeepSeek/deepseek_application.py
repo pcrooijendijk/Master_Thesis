@@ -232,7 +232,7 @@ class DeepSeekApplication:
             )
 
             relevant_chunks = [
-                document.page_content for document, score in scores if score >= sim_threshold
+                document.page_content for document, score in text_scores if score >= sim_threshold
             ]
 
             return relevant_chunks
