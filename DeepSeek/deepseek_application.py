@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
-from langchain_text_splitters import CharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
@@ -169,6 +169,13 @@ class DeepSeekApplication:
             chunk_overlap=self.chunk_overlap,
         )
 
+        self.text_splitter_recursive = RecursiveCharacterTextSplitter(
+            chunk_size=500, 
+            chunk_overlap=50,
+            length_function=len,
+            separators=["\n\n", "\n", ". ", " ", ""]
+        )
+
         model_kwargs = {
             'device': device
         }
@@ -204,6 +211,7 @@ class DeepSeekApplication:
             raise ValueError("There are no documents uploaded.")
         
         try: 
+            # Using the documents store from FAISS to perform similarity search on
             scores = self.document_store.similarity_search(
                 query=question, 
                 k=top_k
@@ -278,6 +286,7 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
+            # Retrieve the relevant documents using the similarity threshold
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
             
             # Truncate context if it is too long
@@ -285,7 +294,7 @@ class DeepSeekApplication:
                 combined_context = context_documents[:max_context_length] + "..."
             
             prompt = self.construct_prompt(query, combined_context)
-            print("prompt", prompt)
+
             inputs = deepseek.tokenizer(prompt, return_tensors="pt")
             input_ids = inputs["input_ids"].to(device)
             generation_config = GenerationConfig(

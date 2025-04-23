@@ -115,7 +115,7 @@ def run(
             ),
             gr.Textbox(
                 lines=20, 
-                label="Output History",
+                label="📖 Output History",
                 info="Questions and answers are displayed here."
             ),
         ],
