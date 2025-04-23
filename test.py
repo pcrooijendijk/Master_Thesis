@@ -28,4 +28,4 @@ Yes, the LIME and Alvarez-Melis and Jaakkola (2017) methods are dependent on the
 cleaned = re.split(r"Answer:*?", string)
 cleaned2 = re.split(r"</think>", cleaned[2])
 cleaned3 = re.split(r"<｜end▁of▁sentence｜>", cleaned2[1])
-print(cleaned3[0])
+print(cleaned3[0].split('\n')[-1])

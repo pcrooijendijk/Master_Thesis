@@ -324,7 +324,7 @@ class DeepSeekApplication:
         think_answer = re.split(r"</think>", answer[2]) # Removing the think caps
         final_answer = re.split(r"<｜end▁of▁sentence｜>", think_answer[1]) # Removing the end of sentence token
         
-        return final_answer[0]
+        return final_answer[0].split('\n')[-1]
 
     def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
