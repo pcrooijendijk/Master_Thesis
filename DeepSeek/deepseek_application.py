@@ -217,7 +217,25 @@ class DeepSeekApplication:
                 k=top_k
             )
 
-            return scores[0].page_content
+            # Get the page content of the document which has the highest similarity score
+            resulting_page = scores[0].page_content
+            splitted_text = self.text_splitter_recursive.split_text(resulting_page)
+            text_vector = FAISS.from_texts( # Getting the FAISS vector store
+                texts=splitted_text, 
+                embedding=self.embeddings,
+                normalize_L2=True,
+            )
+
+            text_scores = text_vector.similarity_search_with_score(
+                query=question,
+                k=top_k,
+            )
+
+            relevant_chunks = [
+                document.page_content for document, score in scores if score >= sim_threshold
+            ]
+
+            return relevant_chunks
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -288,13 +306,14 @@ class DeepSeekApplication:
         try:
             # Retrieve the relevant documents using the similarity threshold
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-            
+
+            combined_context = ' '.join(context_documents)
             # Truncate context if it is too long
-            if len(context_documents) > max_context_length:
-                combined_context = context_documents[:max_context_length] + "..."
+            if len(combined_context) > max_context_length:
+                combined_context = combined_context[:max_context_length] + "..."
             
             prompt = self.construct_prompt(query, combined_context)
-
+            print("prompt", prompt)
             inputs = deepseek.tokenizer(prompt, return_tensors="pt")
             input_ids = inputs["input_ids"].to(device)
             generation_config = GenerationConfig(
