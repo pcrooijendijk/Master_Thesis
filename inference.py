@@ -36,7 +36,6 @@ def run(
     ):  
         documents = []
         metadata = {}
-        output_history = []
 
         # If there are documents uploaded, then the documents are processed and used for generating the prompt
         if uploaded_documents['files']:
@@ -63,7 +62,8 @@ def run(
         # If there are no documents uploaded, generate a prompt without extra context
         else:
             response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
-        return (response['content'], metadata) if uploaded_documents['files'] or custom_text else (response, metadata)
+        OUTPUT_HISTORY.append(response['content'])
+        return (response['content'], metadata, OUTPUT_HISTORY) if uploaded_documents['files'] or custom_text else (response['content'], metadata['metadata'], OUTPUT_HISTORY)
 
     # The Gradio interface for fetching the question, documents, custom input and parameters
     UI = gr.Interface(
