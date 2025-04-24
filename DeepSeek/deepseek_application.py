@@ -13,11 +13,13 @@ from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 
 from utils.prompt_template import PromptHelper
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig, pipeline
 from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
+from langchain.embeddings import HuggingFacePipeline
+from langchain.chains import ConversationalRetrievalChain
 
 from peft import (
     PeftModel,
@@ -312,10 +314,25 @@ class DeepSeekApplication:
                 ]
             )
 
-            question_answer_chain = create_stuff_documents_chain(deepseek.model, prompt)
-            rag_chain = create_retrieval_chain(self.retriever, question_answer_chain)
+            pipe = pipeline("text-generation", model=deepseek.model, tokenizer=deepseek.tokenizer, return_full_text=False)
+            llm = HuggingFacePipeline(pipeline=pipe)
 
-            results = rag_chain.invoke({"input": query})
+            qa_chain = ConversationalRetrievalChain.from_llm(
+                llm=llm,
+                retriever=self.retriever, 
+                condense_question_prompt=ChatPromptTemplate.from_messages([
+                    ("system", system_prompt),
+                    ("human", "{question}"),
+                ]),
+                return_source_documents=True,
+            )
+
+            results = qa_chain.invoke({"question": query})
+
+            # question_answer_chain = create_stuff_documents_chain(deepseek.model, prompt)
+            # rag_chain = create_retrieval_chain(self.retriever, question_answer_chain)
+
+            # results = rag_chain.invoke({"input": query})
 
             print("answer", results['answer'])
             print("context", results["context"][0].page_content)
