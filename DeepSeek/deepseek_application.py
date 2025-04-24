@@ -322,9 +322,9 @@ class DeepSeekApplication:
                     output_scores=True,
                     max_new_tokens=max_new_tokens,
                 )
-            s = generated_output.sequences
+            s = generated_output.sequences[0]
             output = deepseek.tokenizer.decode(s, skip_special_tokens=True)
-            print(output[0])
+            print(output)
 
             answer = {
                 'content': self.post_processing(output),
