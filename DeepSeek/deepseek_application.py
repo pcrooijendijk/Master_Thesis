@@ -172,7 +172,7 @@ class DeepSeekApplication:
 
         self.recursive_text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1000, 
-            chunk_overlapt=200,
+            chunk_overlap=200,
         )
 
         model_kwargs = {
