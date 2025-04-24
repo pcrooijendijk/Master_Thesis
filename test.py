@@ -48,3 +48,10 @@ scores = document_store.similarity_search(
         k=40
     )
 
+recursive_text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000, 
+        chunk_overlap=200,
+    )
+
+
+text_splits = recursive_text_splitter.split_documents(scores[0])
