@@ -327,7 +327,10 @@ class DeepSeekApplication:
                 return_source_documents=True,
             )
 
-            results = qa_chain.invoke({"question": query})
+            results = qa_chain.invoke({
+                "question": query, 
+                "chat_history": [],
+                })
 
             # question_answer_chain = create_stuff_documents_chain(deepseek.model, prompt)
             # rag_chain = create_retrieval_chain(self.retriever, question_answer_chain)
