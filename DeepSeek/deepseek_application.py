@@ -18,7 +18,7 @@ from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTe
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
-from langchain.embeddings import HuggingFacePipeline
+from langchain_huggingface.llms import HuggingFacePipeline
 from langchain.chains import ConversationalRetrievalChain
 
 from peft import (
