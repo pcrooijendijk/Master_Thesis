@@ -216,7 +216,6 @@ class DeepSeekApplication:
                 query=question, 
                 k=top_k
             )
-            print("BEST DOCUMENT", scores[0])
 
             text_splits = self.recursive_text_splitter.split_documents([scores[0]])
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
@@ -331,11 +330,13 @@ class DeepSeekApplication:
                 "question": query, 
                 "chat_history": [],
                 })
+            
+            retrieved_bits = self.retriever.get_relevant_documents(query)
+            texts = [
+                doc.page_content for doc in retrieved_bits
+            ]
 
-            # question_answer_chain = create_stuff_documents_chain(deepseek.model, prompt)
-            # rag_chain = create_retrieval_chain(self.retriever, question_answer_chain)
-
-            # results = rag_chain.invoke({"input": query})
+            print("Relevant bits", texts)
 
             print("answer", results)
             
