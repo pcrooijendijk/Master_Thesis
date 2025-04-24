@@ -337,8 +337,7 @@ class DeepSeekApplication:
 
             # results = rag_chain.invoke({"input": query})
 
-            print("answer", results['answer'])
-            print("context", results["context"][0].page_content)
+            print("answer", results)
             
             # Truncate context if it is too long
             if len(context_documents) > max_context_length:
