@@ -292,57 +292,17 @@ class DeepSeekApplication:
         
         try:
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-
-            from langchain.chains import create_retrieval_chain
-            from langchain.chains.combine_documents import create_stuff_documents_chain
-            from langchain_core.prompts import ChatPromptTemplate
-
-            system_prompt = (
-                "You are an assistant for question-answering tasks. "
-                "Use the following pieces of retrieved context to answer "
-                "the question. If you don't know the answer, say that you "
-                "don't know. "
-                "\n\n"
-                "{context}"
-            )
-
-            prompt = ChatPromptTemplate.from_messages(
-                [
-                    ("system", system_prompt),
-                    ("human", "{input}"),
-                ]
-            )
-
-            pipe = pipeline("text-generation", model=deepseek.model, tokenizer=deepseek.tokenizer, return_full_text=True)
-            llm = HuggingFacePipeline(pipeline=pipe)
-
-            qa_chain = ConversationalRetrievalChain.from_llm(
-                llm=llm,
-                retriever=self.retriever, 
-                condense_question_prompt=ChatPromptTemplate.from_messages([
-                    ("system", system_prompt),
-                    ("human", "{question}"),
-                ]),
-                return_source_documents=True,
-            )
-
-            results = qa_chain.invoke({
-                "question": query, 
-                "chat_history": [],
-                })
             
             retrieved_bits = self.retriever.get_relevant_documents(query)
             texts = [
                 doc.page_content for doc in retrieved_bits
             ]
 
-            print("Relevant bits", texts)
-
-            print("answer", results)
+            combined_texts = ' '.join(texts)
             
             # Truncate context if it is too long
-            if len(context_documents) > max_context_length:
-                combined_context = context_documents[:max_context_length] + "..."
+            if len(combined_texts) > max_context_length:
+                combined_context = combined_texts[:max_context_length] + "..."
             
             prompt = self.construct_prompt(query, combined_context)
             print("prompt", prompt)
