@@ -54,3 +54,36 @@ recursive_text_splitter = RecursiveCharacterTextSplitter(
     )
 
 text_splits = recursive_text_splitter.split_documents([scores[0]])
+
+from langchain.chains import ConversationalRetrievalChain
+from langchain.vectorstores import Chroma
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.llms import HuggingFacePipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+
+# 1. Setup embeddings + vectorstore
+embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+text_splits = self.recursive_text_splitter.split_documents([scores[0]])
+vectorstore = Chroma.from_documents(text_splits, embedding=embeddings)
+
+# 2. Setup HF model as LLM
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+model = AutoModelForCausalLM.from_pretrained("gpt2")
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, return_full_text=False)
+llm = HuggingFacePipeline(pipeline=pipe)
+
+# 3. Create the RAG chain
+qa_chain = ConversationalRetrievalChain.from_llm(
+    llm=llm,
+    retriever=vectorstore.as_retriever(),
+    condense_question_prompt=ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful assistant."),
+        ("human", "{question}")
+    ]),
+    return_source_documents=True
+)
+
+# 4. Run the chain
+response = qa_chain.invoke({"question": query})
+
+# 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
