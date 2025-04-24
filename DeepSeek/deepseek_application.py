@@ -315,7 +315,7 @@ class DeepSeekApplication:
             question_answer_chain = create_stuff_documents_chain(deepseek.model, prompt)
             rag_chain = create_retrieval_chain(self.retriever, question_answer_chain)
 
-            results = rag_chain.invoke({"input": query})
+            results = rag_chain.run({"input": query})
 
             print("answer", results['answer'])
             print("context", results["context"][0].page_content)
