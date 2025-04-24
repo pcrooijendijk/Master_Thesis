@@ -53,4 +53,4 @@ recursive_text_splitter = RecursiveCharacterTextSplitter(
         chunk_overlap=200,
     )
 
-text_splits = recursive_text_splitter.split_documents(scores)
+text_splits = recursive_text_splitter.split_documents([scores[0]])
