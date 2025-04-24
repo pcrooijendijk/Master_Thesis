@@ -215,6 +215,8 @@ class DeepSeekApplication:
                 k=top_k
             )
 
+            print("scores", scores)
+
             text_splits = self.recursive_text_splitter.split_documents(scores[0])
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
 
