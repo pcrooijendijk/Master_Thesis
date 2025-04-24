@@ -324,7 +324,7 @@ class DeepSeekApplication:
                 )
             s = generated_output.sequences[0]
             output = deepseek.tokenizer.decode(s, skip_special_tokens=True)
-            print(output)
+            print("Answering", output)
 
             answer = {
                 'content': self.post_processing(output),
