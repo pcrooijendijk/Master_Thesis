@@ -323,7 +323,7 @@ class DeepSeekApplication:
                     max_new_tokens=max_new_tokens,
                 )
             s = generated_output.sequences[0]
-            output = deepseek.tokenizer.decode(s, skip_special_tokens=True)
+            output = deepseek.tokenizer.decode(s)
             print("Answering", output)
 
             answer = {
