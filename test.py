@@ -1,89 +1,105 @@
-from langchain_community.document_loaders import TextLoader
-from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
-import torch
-import json
-from more_itertools import chunked
+import gradio as gr
 
-# Set up device and clear CUDA cache
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-torch.cuda.empty_cache()
-
-# Step 1: Load and parse the JSON
-with open("utils/documents.json", "r", encoding="utf-8") as f:
-    raw_json = json.load(f)
-
-# Step 2: Extract only the "context" field and metadata
-documents = [
-    Document(
-        page_content=entry["context"],
-        metadata={"space_key_index": entry["space_key_index"]}
-    )
-    for entry in raw_json
-]
-
-# Step 3: Split documents into smaller chunks
-text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-docs = text_splitter.split_documents(documents)
-
-# Step 4: Set up HuggingFace embeddings
-model_kwargs = {'device': device}
-encode_kwargs = {'normalize_embeddings': True, 'batch_size': 8}
-
-embeddings = HuggingFaceEmbeddings(
-    model_name="BAAI/bge-small-en-v1.5", 
-    model_kwargs=model_kwargs,
-    encode_kwargs=encode_kwargs
-)
-
-splitted_docs = text_splitter.split_documents(documents)
-document_store = FAISS.from_documents(splitted_docs, embeddings)
-
-question = "Are LIME and Alvarez-Melis and Jaakkola (2017) methods dependent on model properties?"
-
-scores = document_store.similarity_search(
-        query=question, 
-        k=40
+def evaluate(question, files, pasted_text, temperature, top_p, top_k, beams, max_tokens):
+    # Simulated outputs
+    return (
+        "🧠 Model Output Here...",
+        "📁 Parsed Document Info Here...",
+        "📝 Output History Here..."
     )
 
-recursive_text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000, 
-        chunk_overlap=200,
+def show_document():
+    # This function just returns visibility=True to reveal the box
+    return gr.update(visible=True, interactive=False)
+
+with gr.Blocks(theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.blue)) as UI:
+    gr.Markdown("""
+    # 🔎 DeepSeek Q&A
+    ### Document Analysis and Question Answering.
+    Upload documents or paste text to ask questions about the content.
+    """)
+
+    with gr.Row():
+        # Left Column: Inputs
+        with gr.Column(scale=1):
+            question_input = gr.Textbox(
+                lines=2,
+                label="❓ Question",
+                info="Upload documents below to ask questions about the content."
+            )
+
+            document_input = gr.MultimodalTextbox(
+                file_count='multiple',
+                placeholder="Upload your documents here.",
+                label="📁 Document Input",
+                show_label=True,
+                info="Supported formats: PDF, DOCX, TXT"
+            )
+
+            pasted_text_input = gr.Textbox(
+                lines=1,
+                label="📃 Or paste text",
+                info="Enter text directly. Each paragraph will be processed separately."
+            )
+
+            temperature_slider = gr.Slider(minimum=0, maximum=1, value=0.6, label="🌡️ Temperature")
+            top_p_slider = gr.Slider(minimum=0, maximum=1, value=0.75, label="Top p")
+            top_k_slider = gr.Slider(minimum=0, maximum=100, step=1, value=40, label="Top k")
+            beams_slider = gr.Slider(minimum=1, maximum=4, step=1, value=4, label="Beams")
+            max_tokens_slider = gr.Slider(minimum=1, maximum=2000, step=1, value=1500, label="Max tokens")
+
+            generate_btn = gr.Button("🚀 Generate Response")
+
+        # Right Column: Outputs
+        with gr.Column(scale=1):
+            output_box = gr.Textbox(
+                lines=10,
+                label="🔮 Output",
+                info="Output of the DeepSeek model.",
+                interactive=False
+            )
+
+            metadata_box = gr.Textbox(
+                lines=10,
+                label="📊 Document Info",
+                info="Meta Data of the input documents.",
+                interactive=False
+            )
+
+            history_box = gr.Textbox(
+                lines=20,
+                label="📖 Output History",
+                info="Questions and answers are displayed here.",
+                interactive=False
+            )
+
+            # Button to show full document
+            show_doc_btn = gr.Button("📂 Show Full Document")
+
+            # Hidden textbox for full document content
+            full_doc_view = gr.Textbox(
+                label="📄 Full Document Content",
+                lines=20,
+                visible=False,
+                interactive=False
+            )
+
+    # Events
+    generate_btn.click(
+        fn=evaluate,
+        inputs=[
+            question_input,
+            document_input,
+            pasted_text_input,
+            temperature_slider,
+            top_p_slider,
+            top_k_slider,
+            beams_slider,
+            max_tokens_slider
+        ],
+        outputs=[output_box, metadata_box, history_box]
     )
 
-text_splits = recursive_text_splitter.split_documents([scores[0]])
+    show_doc_btn.click(fn=show_document, outputs=full_doc_view)
 
-from langchain.chains import ConversationalRetrievalChain
-from langchain.vectorstores import Chroma
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import HuggingFacePipeline
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-
-# 1. Setup embeddings + vectorstore
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-text_splits = self.recursive_text_splitter.split_documents([scores[0]])
-vectorstore = Chroma.from_documents(text_splits, embedding=embeddings)
-
-# 2. Setup HF model as LLM
-tokenizer = AutoTokenizer.from_pretrained("gpt2")
-model = AutoModelForCausalLM.from_pretrained("gpt2")
-pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, return_full_text=False)
-llm = HuggingFacePipeline(pipeline=pipe)
-
-# 3. Create the RAG chain
-qa_chain = ConversationalRetrievalChain.from_llm(
-    llm=llm,
-    retriever=vectorstore.as_retriever(),
-    condense_question_prompt=ChatPromptTemplate.from_messages([
-        ("system", "You are a helpful assistant."),
-        ("human", "{question}")
-    ]),
-    return_source_documents=True
-)
-
-# 4. Run the chain
-response = qa_chain.invoke({"question": query})
-
-# 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
+UI.queue().launch()
