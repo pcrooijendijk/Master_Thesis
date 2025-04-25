@@ -161,7 +161,7 @@ def run(
 
         show_doc_btn.click(fn=show_document, outputs=full_doc_view)
 
-    UI.queue().launch(share=True, title="🧠 DeepSeek Q&A Assistant")
+    UI.queue().launch(share=True)
 
 if __name__ == "__main__":
     fire.Fire(run)
