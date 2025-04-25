@@ -297,51 +297,6 @@ class DeepSeekApplication:
             ]
 
             combined_texts = ' '.join(texts)
-
-            from transformers import pipeline
-            from langchain_huggingface.llms import HuggingFacePipeline
-            from langchain.chains import ConversationalRetrievalChain
-            from langchain_core.prompts import ChatPromptTemplate
-
-            system_prompt = (
-                "You are an assistant for question-answering tasks. "
-                "Use the following pieces of retrieved context to answer "
-                "the question. If you don't know the answer, say that you "
-                "don't know. Use three sentences maximum and keep the "
-                "answer concise."
-                "\n\n"
-                "{context}"
-            )
-
-
-            pipe = pipeline(task="question-answering", model=deepseek.model, tokenizer=deepseek.tokenizer, return_full_text=True)
-            # llm = HuggingFacePipeline(pipeline=pipe)
-
-            preds = pipe(
-                question=query, 
-                context=retrieved_bits,
-            )
-            print(
-                f"score: {round(preds['score'], 4)}, start: {preds['start']}, end: {preds['end']}, answer: {preds['answer']}"
-            )
-
-            # qa_chain = ConversationalRetrievalChain.from_llm(
-            #     llm=llm,
-            #     retriever=self.retriever, 
-            #     condense_question_prompt=ChatPromptTemplate.from_messages([
-            #         ("system", system_prompt),
-            #         ("human", "{question}"),
-            #     ]),
-            #     return_source_documents=True,
-            # )
-
-            # results = qa_chain.invoke({
-            #     "question": query, 
-            #     "chat_history": [],
-            #     })
-            
-            print("other results", results)
-
             
             # Truncate context if it is too long
             if len(combined_texts) > max_context_length:
