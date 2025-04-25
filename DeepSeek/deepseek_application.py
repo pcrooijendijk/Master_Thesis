@@ -251,6 +251,7 @@ class DeepSeekApplication:
                     )
                 else: 
                     print(metadata)
+                    print("document", documents)
                     documents_array = (
                         Document(
                             page_content=doc, 
