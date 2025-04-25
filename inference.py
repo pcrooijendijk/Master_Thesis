@@ -44,7 +44,7 @@ def run(
                 documents.append(content)
                 metadata[file_name] = metadata_doc
 
-            deepseek.load_documents(documents, metadata)
+            deepseek.load_documents(documents, metadata[file_name])
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         # If there is manual input from the user, treat it as if it is a document and append to the total list of documents
         elif custom_text:  
@@ -71,7 +71,7 @@ def run(
     def show_document():
         return gr.update(visible=True, interactive=False)
     
-    with gr.Blocks(theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.blue)) as UI:
+    with gr.Blocks(title="🔎 DeepSeek Q&A", theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.blue)) as UI:
         gr.Markdown("""
         # 🔎 DeepSeek Q&A
         ### Document Analysis and Question Answering.
