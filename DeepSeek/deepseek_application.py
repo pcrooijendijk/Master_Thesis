@@ -317,20 +317,28 @@ class DeepSeekApplication:
             pipe = pipeline("question-answering", model=deepseek.model, tokenizer=deepseek.tokenizer, return_full_text=True)
             llm = HuggingFacePipeline(pipeline=pipe)
 
-            qa_chain = ConversationalRetrievalChain.from_llm(
-                llm=llm,
-                retriever=self.retriever, 
-                condense_question_prompt=ChatPromptTemplate.from_messages([
-                    ("system", system_prompt),
-                    ("human", "{question}"),
-                ]),
-                return_source_documents=True,
+            preds = llm(
+                question=query, 
+                context=retrieved_bits,
+            )
+            print(
+                f"score: {round(preds['score'], 4)}, start: {preds['start']}, end: {preds['end']}, answer: {preds['answer']}"
             )
 
-            results = qa_chain.invoke({
-                "question": query, 
-                "chat_history": [],
-                })
+            # qa_chain = ConversationalRetrievalChain.from_llm(
+            #     llm=llm,
+            #     retriever=self.retriever, 
+            #     condense_question_prompt=ChatPromptTemplate.from_messages([
+            #         ("system", system_prompt),
+            #         ("human", "{question}"),
+            #     ]),
+            #     return_source_documents=True,
+            # )
+
+            # results = qa_chain.invoke({
+            #     "question": query, 
+            #     "chat_history": [],
+            #     })
             
             print("other results", results)
 
