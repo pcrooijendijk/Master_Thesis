@@ -314,10 +314,10 @@ class DeepSeekApplication:
             )
 
 
-            pipe = pipeline("question-answering", model=deepseek.model, tokenizer=deepseek.tokenizer, return_full_text=True)
-            llm = HuggingFacePipeline(pipeline=pipe)
+            pipe = pipeline(task="question-answering", model=deepseek.model, tokenizer=deepseek.tokenizer, return_full_text=True)
+            # llm = HuggingFacePipeline(pipeline=pipe)
 
-            preds = llm(
+            preds = pipe(
                 question=query, 
                 context=retrieved_bits,
             )
