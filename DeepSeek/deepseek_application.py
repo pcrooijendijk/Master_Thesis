@@ -214,7 +214,7 @@ class DeepSeekApplication:
                 query=question, 
                 k=top_k
             )
-		print("SCORES", scores)	
+            print("SCORES", scores)	
 
             # Splitting the documents recursively 
             text_splits = self.recursive_text_splitter.split_documents([scores[0]])
