@@ -214,7 +214,6 @@ class DeepSeekApplication:
                 query=question, 
                 k=top_k
             )
-            print("SCORES", scores)	
 
             # Splitting the documents recursively 
             text_splits = self.recursive_text_splitter.split_documents([scores[0]])
@@ -267,6 +266,7 @@ class DeepSeekApplication:
                 return documents_array
             
             if documents: 
+                self.uploaded_doc_present = True
                 self.documents_array = loading_documents(documents, documents_array, dict=False) # Adding additional documents to the chunks
             else: 
                 self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
@@ -298,10 +298,15 @@ class DeepSeekApplication:
         try:
             relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
 
-            # Lower scores is more similar
-            retrieved_bits = [
-                text.page_content for text, score in self.results_with_scores if score <= 0.7
-            ]
+            if self.uploaded_doc_present:
+                retrieved_bits = [
+                    text.page_content for text, _ in self.results_with_scores
+                ]
+            else: 
+                # Lower scores is more similar
+                retrieved_bits = [
+                    text.page_content for text, score in self.results_with_scores if score <= 0.7
+                ]
 
             combined_texts = ' '.join(retrieved_bits)
             combined_context = []
