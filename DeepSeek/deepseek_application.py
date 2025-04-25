@@ -299,6 +299,7 @@ class DeepSeekApplication:
             ]
 
             combined_texts = ' '.join(retrieved_bits)
+            combined_context = []
             
             # Truncate context if it is too long
             if len(combined_texts) > max_context_length:
@@ -357,7 +358,7 @@ class DeepSeekApplication:
         return text.strip()
 
 
-    def construct_prompt(self, query: str, context: str) -> str:
+    def construct_prompt(self, query: str, context: str) -> str: # TODO: make another prompt to check if context is empty to handle better question answering
         """Construct an enhanced prompt template"""
         return f"""
         You are an expert assistant designed to answer questions accurately and helpfully.
