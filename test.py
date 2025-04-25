@@ -104,52 +104,6 @@
 
 # UI.queue().launch()
 
-import re
-
-def clean_model_output(text: str) -> str:
-    # Step 1: Remove special sentence tokens
-    text = re.sub(r"<\｜begin▁of▁sentence\｜>", "", text)
-    text = re.sub(r"<\｜end▁of▁sentence\｜>", "", text)
-
-    # Step 2: Optional - Extract only answer after "Your answer"
-    match = re.search(r"Your answer\s*(.*?)\s*$", text, re.DOTALL)
-    if match:
-        text = match.group(1)
-    
-    # Remove tags like </think>
-    text = re.sub(r"</?\w+>", "", text)
-    text = text.replace("\n", "")
-
-    # Step 3: Strip leading/trailing whitespace
-    return text.strip()
-
-
-raw_output = """<｜begin▁of▁sentence｜>
-        You are given a context document and a related question. Your task is to generate a comprehensive answer based on the context.
-
-        Context:
-        prior ﬁndings that it may provideplausible, but not faithful, explanation (Zhong et al.,2019). Interestingly, LIME does particularly wellacross these tasks in terms of faithfulness.From the ‘Random’ results that we concludemodels with overall poor performance on their ﬁ-nal tasks tend to have an overall poor ordering, withmarginal differences in comprehensiveness and suf-ﬁciency between them. For models that with highsufﬁciency scores: Movies, FEVER, CoS-E, and e-SNLI, we ﬁnd that random removal is particularlydamaging to performance, indicating poor absoluteranking; whereas those with high comprehensive-ness are sensitive to rationale length.7Conclusions and Future DirectionsWe have introduced a new publicly available re-source: the Evaluating Rationales And Simple En-glish Reasoning (ERASER) benchmark. This com-prises seven datasets, all of which include bothinstance level labels and corresponding supportingsnippets (‘rationales’) marked by human annotators.We have augmented many of any modelproperties. Examples include LIME (Ribeiro et al.,2016) and Alvarez-Melis and Jaakkola (2017);these methods approximate model behavior lo-cally by having it repeatedly make predictions overperturbed inputs and ﬁtting a simple, explainablemodel over the outputs.Acquiring rationales. Aside from interpretabilityconsiderations, collecting rationales from annota-tors may afford greater efﬁciency in terms of modelperformance realized given a ﬁxed amount of anno-tator effort (Zaidan and Eisner, 2008). In particular,recent work by McDonnell et al. (2017, 2016) hasobserved that at least for some tasks, asking anno-tators to provide rationales justifying their catego-rizations does not impose much additional effort.Combining rationale annotation with active learn-ing (Settles, 2012) is another promising direction(Wallace et al., 2010; Sharma et al., 2015).Learning from rationales. Work on learning fromrationales marked by annotators for text classiﬁca-tion dates back over a decade - Lim...
-
-        Question:
-        Are LIME and Alvarez-Melis and Jaakkola (2017) methods dependent on model properties?
-
-        Instructions:
-        - Answer based only on the given context if it's relevant.
-        - If the context is insufficient or empty, provide the best answer using your own knowledge.
-        - Based on the context above, explain your answer in complete sentences.
-        - Ensure your answer is:
-        1. Directly relevant
-        2. Accurate and fact-based
-        3. Complete and informative
-        4. Clear and well-structured
-
-        Please provide a full-sentence answer.
-         Your answer
-</think>
-
-The context provided discusses various machine learning model explanations methods, such as LIME and Alvarez-Melis and Jaakkola (2017) methods. It mentions that these methods, like LIME, approximate the model's behavior locally by perturbing inputs and fitting a simple explanation model. It also notes that some methods, such as those by McDonnell et al. (2017, 2016), focus on providing rationales justifying categorizations, while others, like wallace et al. (2010) and Sharma et al. (2015), aim to learn from rationales. The key point is that these methods are dependent on the model's properties, such as locality and comprehensive-ness, rather than being independent of them.<｜end▁of▁sentence｜><｜end▁of▁sentence｜><｜end▁of▁sentence｜>
-"""
-
-cleaned = clean_model_output(raw_output)
-
-print(cleaned)
+from langchain_core.documents import Document
+doc, score = (Document(id='bc354813-fc6f-48d8-ac29-b195b911f9fd', metadata={'space_key_index': 1}, page_content='(2) academic re-searchers need equitable access to computationalresources; and (3) researchers should prioritize de-veloping efﬁcient models and hardware.2MethodsTo quantify the computational and environmen-tal cost of training deep neural network mod-els for NLP, we perform an analysis of the en-ergy required to train a variety of popular off-the-shelf NLP models, as well as a case study ofthe complete sum of resources required to developLISA (Strubell et al., 2018), a state-of-the-art NLPmodel from EMNLP 2018, including all tuningand experimentation.We measure energy use as follows. We train themodels described in §2.1 using the default settingsprovided, and sample GPU and CPU power con-sumption during training. Each model was trainedfor a maximum of 1 day. We train all models ona single NVIDIA Titan X GPU, with the excep-tion of ELMo which was trained on 3 NVIDIAGTX 1080 Ti GPUs. While training, we repeat-edly query the NVIDIA System Management In-terface2 to sample the GPU power'), 0.8155202865600586)
+print(doc.page_content)

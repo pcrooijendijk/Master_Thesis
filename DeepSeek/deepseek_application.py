@@ -215,18 +215,12 @@ class DeepSeekApplication:
                 k=top_k
             )
 
+            # Splitting the documents recursively 
             text_splits = self.recursive_text_splitter.split_documents([scores[0]])
+            # Making a vector representation of the documents using embeddings
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
-            results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
-            print("results with scores", results_with_scores)
-
-
-            self.retriever = vectorstore.as_retriever()
-
-            #             as_retriever(
-            #     search_type="similarity_score_threshold",
-            #     search_kwargs={'score_threshold': 0.8}
-            # )
+            # Getting the most relevant bits of the documents 
+            self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
 
             return scores[0].page_content
 
@@ -299,7 +293,11 @@ class DeepSeekApplication:
         try:
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
 
-            retrieved_bits = self.retriever.get_relevant_documents(query)
+            # Lower scores is more similar
+            retrieved_bits = [
+                text.page_content for text, score in self.results_with_scores if score <= 0.7
+            ]
+
             print("RETRIEVED BITS", retrieved_bits)
             texts = [
                 doc.page_content for doc in retrieved_bits
