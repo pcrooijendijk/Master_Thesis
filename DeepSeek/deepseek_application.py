@@ -220,6 +220,11 @@ class DeepSeekApplication:
 
             self.retriever = vectorstore.as_retriever()
 
+            #             as_retriever(
+            #     search_type="similarity_score_threshold",
+            #     search_kwargs={'score_threshold': 0.8}
+            # )
+
             return scores[0].page_content
 
         except Exception as e: 
@@ -292,6 +297,7 @@ class DeepSeekApplication:
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
 
             retrieved_bits = self.retriever.get_relevant_documents(query)
+            print("RETRIEVED BITS", retrieved_bits)
             texts = [
                 doc.page_content for doc in retrieved_bits
             ]
