@@ -13,13 +13,11 @@ from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 
 from utils.prompt_template import PromptHelper
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig, pipeline
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
 from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
-from langchain_huggingface.llms import HuggingFacePipeline
-from langchain.chains import ConversationalRetrievalChain
 
 from peft import (
     PeftModel,
@@ -217,9 +215,9 @@ class DeepSeekApplication:
                 k=top_k
             )
 
-            print("DOCUMENT", scores)
+            print("scores", scores)
 
-            text_splits = self.recursive_text_splitter.split_documents([scores[0]])
+            text_splits = self.recursive_text_splitter.split_documents(scores[0])
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
 
             self.retriever = vectorstore.as_retriever()
@@ -294,13 +292,35 @@ class DeepSeekApplication:
         
         try:
             context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-            
-            retrieved_bits = self.retriever.get_relevant_documents(query)
-            texts = [
-                doc.page_content for doc in retrieved_bits
-            ]
 
-            combined_texts = ' '.join(texts)
+            from langchain.chains import create_retrieval_chain
+            from langchain.chains.combine_documents import create_stuff_documents_chain
+            from langchain_core.prompts import ChatPromptTemplate
+
+            system_prompt = (
+                "You are an assistant for question-answering tasks. "
+                "Use the following pieces of retrieved context to answer "
+                "the question. If you don't know the answer, say that you "
+                "don't know. Use three sentences maximum and keep the "
+                "answer concise."
+                "\n\n"
+                "{context}"
+            )
+
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    ("system", system_prompt),
+                    ("human", "{input}"),
+                ]
+            )
+
+            question_answer_chain = create_stuff_documents_chain(deepseek.model, prompt)
+            rag_chain = create_retrieval_chain(self.retriever, question_answer_chain)
+
+            results = rag_chain.invoke({"input": query})
+
+            print("answer", results['answer'])
+            print("context", results["context"][0].page_content)
             
             # Truncate context if it is too long
             if len(context_documents) > max_context_length:
@@ -326,10 +346,9 @@ class DeepSeekApplication:
                 )
             s = generated_output.sequences[0]
             output = deepseek.tokenizer.decode(s)
-            print("Answering", output)
 
             answer = {
-                'content': output,
+                'content': self.post_processing(output),
                 'metadata': {
                     'processing_time': time.time() - start_time,
                     'context_length': len(combined_context),
