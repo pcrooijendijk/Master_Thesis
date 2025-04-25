@@ -273,9 +273,6 @@ class DeepSeekApplication:
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             
-            if metadata:
-                self.document_metadata.update(metadata)
-            
             logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
             
         except Exception as e:
