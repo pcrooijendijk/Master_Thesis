@@ -324,7 +324,7 @@ class DeepSeekApplication:
             output = deepseek.tokenizer.decode(s)
 
             answer = {
-                'content': self.post_processing(output),
+                'content': output,
                 'metadata': {
                     'processing_time': time.time() - start_time,
                     'context_length': len(combined_context),
