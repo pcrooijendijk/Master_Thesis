@@ -344,6 +344,10 @@ class DeepSeekApplication:
         text = re.sub(r"<\｜begin▁of▁sentence\｜>", "", output)
         text = re.sub(r"<\｜end▁of▁sentence\｜>", "", text)
 
+        match = re.search(r"Your answer\s*(.*?)\s*$", text, re.DOTALL)
+        if match:
+            text = match.group(1)
+
         # Removing the think caps
         text = re.sub(r"</?\w+>", "", text)
         text = text.replace("\n", "") # Remove trailing new lines

@@ -124,7 +124,7 @@ def clean_model_output(text: str) -> str:
     return text.strip()
 
 
-raw_output = """How to generically post process the following with regex: <｜begin▁of▁sentence｜>
+raw_output = """<｜begin▁of▁sentence｜>
         You are given a context document and a related question. Your task is to generate a comprehensive answer based on the context.
 
         Context:
@@ -147,7 +147,8 @@ raw_output = """How to generically post process the following with regex: <｜be
          Your answer
 </think>
 
-The context provided discusses various machine learning model explanations methods, such as LIME and Alvarez-Melis and Jaakkola (2017) methods. It mentions that these methods, like LIME, approximate the model's behavior locally by perturbing inputs and fitting a simple explanation model. It also notes that some methods, such as those by McDonnell et al. (2017, 2016), focus on providing rationales justifying categorizations, while others, like wallace et al. (2010) and Sharma et al. (2015), aim to learn from rationales. The key point is that these methods are dependent on the model's properties, such as locality and comprehensive-ness, rather than being independent of them.<｜end▁of▁sentence｜><｜end▁of▁sentence｜><｜end▁of▁sentence｜> """
+The context provided discusses various machine learning model explanations methods, such as LIME and Alvarez-Melis and Jaakkola (2017) methods. It mentions that these methods, like LIME, approximate the model's behavior locally by perturbing inputs and fitting a simple explanation model. It also notes that some methods, such as those by McDonnell et al. (2017, 2016), focus on providing rationales justifying categorizations, while others, like wallace et al. (2010) and Sharma et al. (2015), aim to learn from rationales. The key point is that these methods are dependent on the model's properties, such as locality and comprehensive-ness, rather than being independent of them.<｜end▁of▁sentence｜><｜end▁of▁sentence｜><｜end▁of▁sentence｜>
+"""
 
 cleaned = clean_model_output(raw_output)
 
