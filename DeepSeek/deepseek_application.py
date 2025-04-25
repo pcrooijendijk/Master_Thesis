@@ -262,6 +262,7 @@ class DeepSeekApplication:
                         )
                         for doc in documents
                     )
+                print("DOCUMENTS", documents_array)
                 return documents_array
             
             if documents: 
