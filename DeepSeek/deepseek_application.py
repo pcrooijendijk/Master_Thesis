@@ -291,7 +291,7 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
+            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
 
             # Lower scores is more similar
             retrieved_bits = [
@@ -306,7 +306,7 @@ class DeepSeekApplication:
                 combined_context = combined_texts[:max_context_length] + "..."
             
             prompt = self.construct_prompt(query, combined_context)
-            print("prompt", prompt)
+
             inputs = deepseek.tokenizer(prompt, return_tensors="pt")
             input_ids = inputs["input_ids"].to(device)
             generation_config = GenerationConfig(
@@ -336,7 +336,7 @@ class DeepSeekApplication:
                     'query_length': len(query)
                 }
             }
-            return answer
+            return answer, relevant_document
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
