@@ -250,15 +250,11 @@ class DeepSeekApplication:
                         for doc in documents
                     )
                 else: 
+                    print(metadata)
                     documents_array = (
                         Document(
                             page_content=doc, 
-                            metadata={
-                                "filename": metadata.filename,
-                                "chunk_count": metadata.chunk_count,
-                                "total_tokens": metadata.total_tokens,
-                                "processing_time": metadata.processing_time
-                            }
+                            metadata={"space_key_index": doc["space_key_index"]}
                         )
                         for doc in documents
                     )
