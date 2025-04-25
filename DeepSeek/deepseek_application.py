@@ -249,9 +249,7 @@ class DeepSeekApplication:
                         )
                         for doc in documents
                     )
-                else: 
-                    print(metadata)
-                    print("document", documents)
+                else:
                     documents_array = (
                         Document(
                             page_content=doc, 
@@ -267,10 +265,11 @@ class DeepSeekApplication:
                 return documents_array
             
             if documents: 
+                print("BOOMBAYAAAHH")
                 self.documents_array = loading_documents(documents, documents_array) # Adding additional documents to the chunks
             else: 
                 self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
-
+            print(self.documents_array)
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             
