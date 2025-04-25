@@ -343,19 +343,12 @@ class DeepSeekApplication:
             raise
 
     def post_processing(self, output: str) -> str:
-        # Removing the begin and end of sentence tokens
-        text = re.sub(r"<\｜begin▁of▁sentence\｜>", "", output)
-        text = re.sub(r"<\｜end▁of▁sentence\｜>", "", text)
-
-        match = re.search(r"Your answer\s*(.*?)\s*$", text, re.DOTALL)
+        # Extract the answer given by the model between </think> and the first <｜end▁of▁sentence｜>
+        match = re.search(r'</think>(.*?)<｜end▁of▁sentence｜>', output, re.DOTALL)
         if match:
             text = match.group(1)
-
-        # Removing the think caps
-        text = re.sub(r"</?\w+>", "", text)
-        text = text.replace("\n", "") # Remove trailing new lines
-
-        return text.strip()
+            return text.replace("\n", "").strip()
+        return ""
 
 
     def construct_prompt(self, query: str, context: str) -> str: # TODO: make another prompt to check if context is empty to handle better question answering
