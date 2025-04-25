@@ -314,7 +314,7 @@ class DeepSeekApplication:
             )
 
 
-            pipe = pipeline("text-generation", model=deepseek.model, tokenizer=deepseek.tokenizer, return_full_text=False)
+            pipe = pipeline("text-generation", model=deepseek.model, tokenizer=deepseek.tokenizer, return_full_text=True)
             llm = HuggingFacePipeline(pipeline=pipe)
 
             qa_chain = ConversationalRetrievalChain.from_llm(
