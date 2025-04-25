@@ -253,7 +253,12 @@ class DeepSeekApplication:
                     documents_array = (
                         Document(
                             page_content=doc, 
-                            metadata=metadata
+                            metadata={
+                                "filename": metadata.filename,
+                                "chunk_count": metadata.chunk_count,
+                                "total_tokens": metadata.total_tokens,
+                                "processing_time": metadata.processing_time
+                            }
                         )
                         for doc in documents
                     )

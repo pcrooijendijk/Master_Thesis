@@ -101,11 +101,12 @@ def run(
                     info="Enter text directly. Each paragraph will be processed separately."
                 )
 
-                temperature_slider = gr.Slider(minimum=0, maximum=1, value=0.6, label="🌡️ Temperature")
-                top_p_slider = gr.Slider(minimum=0, maximum=1, value=0.75, label="Top p")
-                top_k_slider = gr.Slider(minimum=0, maximum=100, step=1, value=40, label="Top k")
-                beams_slider = gr.Slider(minimum=1, maximum=4, step=1, value=4, label="Beams")
-                max_tokens_slider = gr.Slider(minimum=1, maximum=2000, step=1, value=1500, label="Max tokens")
+                with gr.Accordion("⚙️ Advanced Generation Settings", open=False):
+                    temperature_slider = gr.Slider(minimum=0, maximum=1, value=0.6, label="🌡️ Temperature")
+                    top_p_slider = gr.Slider(minimum=0, maximum=1, value=0.75, label="Top p")
+                    top_k_slider = gr.Slider(minimum=0, maximum=100, step=1, value=40, label="Top k")
+                    beams_slider = gr.Slider(minimum=1, maximum=4, step=1, value=4, label="Beams")
+                    max_tokens_slider = gr.Slider(minimum=1, maximum=2000, step=1, value=1500, label="Max tokens")
 
                 generate_btn = gr.Button("🚀 Generate Response")
 
