@@ -359,24 +359,33 @@ class DeepSeekApplication:
 
 
     def construct_prompt(self, query: str, context: str) -> str: # TODO: make another prompt to check if context is empty to handle better question answering
-        """Construct an enhanced prompt template"""
-        return f"""
-        You are an expert assistant designed to answer questions accurately and helpfully.
+        if context:
+            return f"""
+            You are an expert assistant designed to answer questions accurately and helpfully.
 
-        Below, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
+            Below, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
 
-        Context (may be empty or partial):
-        {context}
+            Context (may be empty or partial):
+            {context}
 
-        Question:
-        {query}
+            Question:
+            {query}
 
-        Instructions:
-        - If the context is relevant and useful, base your answer on it.
-        - If the context is insufficient or empty, answer using your own understanding and general knowledge.
-        - Always respond in complete, well-structured sentences.
-        - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
-        - Your goal is to provide the best possible answer regardless of context quality.
+            Instructions:
+            - If the context is relevant and useful, base your answer on it.
+            - If the context is insufficient or empty, answer using your own understanding and general knowledge.
+            - Always respond in complete, well-structured sentences.
+            - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
+            - Your goal is to provide the best possible answer regardless of context quality.
 
-        Final Answer:
-        """
+            Final Answer:
+            """
+        else: 
+            return f"""
+            You are a knowledgeable assistant. Answer the following question based on your own understanding and general knowledge.
+
+            Question:
+            {query}
+
+            Provide a full-sentence, informative, and clear response.
+            """
