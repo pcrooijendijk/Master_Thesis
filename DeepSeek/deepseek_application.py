@@ -346,7 +346,7 @@ class DeepSeekApplication:
         text = re.sub(r"</?\w+>", "", text)
         text = text.replace("\n", "") # Remove trailing new lines
 
-        return text
+        return text.strip()
 
 
     def construct_prompt(self, query: str, context: str) -> str:
