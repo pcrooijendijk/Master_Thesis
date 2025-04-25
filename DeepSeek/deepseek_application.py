@@ -365,5 +365,5 @@ class DeepSeekApplication:
         3. Complete and informative
         4. Clear and well-structured
 
-        Please answer in a full sentence without using boxed notation or letter choices.:
+        Please provide a full-sentence answer.
         """
