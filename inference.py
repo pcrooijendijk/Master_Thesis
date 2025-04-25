@@ -131,7 +131,7 @@ def run(
         flagging_mode="never"
     ).queue()
 
-    UI.launch(share=True, server_port=7860)
+    UI.launch(share=True)
 
 if __name__ == "__main__":
     fire.Fire(run)

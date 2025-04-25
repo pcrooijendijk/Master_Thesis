@@ -300,7 +300,7 @@ class DeepSeekApplication:
 
             print("RETRIEVED BITS", retrieved_bits)
 
-            combined_texts = ' '.join(texts)
+            combined_texts = ' '.join(retrieved_bits)
             
             # Truncate context if it is too long
             if len(combined_texts) > max_context_length:
