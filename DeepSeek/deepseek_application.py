@@ -324,7 +324,7 @@ class DeepSeekApplication:
             output = deepseek.tokenizer.decode(s)
 
             answer = {
-                'content': output,
+                'content': self.post_processing(output),
                 'metadata': {
                     'processing_time': time.time() - start_time,
                     'context_length': len(combined_context),
@@ -338,11 +338,16 @@ class DeepSeekApplication:
             raise
 
     def post_processing(self, output: str) -> str:
-        answer = re.split(r"Answer:*?", output) # Extracting the answer
-        think_answer = re.split(r"</think>", answer[2]) # Removing the think caps
-        final_answer = re.split(r"<｜end▁of▁sentence｜>", think_answer[1]) # Removing the end of sentence token
-        
-        return final_answer[0].split('\n')[-1]
+        # Removing the begin and end of sentence tokens
+        text = re.sub(r"<\｜begin▁of▁sentence\｜>", "", output)
+        text = re.sub(r"<\｜end▁of▁sentence\｜>", "", text)
+
+        # Removing the think caps
+        text = re.sub(r"</?\w+>", "", text)
+        text = text.replace("\n", "") # Remove trailing new lines
+
+        return text
+
 
     def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
