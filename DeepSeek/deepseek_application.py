@@ -217,6 +217,9 @@ class DeepSeekApplication:
 
             text_splits = self.recursive_text_splitter.split_documents([scores[0]])
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
+            results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
+            print("results with scores", results_with_scores)
+
 
             self.retriever = vectorstore.as_retriever()
 
