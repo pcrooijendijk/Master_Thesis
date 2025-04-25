@@ -298,8 +298,6 @@ class DeepSeekApplication:
                 text.page_content for text, score in self.results_with_scores if score <= 0.7
             ]
 
-            print("RETRIEVED BITS", retrieved_bits)
-
             combined_texts = ' '.join(retrieved_bits)
             
             # Truncate context if it is too long
@@ -362,23 +360,22 @@ class DeepSeekApplication:
     def construct_prompt(self, query: str, context: str) -> str:
         """Construct an enhanced prompt template"""
         return f"""
-        You are given a context document and a related question. Your task is to generate a comprehensive answer based on the context.
+        You are an expert assistant designed to answer questions accurately and helpfully.
 
-        Context:
+        Below, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
+
+        Context (may be empty or partial):
         {context}
 
         Question:
         {query}
 
         Instructions:
-        - Answer based only on the given context if it's relevant.
-        - If the context is insufficient or empty, provide the best answer using your own knowledge.
-        - Based on the context above, explain your answer in complete sentences.
-        - Ensure your answer is:
-        1. Directly relevant
-        2. Accurate and fact-based
-        3. Complete and informative
-        4. Clear and well-structured
+        - If the context is relevant and useful, base your answer on it.
+        - If the context is insufficient or empty, answer using your own understanding and general knowledge.
+        - Always respond in complete, well-structured sentences.
+        - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
+        - Your goal is to provide the best possible answer regardless of context quality.
 
-        Please provide a full-sentence answer.
+        Final Answer:
         """
