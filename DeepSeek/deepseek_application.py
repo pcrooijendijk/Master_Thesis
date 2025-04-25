@@ -299,9 +299,6 @@ class DeepSeekApplication:
             ]
 
             print("RETRIEVED BITS", retrieved_bits)
-            texts = [
-                doc.page_content for doc in retrieved_bits
-            ]
 
             combined_texts = ' '.join(texts)
             
