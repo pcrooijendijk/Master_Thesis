@@ -234,6 +234,14 @@ class DeepSeekApplication:
         document = document.replace('\t', ' ').strip()
         return document
     
+    def clean_metadata(self, metadata: dict) -> dict:
+        return {
+            k: str(v) if v is not None else ""  # or remove it with a conditional
+            for k, v in metadata.items()
+            if v is not None  # Optional: skip None entirely
+        }
+
+    
     def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None) -> None:
         try:
             doc_chunks = []
@@ -246,12 +254,10 @@ class DeepSeekApplication:
                     documents_array = (
                         Document(
                             page_content=doc["context"], 
-                            metadata=doc["metadata"]
+                            metadata=self.clean_metadata(doc["metadata"])
                         )
                         for doc in documents
                     )
-                    print(documents[0]['metadata'])
-                    print(documents[1]['metadata'])
                 else:
                     documents_array = (
                         Document(
