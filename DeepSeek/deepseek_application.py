@@ -315,14 +315,13 @@ class DeepSeekApplication:
                 retrieved_bits = [
                     text.page_content for text, _ in self.results_with_scores
                 ]
-                metadata = self.results_with_scores[0]
+                metadata = self.results_with_scores[0][0].metadata
             else: 
                 # Lower scores is more similar
                 retrieved_bits = [
                     text.page_content for text, score in self.results_with_scores if score <= 0.7
                 ]
-                metadata = self.results_with_scores[0]
-                print(metadata)
+                metadata = self.results_with_scores[0][0].metadata
 
             combined_texts = ' '.join(retrieved_bits)
             combined_context = []
