@@ -246,7 +246,7 @@ class DeepSeekApplication:
                     documents_array = (
                         Document(
                             page_content=doc["context"], 
-                            metadata={"space_key_index": doc["space_key_index"]}
+                            metadata=doc["metadata"]
                         )
                         for doc in documents
                     )
@@ -307,11 +307,13 @@ class DeepSeekApplication:
                 retrieved_bits = [
                     text.page_content for text, _ in self.results_with_scores
                 ]
+                metadata = self.results_with_scores[0].metadata
             else: 
                 # Lower scores is more similar
                 retrieved_bits = [
                     text.page_content for text, score in self.results_with_scores if score <= 0.7
                 ]
+                metadata = self.results_with_scores[0].metadata
 
             combined_texts = ' '.join(retrieved_bits)
             combined_context = []
@@ -344,6 +346,7 @@ class DeepSeekApplication:
             answer = {
                 'content': self.post_processing(output),
                 'metadata': {
+                    'text_metadata': metadata,
                     'processing_time': time.time() - start_time,
                     'context_length': len(combined_context),
                     'query_length': len(query)
