@@ -24,10 +24,8 @@ def run(
         prompt_template,
     )
 
-    def format_metadata_pretty(metadata: dict) -> list:
+    def format_metadata_html(metadata: dict):
         flat_data = {}
-
-        # Flatten first-level keys, especially for 'text_metadata'
         for k, v in metadata.items():
             if isinstance(v, dict):
                 for sub_k, sub_v in v.items():
@@ -35,28 +33,13 @@ def run(
             else:
                 flat_data[k] = v
 
-        # Make keys more human-readable
-        pretty_keys = {
-            "author": "Author",
-            "creationDate": "Created",
-            "creator": "Created With",
-            "format": "Format",
-            "keywords": "Keywords",
-            "modDate": "Modified",
-            "producer": "PDF Producer",
-            "subject": "Subject",
-            "title": "Title",
-            "trapped": "Trapped",
-            "processing_time": "Processing Time (s)",
-            "context_length": "Context Length",
-            "query_length": "Query Length"
-        }
-
-        # Format key-value pairs
-        return [
-            f"{pretty_keys.get(k, k)}: {v if v else 'N/A'}"
-            for k, v in flat_data.items()
-        ]
+        html = "<ul style='list-style: none; padding-left: 0;'>"
+        for k, v in flat_data.items():
+            label = k.replace("_", " ").capitalize()
+            value = v if v else "N/A"
+            html += f"<li><strong>{label}:</strong> {value}</li>"
+        html += "</ul>"
+        return html
 
     def evaluate(
         question: str, # The question to be asked
@@ -99,7 +82,7 @@ def run(
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
         # For the output history
         OUTPUT_HISTORY.append(response)
-        return (response['content'], format_metadata_pretty(metadata), OUTPUT_HISTORY, content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_pretty(response['metadata']), OUTPUT_HISTORY, content_doc)
+        return (response['content'], format_metadata_html(metadata), OUTPUT_HISTORY, content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_pretty(response['metadata']), OUTPUT_HISTORY, content_doc)
 
 
     def show_document():
@@ -153,11 +136,9 @@ def run(
                     interactive=False
                 )
 
-                metadata_box = gr.Textbox(
-                    lines=10,
+                metadata_box = gr.HTML(
                     label="📊 Document Info",
                     info="Meta Data of the input documents.",
-                    interactive=False
                 )
 
                 history_box = gr.Textbox(
