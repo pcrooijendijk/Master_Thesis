@@ -11,6 +11,7 @@ import faiss
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
+from datasets import load_dataset
 
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
@@ -262,14 +263,17 @@ class DeepSeekApplication:
                         )
                         for doc in documents
                     )
-                print("DOCUMENTS", documents_array)
                 return documents_array
             
             if documents: 
                 self.uploaded_doc_present = True
                 self.documents_array = loading_documents(documents, documents_array, dict=False) # Adding additional documents to the chunks
             else: 
-                self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
+                all_documents = load_dataset("json", data_files="utils/documents.json")
+                temp_doc = []
+                for index, _ in enumerate(all_documents['train']):
+                    temp_doc.append(all_documents["train"][index])
+                self.documents_array = loading_documents(temp_doc, documents_array, dict=True) # Adding the documents of the clients they have access to
 
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
