@@ -99,7 +99,7 @@ def run(
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
         # For the output history
         OUTPUT_HISTORY.append(response)
-        return (response['content'], metadata, OUTPUT_HISTORY, content_doc) if uploaded_documents['files'] or custom_text else (response['content'], response['metadata'], OUTPUT_HISTORY, content_doc)
+        return (response['content'], format_metadata_pretty(metadata), OUTPUT_HISTORY, content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_pretty(response['metadata']), OUTPUT_HISTORY, content_doc)
 
 
     def show_document():
@@ -191,7 +191,7 @@ def run(
                 beams_slider,
                 max_tokens_slider
             ],
-            outputs=[output_box, format_metadata_pretty(metadata_box), history_box, full_doc_view]
+            outputs=[output_box, metadata_box, history_box, full_doc_view]
         )
 
         show_doc_btn.click(fn=show_document, outputs=full_doc_view)
