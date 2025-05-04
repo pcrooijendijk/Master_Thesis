@@ -250,6 +250,8 @@ class DeepSeekApplication:
                         )
                         for doc in documents
                     )
+                    print(documents[0]['metadata'])
+                    print(documents[1]['metadata'])
                 else:
                     documents_array = (
                         Document(
