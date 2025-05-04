@@ -49,7 +49,8 @@ class Dataset:
                         "question": q_list[0],
                         "context": chr(12).join([page.get_text().replace('\n', '') for page in file]),
                         "answer": a_list[0],
-                        "space_key_index": space_key_index
+                        "space_key_index": space_key_index,
+                        "metadata": file.metadata,
                     }
                 )
         with open('documents.json', 'w', encoding='utf-8') as f: 

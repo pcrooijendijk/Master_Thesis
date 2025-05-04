@@ -341,8 +341,6 @@ class DeepSeekApplication:
             s = generated_output.sequences[0]
             output = deepseek.tokenizer.decode(s)
 
-            print("OUTPUT", output)
-
             answer = {
                 'content': self.post_processing(output),
                 'metadata': {
