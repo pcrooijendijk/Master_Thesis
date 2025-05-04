@@ -24,6 +24,40 @@ def run(
         prompt_template,
     )
 
+    def format_metadata_pretty(metadata: dict) -> list:
+        flat_data = {}
+
+        # Flatten first-level keys, especially for 'text_metadata'
+        for k, v in metadata.items():
+            if isinstance(v, dict):
+                for sub_k, sub_v in v.items():
+                    flat_data[sub_k] = sub_v
+            else:
+                flat_data[k] = v
+
+        # Make keys more human-readable
+        pretty_keys = {
+            "author": "Author",
+            "creationDate": "Created",
+            "creator": "Created With",
+            "format": "Format",
+            "keywords": "Keywords",
+            "modDate": "Modified",
+            "producer": "PDF Producer",
+            "subject": "Subject",
+            "title": "Title",
+            "trapped": "Trapped",
+            "processing_time": "Processing Time (s)",
+            "context_length": "Context Length",
+            "query_length": "Query Length"
+        }
+
+        # Format key-value pairs
+        return [
+            f"{pretty_keys.get(k, k)}: {v if v else 'N/A'}"
+            for k, v in flat_data.items()
+        ]
+
     def evaluate(
         question: str, # The question to be asked
         uploaded_documents: str = None, # The corresponding document(s)
@@ -157,7 +191,7 @@ def run(
                 beams_slider,
                 max_tokens_slider
             ],
-            outputs=[output_box, metadata_box, history_box, full_doc_view]
+            outputs=[output_box, format_metadata_pretty(metadata_box), history_box, full_doc_view]
         )
 
         show_doc_btn.click(fn=show_document, outputs=full_doc_view)
