@@ -8,7 +8,7 @@ from DeepSeek import DeepSeekApplication, Metadata
 OUTPUT_HISTORY = []
 
 def run(
-    client_id: int = 2,    
+    client_id: int = 9,    
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
     lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
     lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
@@ -136,10 +136,12 @@ def run(
                     interactive=False
                 )
 
-                metadata_box = gr.HTML(
-                    label="📊 Document Info",
-                    info="Meta Data of the input documents.",
-                )
+                with gr.Accordion("📊 Document Info", open=False):
+                    metadata_box = gr.HTML()
+
+                # metadata_box = gr.HTML(
+                #     label="📊 Document Info",
+                # )
 
                 history_box = gr.Textbox(
                     lines=20,
