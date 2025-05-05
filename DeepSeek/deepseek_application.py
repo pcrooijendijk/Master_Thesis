@@ -375,7 +375,7 @@ class DeepSeekApplication:
         return ""
 
 
-    def construct_prompt(self, query: str, context: str) -> str: # TODO: make another prompt to check if context is empty to handle better question answering
+    def construct_prompt(self, query: str, context: str) -> str: 
         if context:
             return f"""
             You are an expert assistant designed to answer questions accurately and helpfully.

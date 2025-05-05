@@ -82,7 +82,7 @@ def run(
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
         # For the output history
         OUTPUT_HISTORY.append(response)
-        return (response['content'], format_metadata_html(metadata), OUTPUT_HISTORY, content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_pretty(response['metadata']), OUTPUT_HISTORY, content_doc)
+        return (response['content'], format_metadata_html(metadata), OUTPUT_HISTORY, content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_html(response['metadata']), OUTPUT_HISTORY, content_doc)
 
 
     def show_document():
@@ -138,10 +138,6 @@ def run(
 
                 with gr.Accordion("📊 Document Info", open=False):
                     metadata_box = gr.HTML()
-
-                # metadata_box = gr.HTML(
-                #     label="📊 Document Info",
-                # )
 
                 history_box = gr.Textbox(
                     lines=20,
