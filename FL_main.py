@@ -67,7 +67,11 @@ def federated_privacy_learning(
         'transformer.ln_f': 'cuda', # Keep final layer on GPU
         'embed_tokens': 'cuda',  # Make sure the embedding layer is on GPU 
         'model.layers.0.input_layernorm': 'cuda',  # Assign input_layernorm to GPU
-        'model.layers.1.input_layernorm': 'cuda',    
+        'model.layers.0.mlp.down_proj': 'cuda',  # Move down_proj layer to GPU
+        'model.layers.0.mlp.up_proj': 'cuda',  # Move up_proj layer to GPU
+        'model.layers.1.input_layernorm': 'cuda',  # Assign second input_layernorm to GPU (if required)
+        'model.layers.1.mlp.down_proj': 'cuda',  # Move second down_proj layer to GPU
+        'model.layers.1.mlp.up_proj': 'cuda',   
     }
 
     # Helper functions for the training process
