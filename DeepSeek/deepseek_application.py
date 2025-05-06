@@ -185,7 +185,7 @@ class DeepSeekApplication:
             'batch_size': 8
         }
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="BAAI/bge-m3", # Embedding is different from the original model due to efficient embedding usage
+            model_name="BAAI/bge-small-en-v1.5", # Embedding is different from the original model due to efficient embedding usage
             model_kwargs=model_kwargs,
             encode_kwargs=encode_kwargs
         )
