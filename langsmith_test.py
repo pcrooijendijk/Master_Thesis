@@ -2,6 +2,7 @@ from langsmith import Client
 from DeepSeek import DeepSeekApplication
 from openevals.llm import create_llm_as_judge
 from openevals.prompts import CORRECTNESS_PROMPT
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import os
 
 os.environ["LANGCHAIN_API_KEY"] = "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"
@@ -15,6 +16,13 @@ deepseek = DeepSeekApplication(
     lora_config_path = "FL_output", # Path to the config.json file after LoRA
     prompt_template = 'utils/prompt_template.json', # Prompt template for LLM
 )
+
+
+model_id = "meta-llama/Llama-2-7b-chat-hf"
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(model_id)
+
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
 
 client = Client()
 
@@ -46,25 +54,40 @@ client.create_examples(dataset_id=dataset.id, examples=examples)
 def target(inputs: dict) -> dict:
     return deepseek.test_generation(deepseek, inputs["question"], 0.1, 0.75, 40, 4, 128)
 
-def correctness_evaluator(inputs: dict, outputs: dict, reference_outputs: dict):
-    evaluator = create_llm_as_judge(
-        prompt=CORRECTNESS_PROMPT,
-        model="openai:o3-mini",
-        feedback_key="correctness",
-    )
-    eval_result = evaluator(
-        inputs=inputs,
-        outputs=outputs,
-        reference_outputs=reference_outputs
-    )
-    return eval_result
+def llama_grader(inputs: dict, outputs: dict, reference_outputs: dict):
+    question = inputs["question"]
+    prediction = outputs["output"]
+    reference = reference_outputs["output"]
+
+    prompt = f"""
+    [INST] <<SYS>>
+    You are an expert evaluator. Please assess the quality of an AI answer.
+    <</SYS>>
+
+    Question: {question}
+
+    Prediction: {prediction}
+
+    Reference: {reference}
+
+    Does the prediction correctly and fully answer the question based on the reference? Reply "yes" or "no", followed by a short explanation.
+    [/INST]
+    """
+
+    result = pipe(prompt, max_new_tokens=150, return_full_text=False)[0]["generated_text"]
+
+    return {
+        "key": "correctness",
+        "score": 1.0 if "yes" in result.lower() else 0.0,
+        "value": result.strip()
+    }
 
 # After running the evaluation, a link will be provided to view the results in langsmith
 experiment_results = client.evaluate(
     target,
     data="Sample dataset",
     evaluators=[
-        correctness_evaluator,
+        llama_grader,
         # can add multiple evaluators here
     ],
     experiment_prefix="first-eval-in-langsmith",
