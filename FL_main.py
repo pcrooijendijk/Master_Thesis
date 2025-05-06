@@ -77,6 +77,7 @@ def federated_privacy_learning(
         'model.layers.0.self_attn.k_proj.bias': 'cuda',
         'model.layers.0.self_attn.k_proj.weight': 'cuda',
         'model.layers.0.self_attn.o_proj.weight': 'cuda',
+        'model.layers.0.self_attn.q_proj.bias': 'cuda',
     }
 
     # Helper functions for the training process
