@@ -373,6 +373,28 @@ class DeepSeekApplication:
             text = match.group(1)
             return text.replace("\n", "").strip()
         return ""
+    
+    def test_generation(self, deepseek, prompt: str, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
+        inputs = deepseek.tokenizer(prompt, return_tensors="pt")
+        input_ids = inputs["input_ids"].to(device)
+        generation_config = GenerationConfig(
+            temperature=temp,
+            top_p=top_p,
+            top_k=top_k,
+            num_beams=num_beams
+        )
+        with torch.no_grad():
+            generated_output = deepseek.model.generate(
+                input_ids=input_ids,
+                generation_config=generation_config,
+                return_dict_in_generate=True,
+                output_scores=True,
+                max_new_tokens=max_new_tokens,
+            )
+        s = generated_output.sequences[0]
+        output = deepseek.tokenizer.decode(s)
+
+        return self.post_processing(output)
 
 
     def construct_prompt(self, query: str, context: str) -> str: 
