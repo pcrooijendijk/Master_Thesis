@@ -60,24 +60,45 @@ def federated_privacy_learning(
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     gradient_steps = batch_size // micro_batch_size
+    # device_map = {
+    #     'transformer.h.0': 'cpu',  # Move layer 0 to CPU
+    #     'transformer.h.1': 'cpu',  # Move layer 1 to CPU
+    #     'transformer.h.2': 'cuda',  # Keep layer 2 on GPU
+    #     'transformer.ln_f': 'cuda', # Keep final layer on GPU
+    #     'embed_tokens': 'cuda',  # Make sure the embedding layer is on GPU 
+    #     'model.layers.0.input_layernorm': 'cuda',  # Assign input_layernorm to GPU
+    #     'model.layers.0.mlp.down_proj': 'cuda',  # Move down_proj layer to GPU
+    #     'model.layers.0.mlp.up_proj': 'cuda',  # Move up_proj layer to GPU
+    #     'model.layers.1.input_layernorm': 'cuda',  # Assign second input_layernorm to GPU (if required)
+    #     'model.layers.1.mlp.down_proj': 'cuda',  # Move second down_proj layer to GPU
+    #     'model.layers.1.mlp.up_proj': 'cuda',   
+    #     'model.layers.0.mlp.gate_proj.weight': 'cuda',
+    #     'model.layers.0.post_attention_layernorm.weight': 'cuda',
+    #     'model.layers.0.self_attn.k_proj.bias': 'cuda',
+    #     'model.layers.0.self_attn.k_proj.weight': 'cuda',
+    #     'model.layers.0.self_attn.o_proj.weight': 'cuda',
+    #     'model.layers.0.self_attn.q_proj.bias': 'cuda',
+    # }
+    
     device_map = {
-        'transformer.h.0': 'cpu',  # Move layer 0 to CPU
-        'transformer.h.1': 'cpu',  # Move layer 1 to CPU
-        'transformer.h.2': 'cuda',  # Keep layer 2 on GPU
-        'transformer.ln_f': 'cuda', # Keep final layer on GPU
-        'embed_tokens': 'cuda',  # Make sure the embedding layer is on GPU 
-        'model.layers.0.input_layernorm': 'cuda',  # Assign input_layernorm to GPU
-        'model.layers.0.mlp.down_proj': 'cuda',  # Move down_proj layer to GPU
-        'model.layers.0.mlp.up_proj': 'cuda',  # Move up_proj layer to GPU
-        'model.layers.1.input_layernorm': 'cuda',  # Assign second input_layernorm to GPU (if required)
-        'model.layers.1.mlp.down_proj': 'cuda',  # Move second down_proj layer to GPU
-        'model.layers.1.mlp.up_proj': 'cuda',   
-        'model.layers.0.mlp.gate_proj.weight': 'cuda',
-        'model.layers.0.post_attention_layernorm.weight': 'cuda',
-        'model.layers.0.self_attn.k_proj.bias': 'cuda',
-        'model.layers.0.self_attn.k_proj.weight': 'cuda',
-        'model.layers.0.self_attn.o_proj.weight': 'cuda',
-        'model.layers.0.self_attn.q_proj.bias': 'cuda',
+        "model.embed_tokens": "cuda",
+        "model.layers.0": "cuda",
+        "model.layers.1": "cuda",
+        "model.layers.2": "cuda",
+        "model.layers.3": "cuda",
+        "model.layers.4": "cuda",
+        "model.layers.5": "cuda",
+        "model.layers.6": "cuda",
+        "model.layers.7": "cuda",
+        "model.layers.8": "cuda",
+        "model.layers.9": "cuda",
+        "model.layers.10": "cuda",
+        "model.layers.11": "cuda",
+        "model.layers.12": "cpu",   # moved to CPU
+        "model.layers.13": "cpu",   # moved to CPU
+        "model.layers.14": "cpu",   # moved to CPU
+        "model.norm": "cpu",        # moved to CPU
+        "lm_head": "cpu"            # moved to CPU
     }
 
     # Helper functions for the training process
