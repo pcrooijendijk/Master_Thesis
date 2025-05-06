@@ -81,25 +81,19 @@ def federated_privacy_learning(
     # }
     
     device_map = {
-        "model.embed_tokens": "cuda",
-        "model.layers.0": "cuda",
-        "model.layers.1": "cuda",
-        "model.layers.2": "cuda",
-        "model.layers.3": "cuda",
-        "model.layers.4": "cuda",
-        "model.layers.5": "cuda",
-        "model.layers.6": "cuda",
-        "model.layers.7": "cuda",
-        "model.layers.8": "cuda",
-        "model.layers.9": "cuda",
-        "model.layers.10": "cuda",
-        "model.layers.11": "cuda",
-        "model.layers.12": "cpu",   # moved to CPU
-        "model.layers.13": "cpu",   # moved to CPU
-        "model.layers.14": "cpu",   # moved to CPU
-        "model.norm": "cpu",        # moved to CPU
-        "lm_head": "cpu"            # moved to CPU
+    "model.embed_tokens": "cuda",
+    "model.norm": "cpu",
+    "lm_head": "cpu"
     }
+
+    # First 15 layers on GPU
+    for i in range(15):
+        device_map[f"model.layers.{i}"] = "cuda"
+
+    # Remaining layers on CPU
+    for i in range(15, 28):
+        device_map[f"model.layers.{i}"] = "cpu"
+
 
     # Helper functions for the training process
     def tokenizer_init(prompt: str, add_eos_token: bool=True):
