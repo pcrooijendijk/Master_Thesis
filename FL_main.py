@@ -63,9 +63,9 @@ def federated_privacy_learning(
     device_map = {
         'transformer.h.0': 'cpu',  # Move layer 0 to CPU
         'transformer.h.1': 'cpu',  # Move layer 1 to CPU
-        'transformer.h.2': 'gpu',  # Keep layer 2 on GPU
-        'transformer.ln_f': 'gpu', # Keep final layer on GPU
-        'embed_tokens': 'gpu',  # Make sure the embedding layer is on GPU 
+        'transformer.h.2': 'cuda',  # Keep layer 2 on GPU
+        'transformer.ln_f': 'cuda', # Keep final layer on GPU
+        'embed_tokens': 'cuda',  # Make sure the embedding layer is on GPU 
     }
 
     # Helper functions for the training process
