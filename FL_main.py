@@ -72,6 +72,7 @@ def federated_privacy_learning(
         'model.layers.1.input_layernorm': 'cuda',  # Assign second input_layernorm to GPU (if required)
         'model.layers.1.mlp.down_proj': 'cuda',  # Move second down_proj layer to GPU
         'model.layers.1.mlp.up_proj': 'cuda',   
+        'model.layers.0.mlp.gate_proj.weight': 'cuda',
     }
 
     # Helper functions for the training process
