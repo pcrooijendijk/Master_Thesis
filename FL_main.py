@@ -98,10 +98,10 @@ def federated_privacy_learning(
     dataset_length = dict()
 
     model = AutoModelForCausalLM.from_pretrained(
-    global_model,
-    load_in_8bit=True,
-    torch_dtype=torch.float16,
-    device_map=device_map,
+        global_model,
+        load_in_8bit=True,
+        torch_dtype=torch.float32,
+        device_map=device_map,
     )
 
     tokenizer = AutoTokenizer.from_pretrained(global_model)
