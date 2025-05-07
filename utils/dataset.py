@@ -29,7 +29,7 @@ class Dataset:
             
         return documents
 
-    def convert_to_json(self) -> None:
+    def convert_to_json(self, answer_index: int, output_file: str) -> None:
         # Function to convert the questions, documents and answers to JSON format instead of
         # PDF and seperate JSON file
         documents = []
@@ -48,12 +48,12 @@ class Dataset:
                     {
                         "question": q_list[0],
                         "context": chr(12).join([page.get_text().replace('\n', '') for page in file]),
-                        "answer": a_list[0],
+                        "answer": a_list[answer_index],
                         "space_key_index": space_key_index,
                         "metadata": file.metadata,
                     }
                 )
-        with open('documents.json', 'w', encoding='utf-8') as f: 
+        with open(output_file, 'w', encoding='utf-8') as f: 
             json.dump(documents, f, ensure_ascii=False, indent=4)
 
 class Document: 
