@@ -1,8 +1,6 @@
 from langsmith import Client
 from DeepSeek import DeepSeekApplication
-from openevals.llm import create_llm_as_judge
-from openevals.prompts import CORRECTNESS_PROMPT
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from ollama_res import OllamaResponder
 import os
 
 os.environ["LANGCHAIN_API_KEY"] = "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"
@@ -17,14 +15,9 @@ deepseek = DeepSeekApplication(
     prompt_template = 'utils/prompt_template.json', # Prompt template for LLM
 )
 
-
-model_id = "meta-llama/Llama-3.2-3B"
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id)
-
-pipe = pipeline("text-generation", model=model, tokenizer=tokenizer)
-
 client = Client()
+
+ollama_chat = OllamaResponder("llama3.2", 0.1, 126)
 
 # Programmatically create a dataset in LangSmith
 # For other dataset creation methods, see:
@@ -52,44 +45,23 @@ client.create_examples(dataset_id=dataset.id, examples=examples)
 # Define the application logic you want to evaluate inside a target function
 # The SDK will automatically send the inputs from the dataset to your target function
 def target(inputs: dict) -> dict:
-    return deepseek.test_generation(deepseek, inputs["question"], 0.1, 0.75, 40, 4, 128)
+    result = ollama_chat.generate_response(inputs['question'])
+    return {"answer": result["content"]}
 
-def llama_grader(inputs: dict, outputs: dict, reference_outputs: dict):
-    question = inputs["question"]
-    prediction = outputs["output"]
-    reference = reference_outputs["output"]
+# Define evaluator (can be OpenAI-based or another local LLM if supported)
+def correctness_evaluator(inputs: dict, outputs: dict, reference_outputs: dict):
+    evaluator = create_llm_as_judge(
+        prompt="Evaluate the factual correctness of the answer based on the input and reference.",
+        model="openai:gpt-3.5-turbo",  # Use OpenAI, or switch to your own hosted model if supported
+        feedback_key="correctness"
+    )
+    return evaluator(inputs=inputs, outputs=outputs, reference_outputs=reference_outputs)
 
-    prompt = f"""
-    [INST] <<SYS>>
-    You are an expert evaluator. Please assess the quality of an AI answer.
-    <</SYS>>
-
-    Question: {question}
-
-    Prediction: {prediction}
-
-    Reference: {reference}
-
-    Does the prediction correctly and fully answer the question based on the reference? Reply "yes" or "no", followed by a short explanation.
-    [/INST]
-    """
-
-    result = pipe(prompt, max_new_tokens=150, return_full_text=False)[0]["generated_text"]
-
-    return {
-        "key": "correctness",
-        "score": 1.0 if "yes" in result.lower() else 0.0,
-        "value": result.strip()
-    }
-
-# After running the evaluation, a link will be provided to view the results in langsmith
+# Run the evaluation
 experiment_results = client.evaluate(
-    target,
+    target=target,
     data="Sample dataset",
-    evaluators=[
-        llama_grader,
-        # can add multiple evaluators here
-    ],
-    experiment_prefix="first-eval-in-langsmith",
+    evaluators=[correctness_evaluator],
+    experiment_prefix="ollama-local-eval",
     max_concurrency=2,
 )
