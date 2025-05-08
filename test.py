@@ -4,6 +4,7 @@ from tqdm import tqdm
 from typing import List, Optional, Dict
 import ollama
 
+
 all_documents = load_dataset("json", data_files="test_documents.json")
 temp_doc = []
 
@@ -88,22 +89,3 @@ for entry in temp_doc:
     print("\nScore:")
     print(">>", generate_response(_construct_prompt(entry['question'], entry['answer'], model_response)))
     print("\n-------------------------")
-
-def generate_model_scores(json_data, json_key, model="llama3"):
-    scores = []
-    for entry in tqdm(json_data, desc="Scoring entries"):
-        prompt = (
-            f"Given the input `{format_input(entry)}` "
-            f"and correct output `{entry['answer']}`, "
-            f"score the model response `{entry[json_key]}`"
-            f" on a scale from 0 to 100, where 100 is the best score. "
-            f"Respond with the integer number only."
-        )
-        score = generate_response(prompt, model)
-        try:
-            scores.append(int(score))
-        except ValueError:
-            print(f"Could not convert score: {score}")
-            continue
-
-    return scores

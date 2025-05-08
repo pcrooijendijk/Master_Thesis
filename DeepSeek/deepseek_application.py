@@ -367,17 +367,20 @@ class DeepSeekApplication:
             raise
 
     def post_processing(self, output: str) -> str:
-        # Extract the answer given by the model between </think> and the first <｜end▁of▁sentence｜>
-        match = re.search(r'</think>(.*?)<｜end▁of▁sentence｜>', output, re.DOTALL)
+        # Try to extract answer after "Final Answer:"
+        match = re.search(r"Final Answer:\s*(.*)", output)
         if match:
-            text = match.group(1)
-            return text.replace("\n", "").strip()
-        return ""
+            answer = match.group(1).strip()
+            # Optionally, strip tags or boxed formatting
+            answer = re.sub(r"[\\]boxed\{(.*?)}", r"\1", answer)
+            return answer.strip()
+
+        # Fallback if pattern not found
+        return output.strip()
     
     def test_generation(self, prompt: str, context: str, max_context_length: int, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
         # Truncate context if it is too long
-        if len(context) > max_context_length:
-            combined_context = context[:max_context_length] + "..."
+        combined_context = context[:max_context_length] + "..." if len(context) > max_context_length else context
         
         prompt = self.construct_prompt(prompt, combined_context)
         
