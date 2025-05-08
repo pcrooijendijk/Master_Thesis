@@ -374,14 +374,14 @@ class DeepSeekApplication:
             return text.replace("\n", "").strip()
         return ""
     
-    def test_generation(self, deepseek, prompt: str, context: str, max_context_length: int, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
+    def test_generation(self, prompt: str, context: str, max_context_length: int, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
         # Truncate context if it is too long
         if len(context) > max_context_length:
             combined_context = context[:max_context_length] + "..."
         
         prompt = self.construct_prompt(prompt, combined_context)
         
-        inputs = deepseek.tokenizer(prompt, return_tensors="pt")
+        inputs = self.tokenizer(prompt, return_tensors="pt")
         input_ids = inputs["input_ids"].to(device)
         generation_config = GenerationConfig(
             temperature=temp,
@@ -390,7 +390,7 @@ class DeepSeekApplication:
             num_beams=num_beams
         )
         with torch.no_grad():
-            generated_output = deepseek.model.generate(
+            generated_output = self.model.generate(
                 input_ids=input_ids,
                 generation_config=generation_config,
                 return_dict_in_generate=True,
@@ -398,7 +398,7 @@ class DeepSeekApplication:
                 max_new_tokens=max_new_tokens,
             )
         s = generated_output.sequences[0]
-        output = deepseek.tokenizer.decode(s)
+        output = self.tokenizer.decode(s)
 
         return self.post_processing(output)
 

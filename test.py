@@ -63,14 +63,15 @@ def format_input(entry):
 
     return instruction_text + input_text
 
+deepseek = DeepSeekApplication(
+    client_id = 9,    
+    ori_model = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
+    lora_weights_path = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
+    lora_config_path = "FL_output", # Path to the config.json file after LoRA
+    prompt_template = 'utils/prompt_template.json', # Prompt template for LLM
+)
+
 for entry in temp_doc:
-    deepseek = DeepSeekApplication(
-        client_id = 9,    
-        ori_model = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
-        lora_weights_path = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
-        lora_config_path = "FL_output", # Path to the config.json file after LoRA
-        prompt_template = 'utils/prompt_template.json', # Prompt template for LLM
-    )
     model_response = deepseek.test_generation(deepseek, entry['question'], entry['context'], 2000, 0.1, 10, 40, 4, 126)
     prompt = (
         f"Given the input `{format_input(entry)}` "
