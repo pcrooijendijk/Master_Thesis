@@ -24,6 +24,11 @@ def run(
         prompt_template,
     )
 
+    def format_qa_pair(pair: list[str]) -> str:
+        question, answer = pair
+        return f"**Question:** {question}\n\n**Answer:** {answer}"
+
+
     def format_metadata_html(metadata: dict):
         flat_data = {}
         for k, v in metadata.items():
@@ -83,7 +88,7 @@ def run(
         # For the output history
         OUTPUT_HISTORY.append(question)
         OUTPUT_HISTORY.append(response['content'])
-        return (response['content'], format_metadata_html(metadata), OUTPUT_HISTORY, content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_html(response['metadata']), OUTPUT_HISTORY, content_doc)
+        return (response['content'], format_metadata_html(metadata), format_qa_pair(OUTPUT_HISTORY), content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_html(response['metadata']), format_qa_pair(OUTPUT_HISTORY), content_doc)
 
 
     def show_document():
@@ -143,7 +148,7 @@ def run(
                     metadata_box = gr.HTML()
 
                 history_box = gr.Textbox(
-                    lines=20,
+                    lines=10,
                     label="📖 Output History",
                     info="Questions and answers are displayed here.",
                     interactive=False
