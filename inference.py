@@ -26,7 +26,7 @@ def run(
 
     def format_qa_pair(pair: list[str]) -> str:
         question, answer = pair
-        return f"**Question:** {question}\n\n**Answer:** {answer}"
+        return f"Question: {question}\n\nAnswer: {answer}\n\n"
 
 
     def format_metadata_html(metadata: dict):
