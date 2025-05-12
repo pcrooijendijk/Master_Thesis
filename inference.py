@@ -81,7 +81,8 @@ def run(
             deepseek.load_documents([], metadata)
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
         # For the output history
-        OUTPUT_HISTORY.append(response)
+        OUTPUT_HISTORY.append(question)
+        OUTPUT_HISTORY.append(response['content'])
         return (response['content'], format_metadata_html(metadata), OUTPUT_HISTORY, content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_html(response['metadata']), OUTPUT_HISTORY, content_doc)
 
 
@@ -90,7 +91,7 @@ def run(
     
     with gr.Blocks(title="🔎 DeepSeek Q&A", theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.blue)) as UI:
         gr.Markdown("""
-        # 🔎 DeepSeek Q&A
+        # 🔎 DeepSeek Document Q&A
         ### Document Analysis and Question Answering.
         Upload documents or paste text to ask questions about the content.
         """)
@@ -101,7 +102,8 @@ def run(
                 question_input = gr.Textbox(
                     lines=2,
                     label="❓ Question",
-                    info="Upload documents below to ask questions about the content."
+                    info="Upload documents below to ask questions about the content.", 
+                    placeholder="What is this document about?"
                 )
 
                 document_input = gr.MultimodalTextbox(
@@ -115,17 +117,18 @@ def run(
                 pasted_text_input = gr.Textbox(
                     lines=1,
                     label="📃 Or paste text",
-                    info="Enter text directly. Each paragraph will be processed separately."
+                    info="Enter text directly. Each paragraph will be processed separately.",
+                    placeholder="Paste additional or alternative content here."
                 )
 
                 with gr.Accordion("⚙️ Advanced Generation Settings", open=False):
-                    temperature_slider = gr.Slider(minimum=0, maximum=1, value=0.6, label="🌡️ Temperature")
+                    temperature_slider = gr.Slider(minimum=0, maximum=1, value=0.6, label="🌡️ Temperature (Randomness Control)")
                     top_p_slider = gr.Slider(minimum=0, maximum=1, value=0.75, label="Top p")
                     top_k_slider = gr.Slider(minimum=0, maximum=100, step=1, value=40, label="Top k")
                     beams_slider = gr.Slider(minimum=1, maximum=4, step=1, value=4, label="Beams")
                     max_tokens_slider = gr.Slider(minimum=1, maximum=2000, step=1, value=1500, label="Max tokens")
 
-                generate_btn = gr.Button("🚀 Generate Response")
+                generate_btn = gr.Button("💬 Generate Response")
 
             # Right Column: Outputs
             with gr.Column(scale=1):
