@@ -1,6 +1,7 @@
 import torch
 import os
 import gc
+import pickle
 import tenseal as ts
 from torch.nn.functional import normalize
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -54,7 +55,8 @@ class Server:
             path = encrypted_paths[index]
 
             with open(path, "rb") as f:
-                encrypted_weights = ts.ckks_tensor_from(context, f.read())
+                serialized = pickle.load(f)
+                encrypted_weights =  {k: ts.ckks_vector_from(context, v) for k, v in serialized.items()}
 
             encrypted_weights *= weights_array[index].item()
 
