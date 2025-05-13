@@ -79,8 +79,15 @@ class Client:
         context = ts.context_from(context_bytes)
         return context
 
-    def encrypt_model_weights(self, model_weights, context):
-        return ts.ckks_tensor(context, model_weights.tolist())
+    def encrypt_model_weights(state_dict, context):
+        # Flatten and concatenate all weights into a single list
+        flat_weights = []
+        for param in state_dict.values():
+            flat_weights.extend(param.cpu().numpy().flatten().tolist())
+
+        # Encrypt the flat list
+        return ts.ckks_vector(context, flat_weights)
+
     
     def decrypt_model_weights(self, enc_update_bytes, context):
         enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
