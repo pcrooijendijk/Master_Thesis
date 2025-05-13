@@ -17,10 +17,10 @@ class Server:
         self.server_context = self.generate_context()
 
         with open("tenseal_full_context.tenseal", "wb") as f:
-            f.write(server_context.serialize(save_secret_key=True))
+            f.write(self.server_context.serialize(save_secret_key=True))
 
         with open("tenseal_public_context.tenseal", "wb") as f:
-            f.write(server_context.serialize(save_secret_key=False))
+            f.write(self.server_context.serialize(save_secret_key=False))
 
     def generate_context(self):
         context = ts.context(
