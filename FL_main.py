@@ -61,21 +61,6 @@ def federated_privacy_learning(
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
     gradient_steps = batch_size // micro_batch_size
-    
-    device_map = {
-    "model.embed_tokens": "cuda",
-    "model.norm": "cpu",
-    "lm_head": "cpu"
-    }
-
-    # First 15 layers on GPU
-    for i in range(15):
-        device_map[f"model.layers.{i}"] = "cuda"
-
-    # Remaining layers on CPU
-    for i in range(15, 28):
-        device_map[f"model.layers.{i}"] = "cpu"
-
 
     # Helper functions for the training process
     def tokenizer_init(prompt: str, add_eos_token: bool=True):
@@ -116,7 +101,7 @@ def federated_privacy_learning(
         global_model,
         load_in_8bit=True,
         torch_dtype=torch.float32,
-        device_map=device_map,
+        device_map="auto",
         llm_int8_enable_fp32_cpu_offload=True, 
     )
 
