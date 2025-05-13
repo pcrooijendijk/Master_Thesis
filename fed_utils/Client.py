@@ -78,18 +78,27 @@ class Client:
             context_bytes = f.read()
         context = ts.context_from(context_bytes)
         return context
+    
+    def encrypt_model_weights_per_layer(state_dict, context):
+        encrypted_layers = {}
+
+        for name, param in state_dict.items():
+            if isinstance(param, torch.Tensor):
+                tensor = param.detach().cpu().numpy().flatten().tolist()
+                encrypted_layers[name] = ts.ckks_vector(context, tensor)
+
+        return encrypted_layers
+
 
     def encrypt_model_weights(self, state_dict, context):
-        # Flatten and concatenate all weights into a single list
-        flat_weights = []
-        for param in state_dict.values():
-            flat_weights.extend(param.cpu().numpy().flatten().tolist())
-        data = flat_weights
-        assert isinstance(data, list)
-        assert all(isinstance(x, (int, float)) for x in data)
+        encrypted_layers = {}
 
-        # Encrypt the flat list
-        return ts.ckks_vector(context, flat_weights)
+        for name, param in state_dict.items():
+            if isinstance(param, torch.Tensor):
+                tensor = param.detach().cpu().numpy().flatten().tolist()
+                encrypted_layers[name] = ts.ckks_vector(context, tensor)
+
+        return encrypted_layers
 
     
     def decrypt_model_weights(self, enc_update_bytes, context):
