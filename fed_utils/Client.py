@@ -10,6 +10,7 @@ import copy
 import numpy as np
 import transformers
 import logging
+import tenseal as ts
 from typing import List
 from collections import OrderedDict
 from torch.utils.data import DataLoader
@@ -71,6 +72,24 @@ class Client:
 
         self.spaces_permissions_init()
         self.filter_documents()
+
+    def load_public_context(self, path: str="tenseal_full_context.tenseal"):
+        with open(path, "rb") as f:
+            context_bytes = f.read()
+        context = ts.context_from(context_bytes)
+        return context
+
+    def encrypt_model_weights(self, model_weights, context):
+        return ts.ckks_tensor(context, model_weights.tolist())
+    
+    def decrypt_model_weights(self, enc_update_bytes, context):
+        enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
+        return torch.tensor(enc_vector.decrypt())
+    
+    def save_encrypted_weights(self, encrypted_weights, path: str="encrypted_weights.pkl"):
+        output_dir = 'FL_output/' + str(self.client_id) + path
+        with open(output_dir, "wb") as f:
+            f.write(encrypted_weights.serialize())
 
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})

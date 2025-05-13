@@ -10,6 +10,7 @@ from peft import (
     LoraConfig,
     get_peft_model,
     prepare_model_for_kbit_training,
+    set_peft_model_state_dict,
 )
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from tqdm import tqdm
@@ -182,7 +183,7 @@ def federated_privacy_learning(
             client.train()
 
             print("\nEnding the local training of client {}".format(client_id))
-            dataset_length, selected_clients, last_client = client.end_local_training(
+            dataset_length, selected_clients, _ = client.end_local_training(
                 epoch, dataset_length, selected_clients, output_dir
                 )
             
@@ -195,7 +196,9 @@ def federated_privacy_learning(
             torch.cuda.empty_cache()
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
-        model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
+        model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
+        decrypted_weights = client.decrypt_model_weights(model_weights, server.get_server_context())
+        set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir) 
 
