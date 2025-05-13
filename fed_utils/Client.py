@@ -99,7 +99,6 @@ class Client:
                 encrypted_layers[name] = ts.ckks_vector(context, tensor)
 
         return encrypted_layers
-
     
     def decrypt_model_weights(self, enc_update_bytes, context):
         enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
@@ -107,8 +106,12 @@ class Client:
     
     def save_encrypted_weights(self, encrypted_weights, path: str="encrypted_weights.pkl"):
         output_dir = 'FL_output/' + str(self.client_id) + path
-        with open(output_dir, "wb") as f:
-            f.write(encrypted_weights.serialize())
+        with open(output_dir, 'wb') as f:
+            # Serialize each layer and store in a dict of bytes
+            serialized = {k: v.serialize() for k, v in encrypted_weights.items()}
+            # Use pickle to write the entire dict
+            import pickle
+            pickle.dump(serialized, f)
 
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
