@@ -5,7 +5,6 @@ import torch
 import fire
 import pickle
 from typing import List
-import argparse
 from peft import (
     LoraConfig,
     get_peft_model,
@@ -16,8 +15,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from tqdm import tqdm
 from datasets import load_dataset
 
-global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B'
-local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B'
+global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
+local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 output_dir = 'FL_output/'
 
 documents = load_dataset("json", data_files="utils/documents.json")
@@ -38,7 +37,7 @@ with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
 
 # Main federated learning function
 def federated_privacy_learning(
-    global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', # The global model
+    global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
     client_frac: float = 0.2, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
@@ -60,7 +59,8 @@ def federated_privacy_learning(
     template: str = 'utils/prompt_template.json', # Prompt template 
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-    gradient_steps = batch_size // micro_batch_size
+
+    device_map = "auto"
 
     # Helper functions for the training process
     def tokenizer_init(prompt: str, add_eos_token: bool=True):
@@ -100,9 +100,8 @@ def federated_privacy_learning(
     model = AutoModelForCausalLM.from_pretrained(
         global_model,
         load_in_8bit=True,
-        torch_dtype=torch.float32,
-        device_map="auto",
-        llm_int8_enable_fp32_cpu_offload=True, 
+        torch_dtype=torch.float16,
+        device_map=device_map,
     )
 
     tokenizer = AutoTokenizer.from_pretrained(global_model)
