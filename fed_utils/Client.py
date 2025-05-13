@@ -79,7 +79,7 @@ class Client:
         context = ts.context_from(context_bytes)
         return context
 
-    def encrypt_model_weights(state_dict, context):
+    def encrypt_model_weights(self, state_dict, context):
         # Flatten and concatenate all weights into a single list
         flat_weights = []
         for param in state_dict.values():
