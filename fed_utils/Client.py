@@ -84,6 +84,9 @@ class Client:
         flat_weights = []
         for param in state_dict.values():
             flat_weights.extend(param.cpu().numpy().flatten().tolist())
+        data = flat_weights
+        assert isinstance(data, list)
+        assert all(isinstance(x, (int, float)) for x in data)
 
         # Encrypt the flat list
         return ts.ckks_vector(context, flat_weights)
