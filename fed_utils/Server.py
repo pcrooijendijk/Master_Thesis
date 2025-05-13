@@ -41,7 +41,7 @@ class Server:
             return ts.ckks_vector_from(context, f.read())
     
     def FedAvg(self, model, selected_clients, dataset_length, epoch, output_dir):
-        encrypted_paths = [f"'FL_output/' + str{self.client_id} + encrypted_weights.pkl" for id in selected_clients]
+        encrypted_paths = [f"'FL_output/' + str{client.client_id} + encrypted_weights.pkl" for client in selected_clients]
         context = ts.context_from(open("tenseal_public_context.tenseal", "rb").read())
 
         # Normalizing the weights of each client
