@@ -183,11 +183,17 @@ class Client:
             )
         ).__get__(self.model, type(self.model))
     
+    def load_public_context(self):
+        with open("tenseal_public_context.tenseal", "rb") as f:
+            return ts.context_from(f.read())
+    
     def end_local_training(self, epoch, dataset_length, selected_clients, output_dir):
         dataset_length[self.client_id] = len(self.documents)
         new_weight = self.model.state_dict()
         output_dir = os.path.join(output_dir, str(epoch), "local_output_{}".format(self.client_id))
         os.makedirs(output_dir, exist_ok=True)
+        encrypted_weights = self.encrypt_model_weights(new_weight, self.load_public_context()) # Encrypting the weights
+        self.save_encrypted_weights(encrypted_weights) # Saving the weights
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
 
         old_weights = get_peft_model_state_dict(self.model, self.old_params, "default")
