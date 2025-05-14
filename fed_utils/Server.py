@@ -43,7 +43,6 @@ class Server:
             return {k: ts.ckks_vector_from(context, v) for k, v in serialized.items()}
     
     def FedAvg(self, model, selected_clients, dataset_length, epoch, output_dir):
-        # encrypted_paths = [f"FL_output/" + str(id) + "encrypted_weights.pkl" for id in selected_clients]
         weights_array = torch.tensor([dataset_length[int(cid)] for cid in selected_clients], dtype=torch.float32)
         weights_array = torch.nn.functional.normalize(weights_array, p=1, dim=0)
 
