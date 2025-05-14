@@ -94,7 +94,7 @@ class Client:
         return torch.tensor(enc_vector.decrypt())
     
     def save_encrypted_weights(self, encrypted_weights, path: str="encrypted_weights.pkl"):
-        output_dir = 'FL_output/' + str(self.client_id) + path
+        output_dir = 'FL_output/' + str(self.client_id) + "/" + path
         with open(output_dir, 'wb') as f:
             # Serialize each layer and store in a dict of bytes
             serialized = {k: v.serialize() for k, v in encrypted_weights.items()}

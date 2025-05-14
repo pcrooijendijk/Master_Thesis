@@ -21,6 +21,7 @@ def _construct_prompt(query: str, answer: str, model_response: str) -> str:
     - **AI Response:** {model_response}  
 
     Score the AI response on a scale from 0 to 100, where 100 indicates a perfect match in accuracy, relevance, and completeness.
+    Please give a final response in integers only.
     """
 
 def generate_response(
