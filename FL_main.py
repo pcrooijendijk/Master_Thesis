@@ -36,7 +36,7 @@ user_permissions_resource = management.get_user_permissions_resource()
 with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
     pickle.dump(user_permissions_resource, f)
 
-def decrypt_model_weights(self, enc_update_bytes, context):
+def decrypt_model_weights(enc_update_bytes, context):
     enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
     return torch.tensor(enc_vector.decrypt())
 
