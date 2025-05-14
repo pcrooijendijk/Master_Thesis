@@ -37,58 +37,70 @@ class Server:
         with open("tenseal_public_context.tenseal", "rb") as f:
             return ts.context_from(f.read())
 
-    def load_encrypted_update(self, path, context):
-        with open(path, "rb") as f:
-            return ts.ckks_vector_from(context, f.read())
+    def load_encrypted_weights(self, file_path, context):
+        with open(file_path, 'rb') as f:
+            serialized = pickle.load(f)
+            return {k: ts.ckks_vector_from(context, v) for k, v in serialized.items()}
     
     def FedAvg(self, model, selected_clients, dataset_length, epoch, output_dir):
-        encrypted_paths = [f"FL_output/" + str(id) + "encrypted_weights.pkl" for id in selected_clients]
-        context = ts.context_from(open("tenseal_public_context.tenseal", "rb").read())
+        # encrypted_paths = [f"FL_output/" + str(id) + "encrypted_weights.pkl" for id in selected_clients]
+        weights_array = torch.tensor([dataset_length[int(cid)] for cid in selected_clients], dtype=torch.float32)
+        weights_array = torch.nn.functional.normalize(weights_array, p=1, dim=0)
 
-        # Normalizing the weights of each client
-        weights_array = normalize(
-            torch.tensor([dataset_length[int(client_id)] for client_id in selected_clients],
-                        dtype=torch.float32), p=1, dim=0)
-        
-        weighted_sum = None
+        encrypted_weights_dicts = {
+            cid: self.load_encrypted_weights(f"FL_output/" + str(cid) + "encrypted_weights.pkl", self.server_context)
+            for cid in selected_clients
+        }
+
         for index, client_id in enumerate(selected_clients):
-            path = encrypted_paths[index]
+            encrypted_weights = encrypted_weights_dicts[client_id]
+            weight_scalar = weights_array[index].item()
 
-            with open(path, "rb") as f:
-                serialized = pickle.load(f)
-                encrypted_weights =  {k: ts.ckks_vector_from(context, v) for k, v in serialized.items()}
+            # Scale each encrypted vector in the dict
+            scaled_encrypted_weights = {
+                name: vec * weight_scalar
+                for name, vec in encrypted_weights.items()
+            }
 
-            encrypted_weights *= weights_array[index].item()
-
-            if weighted_sum is None:
-                weighted_sum = encrypted_weights
+            if index == 0:
+                aggregated = scaled_encrypted_weights
             else:
-                weighted_sum += encrypted_weights
-        return weighted_sum
+                aggregated = {
+                    name: aggregated[name] + scaled_encrypted_weights[name]
+                    for name in aggregated
+                }
 
-        with torch.no_grad():
-            for index, client_id in enumerate(selected_clients):
-                total_output_dir = os.path.join(
-                    output_dir, str(epoch), f"local_output_{client_id}", "pytorch_model.bin"
-                )
+        return aggregated  # Still encrypted
+        # encrypted_paths = [f"FL_output/" + str(id) + "encrypted_weights.pkl" for id in selected_clients]
+        # context = ts.context_from(open("tenseal_public_context.tenseal", "rb").read())
 
-                weights = torch.load(total_output_dir)
-                if index == 0:
-                    weighted_weights = {key: weights[key] * weights_array[index] for key in weights}
-                else:
-                    weighted_weights = {
-                        key: weighted_weights[key] + weights[key] * weights_array[index]
-                        for key in weights
-                    }
+        # # Normalizing the weights of each client
+        # weights_array = normalize(
+        #     torch.tensor([dataset_length[int(client_id)] for client_id in selected_clients],
+        #                 dtype=torch.float32), p=1, dim=0)
+        
+        # weighted_sum = None
+        # for index, client_id in enumerate(selected_clients):
+        #     path = encrypted_paths[index]
 
-                # Clean up to avoid GPU memory issues
-                del weights
-                gc.collect()
-                torch.cuda.empty_cache()   
+        #     with open(path, "rb") as f:
+        #         serialized = pickle.load(f)
+        #         encrypted_weights =  {k: ts.ckks_vector_from(context, v) for k, v in serialized.items()}
 
-        set_peft_model_state_dict(model, weighted_weights, "default")
+        #     scaled_encrypted_weights = {
+        #         name: vec * weights_array[index].item()
+        #         for name, vec in encrypted_weights.items()
+        #     }
 
-        return model
+        #     if index == 0:
+        #         aggregated_encrypted_weights = scaled_encrypted_weights
+        #     else:
+        #         aggregated_encrypted_weights = {
+        #             name: aggregated_encrypted_weights[name] + scaled_encrypted_weights[name]
+        #             for name in aggregated_encrypted_weights
+        #         }
+
+        # return weighted_sum
     
     def get_server_context(self):
         return self.server_context
