@@ -48,7 +48,7 @@ def decrypt_model_weights(model, encrypted_aggregated):
         original_shape = model.state_dict()[name].shape
         decrypted_state[name] = torch.tensor(flat_weights).view(original_shape)
 
-    model.load_state_dict(decrypted_state)
+    model.load_state_dict(decrypted_state, strict=False)
     return model
 
 

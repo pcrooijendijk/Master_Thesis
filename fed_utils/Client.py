@@ -78,17 +78,6 @@ class Client:
             context_bytes = f.read()
         context = ts.context_from(context_bytes)
         return context
-    
-    def encrypt_model_weights_per_layer(state_dict, context):
-        encrypted_layers = {}
-
-        for name, param in state_dict.items():
-            if isinstance(param, torch.Tensor):
-                tensor = param.detach().cpu().numpy().flatten().tolist()
-                encrypted_layers[name] = ts.ckks_vector(context, tensor)
-
-        return encrypted_layers
-
 
     def encrypt_model_weights(self, state_dict, context):
         encrypted_layers = {}
@@ -214,7 +203,8 @@ class Client:
         new_weight = self.model.state_dict()
         output_dir = os.path.join(output_dir, str(epoch), "local_output_{}".format(self.client_id))
         os.makedirs(output_dir, exist_ok=True)
-        encrypted_weights = self.encrypt_model_weights(new_weight, self.load_public_context()) # Encrypting the weights
+        lora_state_dict = {k: v for k, v in new_weight.items() if 'lora_' in k} # Getting the lora weights
+        encrypted_weights = self.encrypt_model_weights(lora_state_dict, self.load_public_context()) # Encrypting the weights
         self.save_encrypted_weights(encrypted_weights) # Saving the weights
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
 
