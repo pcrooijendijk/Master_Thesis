@@ -79,15 +79,38 @@ class Client:
         context = ts.context_from(context_bytes)
         return context
 
-    def encrypt_model_weights(self, state_dict, context):
+    # def encrypt_model_weights(self, state_dict, context):
+    #     encrypted_layers = {}
+
+    #     for name, param in state_dict.items():
+    #         if isinstance(param, torch.Tensor):
+    #             tensor = param.detach().cpu().numpy().flatten().tolist()
+    #             encrypted_layers[name] = ts.ckks_vector(context, tensor)
+
+    #     return encrypted_layers
+
+    def encrypt_model_weights(self, state_dict, context, chunk_size=None):
         encrypted_layers = {}
+        slot_count = context.slot_count()
+        chunk_size = chunk_size or slot_count  # default to max possible
 
         for name, param in state_dict.items():
             if isinstance(param, torch.Tensor):
                 tensor = param.detach().cpu().numpy().flatten().tolist()
-                encrypted_layers[name] = ts.ckks_vector(context, tensor)
+
+                if len(tensor) <= chunk_size:
+                    # Can fit into one ciphertext
+                    encrypted_layers[name] = [ts.ckks_vector(context, tensor)]
+                else:
+                    # Split into multiple chunks
+                    encrypted_chunks = []
+                    for i in range(0, len(tensor), chunk_size):
+                        chunk = tensor[i:i + chunk_size]
+                        encrypted_chunks.append(ts.ckks_vector(context, chunk))
+                    encrypted_layers[name] = encrypted_chunks
 
         return encrypted_layers
+
     
     def decrypt_model_weights(self, enc_update_bytes, context):
         enc_vector = ts.ckks_vector_from(context, enc_update_bytes)

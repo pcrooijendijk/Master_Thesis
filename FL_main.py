@@ -36,20 +36,34 @@ user_permissions_resource = management.get_user_permissions_resource()
 with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
     pickle.dump(user_permissions_resource, f)
 
-# def decrypt_model_weights(enc_update_bytes, context):
-#     enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
-#     return torch.tensor(enc_vector.decrypt())
+# def decrypt_model_weights(model, encrypted_aggregated):
+#     decrypted_state = {}
+
+#     for name, encrypted_vec in encrypted_aggregated.items():
+#         flat_weights = encrypted_vec.decrypt()
+#         original_shape = model.state_dict()[name].shape
+#         decrypted_state[name] = torch.tensor(flat_weights).view(original_shape)
+
+#     # model.load_state_dict(decrypted_state, strict=False)
+#     return decrypted_state
 
 def decrypt_model_weights(model, encrypted_aggregated):
     decrypted_state = {}
 
-    for name, encrypted_vec in encrypted_aggregated.items():
-        flat_weights = encrypted_vec.decrypt()
-        original_shape = model.state_dict()[name].shape
-        decrypted_state[name] = torch.tensor(flat_weights).view(original_shape)
+    for name, encrypted_chunks in encrypted_aggregated.items():
+        flat_weights = []
 
-    # model.load_state_dict(decrypted_state, strict=False)
+        # Handle multiple chunks per parameter
+        for chunk in encrypted_chunks:
+            flat_weights.extend(chunk.decrypt())
+
+        # Reshape to original tensor shape
+        original_shape = model.state_dict()[name].shape
+        decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
+        decrypted_state[name] = decrypted_tensor
+
     return decrypted_state
+
 
 
 # Main federated learning function
