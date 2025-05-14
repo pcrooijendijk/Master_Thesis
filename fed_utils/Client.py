@@ -91,8 +91,6 @@ class Client:
 
     def encrypt_model_weights(self, state_dict, context, chunk_size=None):
         encrypted_layers = {}
-        slot_count = context.slot_count()
-        chunk_size = chunk_size or slot_count  # default to max possible
 
         for name, param in state_dict.items():
             if isinstance(param, torch.Tensor):
