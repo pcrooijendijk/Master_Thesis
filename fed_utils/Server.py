@@ -26,7 +26,7 @@ class Server:
     def generate_context(self):
         context = ts.context(
             ts.SCHEME_TYPE.CKKS,
-            poly_modulus_degree=8192,
+            poly_modulus_degree=16384,
             coeff_mod_bit_sizes=[60, 40, 40, 60]
         )
         context.global_scale = 2**40
@@ -69,37 +69,7 @@ class Server:
                     for name in aggregated
                 }
 
-        return aggregated  # Still encrypted
-        # encrypted_paths = [f"FL_output/" + str(id) + "encrypted_weights.pkl" for id in selected_clients]
-        # context = ts.context_from(open("tenseal_public_context.tenseal", "rb").read())
-
-        # # Normalizing the weights of each client
-        # weights_array = normalize(
-        #     torch.tensor([dataset_length[int(client_id)] for client_id in selected_clients],
-        #                 dtype=torch.float32), p=1, dim=0)
-        
-        # weighted_sum = None
-        # for index, client_id in enumerate(selected_clients):
-        #     path = encrypted_paths[index]
-
-        #     with open(path, "rb") as f:
-        #         serialized = pickle.load(f)
-        #         encrypted_weights =  {k: ts.ckks_vector_from(context, v) for k, v in serialized.items()}
-
-        #     scaled_encrypted_weights = {
-        #         name: vec * weights_array[index].item()
-        #         for name, vec in encrypted_weights.items()
-        #     }
-
-        #     if index == 0:
-        #         aggregated_encrypted_weights = scaled_encrypted_weights
-        #     else:
-        #         aggregated_encrypted_weights = {
-        #             name: aggregated_encrypted_weights[name] + scaled_encrypted_weights[name]
-        #             for name in aggregated_encrypted_weights
-        #         }
-
-        # return weighted_sum
+        return aggregated 
     
     def get_server_context(self):
         return self.server_context
