@@ -36,9 +36,21 @@ user_permissions_resource = management.get_user_permissions_resource()
 with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
     pickle.dump(user_permissions_resource, f)
 
-def decrypt_model_weights(enc_update_bytes, context):
-    enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
-    return torch.tensor(enc_vector.decrypt())
+# def decrypt_model_weights(enc_update_bytes, context):
+#     enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
+#     return torch.tensor(enc_vector.decrypt())
+
+def decrypt_model_weights(model, encrypted_aggregated):
+    decrypted_state = {}
+
+    for name, encrypted_vec in encrypted_aggregated.items():
+        flat_weights = encrypted_vec.decrypt()
+        original_shape = model.state_dict()[name].shape
+        decrypted_state[name] = torch.tensor(flat_weights).view(original_shape)
+
+    model.load_state_dict(decrypted_state)
+    return model
+
 
 # Main federated learning function
 def federated_privacy_learning(
@@ -186,7 +198,7 @@ def federated_privacy_learning(
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
         model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
-        decrypted_weights = decrypt_model_weights(model_weights, server.get_server_context())
+        decrypted_weights = decrypt_model_weights(model, model_weights)
         set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir) 
