@@ -49,7 +49,7 @@ def decrypt_model_weights(model, encrypted_aggregated):
         decrypted_state[name] = torch.tensor(flat_weights).view(original_shape)
 
     # model.load_state_dict(decrypted_state, strict=False)
-    return model
+    return decrypted_state
 
 
 # Main federated learning function
