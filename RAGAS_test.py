@@ -36,9 +36,9 @@ documents = []
 metadata = {}
 
 if sample_docs: 
-    for doc in sample_docs:
+    for index, doc in enumerate(sample_docs):
         documents.append(doc)
-        metadata['custom_input'] = Metadata(
+        metadata[index] = Metadata(
             filename='custom_input',
             chunk_count=len(doc.split('\n')), 
             total_tokens=len(doc.split()),
