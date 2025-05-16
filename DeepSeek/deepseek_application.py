@@ -11,7 +11,6 @@ import faiss
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
-from datasets import load_dataset
 
 from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
@@ -156,7 +155,6 @@ class DeepSeekApplication:
         self.client.set_managers(user_permissions_resource)
     
     def init_model(self):
-        self.prompter = PromptHelper(self.prompt_template)
         config = AutoConfig.from_pretrained(self.ori_model, trust_remote_code=True)
         self.model = AutoModelForCausalLM.from_pretrained(
             self.ori_model,

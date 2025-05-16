@@ -1,4 +1,4 @@
-from DeepSeek import DeepSeekApplication
+from DeepSeek import DeepSeekApplication, Metadata
 
 sample_docs = [
     "Albert Einstein proposed the theory of relativity, which transformed our understanding of time, space, and gravity.",
@@ -35,6 +35,16 @@ deepseek = DeepSeekApplication(
 
 documents = []
 metadata = {}
+
+if sample_docs: 
+    for doc in sample_docs:
+        documents.append(doc)
+        metadata['custom_input'] = Metadata(
+            filename='custom_input',
+            chunk_count=len(doc.split('\n')), 
+            total_tokens=len(doc.split()),
+            processing_time=0.0
+        )
 
 # Load documents
 deepseek.load_documents(documents, metadata)
