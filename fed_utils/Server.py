@@ -47,7 +47,7 @@ class Server:
         weights_array = torch.nn.functional.normalize(weights_array, p=1, dim=0)
 
         encrypted_weights_dicts = {
-            cid: self.load_encrypted_weights(f"FL_output/" + str(cid) + "/" + "encrypted_weights.pkl", self.server_context)
+            cid: self.load_encrypted_weights(os.path.join(output_dir, str(epoch), "local_output_{}".format(cid), "encrypted_weights.pkl"), self.server_context)
             for cid in selected_clients
         }
 
