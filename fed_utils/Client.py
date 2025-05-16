@@ -114,8 +114,8 @@ class Client:
         enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
         return torch.tensor(enc_vector.decrypt())
     
-    def save_encrypted_weights(self, encrypted_weights, path: str="encrypted_weights.pkl"):
-        output_dir = 'FL_output/' + str(self.client_id) + "/" + path
+    def save_encrypted_weights(self, encrypted_weights, output_path, ouput_file: str="encrypted_weights.pkl"):
+        output_dir = output_path + "/" + ouput_file
         with open(output_dir, 'wb') as f:
             # Serialize each layer and store in a dict of bytes
             serialized = {k: v.serialize() for k, v in encrypted_weights.items()}
@@ -226,7 +226,7 @@ class Client:
         os.makedirs(output_dir, exist_ok=True)
         lora_state_dict = {k: v for k, v in new_weight.items() if 'lora_' in k} # Getting the lora weights
         encrypted_weights = self.encrypt_model_weights(lora_state_dict, self.load_public_context()) # Encrypting the weights
-        self.save_encrypted_weights(encrypted_weights) # Saving the weights
+        self.save_encrypted_weights(encrypted_weights, output_dir) # Saving the weights
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
 
         old_weights = get_peft_model_state_dict(self.model, self.old_params, "default")
