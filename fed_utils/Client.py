@@ -5,7 +5,7 @@ from perm_utils.UserPermissionManagement import UserPermissionsResource
 
 import os
 import torch
-import torch.nn as nn
+import pickle
 import copy
 import numpy as np
 import transformers
@@ -118,9 +118,11 @@ class Client:
         output_dir = output_path + "/" + ouput_file
         with open(output_dir, 'wb') as f:
             # Serialize each layer and store in a dict of bytes
-            serialized = {k: v.serialize() for k, v in encrypted_weights.items()}
+            serialized = {
+                k: [chunk.serialize() for chunk in v]  # v is a list of ckks_vector chunks
+                for k, v in encrypted_weights.items()
+            }
             # Use pickle to write the entire dict
-            import pickle
             pickle.dump(serialized, f)
 
     def spaces_permissions_init(self) -> None:
