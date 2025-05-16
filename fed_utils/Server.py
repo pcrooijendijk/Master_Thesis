@@ -51,7 +51,10 @@ class Server:
         weights_array = torch.nn.functional.normalize(weights_array, p=1, dim=0)
 
         encrypted_weights_dicts = {
-            cid: self.load_encrypted_weights(os.path.join(output_dir, str(epoch), "local_output_{}".format(cid), "encrypted_weights.pkl"), self.server_context)
+            cid: self.load_encrypted_weights(
+                os.path.join(output_dir, str(epoch), f"local_output_{cid}", "encrypted_weights.pkl"),
+                self.server_context
+            )
             for cid in selected_clients
         }
 
@@ -59,9 +62,9 @@ class Server:
             encrypted_weights = encrypted_weights_dicts[client_id]
             weight_scalar = weights_array[index].item()
 
-            # Scale each encrypted vector in the dict
+            # Multiply each encrypted chunk by scalar
             scaled_encrypted_weights = {
-                name: vec * weight_scalar
+                name: [chunk * weight_scalar for chunk in vec]
                 for name, vec in encrypted_weights.items()
             }
 
@@ -69,11 +72,15 @@ class Server:
                 aggregated = scaled_encrypted_weights
             else:
                 aggregated = {
-                    name: aggregated[name] + scaled_encrypted_weights[name]
+                    name: [
+                        aggregated[name][i] + scaled_encrypted_weights[name][i]
+                        for i in range(len(scaled_encrypted_weights[name]))
+                    ]
                     for name in aggregated
                 }
 
-        return aggregated 
+        return aggregated
+
     
     def get_server_context(self):
         return self.server_context
