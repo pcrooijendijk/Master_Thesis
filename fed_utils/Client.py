@@ -89,7 +89,7 @@ class Client:
 
     #     return encrypted_layers
 
-    def encrypt_model_weights(self, state_dict, context, chunk_size=None):
+    def encrypt_model_weights(self, state_dict, context, chunk_size=32768//2):
         encrypted_layers = {}
 
         for name, param in state_dict.items():
