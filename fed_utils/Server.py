@@ -36,11 +36,15 @@ class Server:
     def load_public_context(self):
         with open("tenseal_public_context.tenseal", "rb") as f:
             return ts.context_from(f.read())
-
-    def load_encrypted_weights(self, file_path, context):
-        with open(file_path, 'rb') as f:
+    
+    def load_encrypted_weights(self, input_path, context):
+        with open(input_path, 'rb') as f:
             serialized = pickle.load(f)
-            return {k: ts.ckks_vector_from(context, v) for k, v in serialized.items()}
+            encrypted_weights = {
+                k: [ts.ckks_vector_from(context, chunk) for chunk in v]
+                for k, v in serialized.items()
+            }
+        return encrypted_weights
     
     def FedAvg(self, model, selected_clients, dataset_length, epoch, output_dir):
         weights_array = torch.tensor([dataset_length[int(cid)] for cid in selected_clients], dtype=torch.float32)
