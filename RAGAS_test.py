@@ -37,19 +37,19 @@ metadata = {}
 
 if sample_docs: 
     for index, doc in enumerate(sample_docs):
-        documents.append(doc)
-        with open(f"index_{index}.txt", "wb") as file:
+        with open(f"index_{index}.txt", "w") as file:
             file.write(doc)
-            content, metadata_doc, file_name = deepseek.doc_processor.process_file(file)
+            file.flush()
+            content, metadata_doc, file_name = deepseek.doc_processor.process_file(f"index_{index}.txt")
             documents.append(content)
             metadata[file_name] = metadata_doc
-
+print(f"documents test: {documents}")
 # Load documents
 deepseek.load_documents(documents, metadata)
 
 # Query and retrieve the most relevant document
 query = "Who introduced the theory of relativity?"
-relevant_doc = deepseek.retrieve_relevant_docs(query, 10)
+relevant_doc = deepseek.retrieve_relevant_docs(query, 10, 0.5)
 
 # Generate an answer
 answer = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)

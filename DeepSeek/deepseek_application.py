@@ -80,8 +80,10 @@ class Processor:
             raise ValueError(f"Failed to process PDF: {str(e)}")
 
     def process_text(self, document):
-        try: 
-            data = document.getvalue()
+        try:
+            with open(document, "rb") as f:
+                data = f.read()
+            print(f"data read: {data}")
             result = chardet.detect(data)
             encodings = [result['encoding'], 'utf-8', 'latin-1', 'ascii']
                 
@@ -92,7 +94,7 @@ class Processor:
                 except UnicodeDecodeError:
                     continue
                 
-                raise ValueError("Unable to decode file with any supported encoding")
+            raise ValueError("Unable to decode file with any supported encoding")
         except Exception as e:
             logger.error(f"Error processing text file: {str(e)}")
             raise ValueError(f"Failed to process text file: {str(e)}")
@@ -108,6 +110,7 @@ class Processor:
             raise ValueError(f"Unsupported file type: {file_extension}")
         
         processor = self.supported_extensions[file_extension]
+        print(f"document in process: {document}")
         content = processor(document)
         
         # Calculate basic metrics
@@ -255,19 +258,20 @@ class DeepSeekApplication:
                         for doc in documents
                     )
                 else:
-                    documents_array = (
-                        Document(
-                            page_content=doc, 
-                            metadata={
-                                "filename": metadata.filename,
-                                "chunk_count": metadata.chunk_count,
-                                "total_tokens": metadata.total_tokens,
-                                "processing_time": metadata.processing_time
+                    print(documents)
+                    for idx, data in enumerate(metadata):
+                        doc = documents[idx]
+                        documents_array.append(Document(
+                            page_content = doc,
+                            metadata = {
+                                "filename": metadata[data].filename,
+                                "chunk_count": metadata[data].chunk_count,
+                                "total_tokens": metadata[data].total_tokens,
+                                "processing_time": metadata[data].processing_time,
                             }
-                        )
-                        for doc in documents
-                    )
-                return documents_array
+                        ))
+
+                return tuple(documents_array)
             
             if documents:
                 print("boe ik heb documents") 
@@ -276,8 +280,11 @@ class DeepSeekApplication:
             else: 
                 self.uploaded_doc_present = False
                 self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
-            
+            print(self.documents_array)
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
+            if not splitted_docs:
+              raise ValueError("No documents to index. Check the output of your document processing step.")
+
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             
             logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
