@@ -269,13 +269,14 @@ class DeepSeekApplication:
                     )
                 return documents_array
             
-            if documents: 
+            if documents:
+                print("boe ik heb documents") 
                 self.uploaded_doc_present = True
                 self.documents_array = loading_documents(documents, documents_array, dict=False) # Adding additional documents to the chunks
             else: 
                 self.uploaded_doc_present = False
                 self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
-
+            
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             

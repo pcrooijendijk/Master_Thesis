@@ -38,12 +38,11 @@ metadata = {}
 if sample_docs: 
     for index, doc in enumerate(sample_docs):
         documents.append(doc)
-        metadata[index] = Metadata(
-            filename='custom_input',
-            chunk_count=len(doc.split('\n')), 
-            total_tokens=len(doc.split()),
-            processing_time=0.0
-        )
+        with open(f"index_{index}.txt", "wb") as file:
+            file.write(doc)
+            content, metadata_doc, file_name = deepseek.doc_processor.process_file(file)
+            documents.append(content)
+            metadata[file_name] = metadata_doc
 
 # Load documents
 deepseek.load_documents(documents, metadata)
