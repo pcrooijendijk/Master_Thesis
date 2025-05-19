@@ -280,10 +280,11 @@ class DeepSeekApplication:
             else: 
                 self.uploaded_doc_present = False
                 self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
-            print(self.documents_array)
+
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
+
             if not splitted_docs:
-              raise ValueError("No documents to index. Check the output of your document processing step.")
+                raise ValueError("No documents to index. Check the output of your document processing step.")
 
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
             
@@ -329,7 +330,7 @@ class DeepSeekApplication:
             # Truncate context if it is too long
             if len(combined_texts) > max_context_length:
                 combined_context = combined_texts[:max_context_length] + "..."
-            
+            print("COMBINED CONTEXT", combined_context)
             prompt = self.construct_prompt(query, combined_context)
 
             inputs = deepseek.tokenizer(prompt, return_tensors="pt")
@@ -430,12 +431,10 @@ class DeepSeekApplication:
             """
         else: 
             return f"""
-            You are a knowledgeable assistant. Answer the following question based on your own understanding and general knowledge.
+            You are a well-informed assistant. Answer the question briefly and clearly based on your understanding.
 
             Question:
             {query}
 
-            Provide a full-sentence, informative, short, and clear response.
-            
             Final Answer:
             """
