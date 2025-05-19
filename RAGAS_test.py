@@ -81,7 +81,7 @@ for query,reference in zip(sample_queries,expected_responses):
 
     relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
-    print("RESPONSE", response)
+    print("RESPONSE", response[0]['content'])
     dataset.append(
         {
             "user_input":query,
