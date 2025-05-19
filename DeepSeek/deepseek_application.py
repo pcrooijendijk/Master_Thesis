@@ -338,6 +338,8 @@ class DeepSeekApplication:
 
             prompt = self.construct_prompt(query, combined_context)
 
+            print("PROMPT", prompt)
+
             inputs = deepseek.tokenizer(prompt, return_tensors="pt")
             input_ids = inputs["input_ids"].to(device)
             generation_config = GenerationConfig(
