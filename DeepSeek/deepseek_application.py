@@ -329,12 +329,9 @@ class DeepSeekApplication:
 
             combined_texts = ' '.join(retrieved_bits)
             print("COMBINED", combined_texts, "\n")
-            combined_context = []
-            
-            # Truncate context if it is too long
-            if len(combined_texts) > max_context_length:
-                print("TESTTTTT")
-                combined_context = combined_texts[:max_context_length] + "..."
+
+            # Truncate or assign the full text as needed
+            combined_context = combined_texts[:max_context_length] + "..." if len(combined_texts) > max_context_length else combined_texts
 
             prompt = self.construct_prompt(query, combined_context)
 
