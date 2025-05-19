@@ -311,6 +311,7 @@ class DeepSeekApplication:
         
         try:
             relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
+            print("RELEVANT DOCS", relevant_document)
 
             if self.uploaded_doc_present:
                 retrieved_bits = [
@@ -330,7 +331,7 @@ class DeepSeekApplication:
             # Truncate context if it is too long
             if len(combined_texts) > max_context_length:
                 combined_context = combined_texts[:max_context_length] + "..."
-            print("COMBINED CONTEXT", combined_context)
+
             prompt = self.construct_prompt(query, combined_context)
 
             inputs = deepseek.tokenizer(prompt, return_tensors="pt")
@@ -341,6 +342,7 @@ class DeepSeekApplication:
                 top_k=top_k,
                 num_beams=num_beams
             )
+
             with torch.no_grad():
                 generated_output = deepseek.model.generate(
                     input_ids=input_ids,
