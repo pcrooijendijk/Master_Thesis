@@ -6,7 +6,6 @@ from ragas import evaluate
 from ragas.llms import LangchainLLMWrapper
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
 from langchain_community.chat_models import ChatOllama
-from langchain_community.embeddings import OllamaEmbeddings
 import os
 
 os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
@@ -101,7 +100,6 @@ for query,reference in zip(sample_queries,expected_responses):
     )
 
 langchain_llm = ChatOllama(model="llama3")
-langchain_embeddings = OllamaEmbeddings(model="llama3")
 
 evaluation_dataset = EvaluationDataset.from_list(dataset)
 
