@@ -85,7 +85,7 @@ for query,reference in zip(sample_queries,expected_responses):
         {
             "user_input":query,
             "retrieved_contexts":relevant_docs,
-            "response":response,
+            "response":response['content'],
             "reference":reference
         }
     )

@@ -274,7 +274,6 @@ class DeepSeekApplication:
                 return tuple(documents_array)
             
             if documents:
-                print("boe ik heb documents") 
                 self.uploaded_doc_present = True
                 self.documents_array = loading_documents(documents, documents_array, dict=False) # Adding additional documents to the chunks
             else: 
@@ -311,14 +310,11 @@ class DeepSeekApplication:
         
         try:
             relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-            print("RELEVANT DOCS", relevant_document)
 
             if self.uploaded_doc_present:
-                print("SCORES", self.results_with_scores)
                 retrieved_bits = [
                     text.page_content for text, _ in self.results_with_scores
                 ]
-                print("RETRIEVED_BITS", retrieved_bits)
                 metadata = self.results_with_scores[0][0].metadata
             else: 
                 # Lower scores is more similar
@@ -328,14 +324,11 @@ class DeepSeekApplication:
                 metadata = self.results_with_scores[0][0].metadata
 
             combined_texts = ' '.join(retrieved_bits)
-            print("COMBINED", combined_texts, "\n")
 
             # Truncate or assign the full text as needed
             combined_context = combined_texts[:max_context_length] + "..." if len(combined_texts) > max_context_length else combined_texts
 
             prompt = self.construct_prompt(query, combined_context)
-
-            print("PROMPT", prompt)
 
             inputs = deepseek.tokenizer(prompt, return_tensors="pt")
             input_ids = inputs["input_ids"].to(device)
