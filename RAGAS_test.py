@@ -1,5 +1,10 @@
 from DeepSeek import DeepSeekApplication, Metadata
 from typing import Optional
+from langchain import HuggingFaceHub
+from ragas import EvaluationDataset
+from ragas import evaluate
+from ragas.llms import LangchainLLMWrapper
+from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
 
 sample_docs = [
     "Albert Einstein proposed the theory of relativity, which transformed our understanding of time, space, and gravity.",
@@ -81,7 +86,6 @@ for query,reference in zip(sample_queries,expected_responses):
 
     relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
-    print("RESPONSE", response)
     dataset.append(
         {
             "user_input":query,
@@ -91,16 +95,13 @@ for query,reference in zip(sample_queries,expected_responses):
         }
     )
 
-print("DATASET", dataset)
+llm = HuggingFaceHub(
+    repo_id="distilgpt2",  # Choose any model you want
+    model_kwargs={"temperature": 0.7, "max_length": 100}
+)
 
-from ragas import EvaluationDataset
 evaluation_dataset = EvaluationDataset.from_list(dataset)
-
-from ragas import evaluate
-from ragas.llms import LangchainLLMWrapper
-
 evaluator_llm = LangchainLLMWrapper(deepseek)
-from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
 
 result = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()],llm=evaluator_llm)
 print(result)
