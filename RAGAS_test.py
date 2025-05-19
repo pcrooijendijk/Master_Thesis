@@ -4,7 +4,7 @@ from ragas import EvaluationDataset
 from ragas import evaluate
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
 from langchain_ollama import ChatOllama
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 import os
 
 os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
