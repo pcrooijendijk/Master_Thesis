@@ -104,7 +104,7 @@ llm = HuggingFaceHub(
 )
 
 evaluation_dataset = EvaluationDataset.from_list(dataset)
-evaluator_llm = LangchainLLMWrapper(deepseek)
+evaluator_llm = LangchainLLMWrapper(llm)
 
 result = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()],llm=evaluator_llm)
 print(result)
