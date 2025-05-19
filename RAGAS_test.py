@@ -85,7 +85,7 @@ for query,reference in zip(sample_queries,expected_responses):
     dataset.append(
         {
             "user_input":query,
-            "retrieved_contexts":relevant_docs,
+            "retrieved_contexts":[relevant_docs],
             "response":response[0]['content'],
             "reference":reference
         }
