@@ -5,6 +5,9 @@ from ragas import EvaluationDataset
 from ragas import evaluate
 from ragas.llms import LangchainLLMWrapper
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
+import os
+
+os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
 
 sample_docs = [
     "Albert Einstein proposed the theory of relativity, which transformed our understanding of time, space, and gravity.",
