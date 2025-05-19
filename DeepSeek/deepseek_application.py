@@ -333,6 +333,7 @@ class DeepSeekApplication:
             
             # Truncate context if it is too long
             if len(combined_texts) > max_context_length:
+                print("TESTTTTT")
                 combined_context = combined_texts[:max_context_length] + "..."
 
             prompt = self.construct_prompt(query, combined_context)
