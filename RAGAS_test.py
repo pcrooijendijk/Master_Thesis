@@ -5,6 +5,8 @@ from ragas import EvaluationDataset
 from ragas import evaluate
 from ragas.llms import LangchainLLMWrapper
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
+from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
+from langchain import HuggingFacePipeline
 import os
 
 os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
@@ -98,13 +100,24 @@ for query,reference in zip(sample_queries,expected_responses):
         }
     )
 
-llm = HuggingFaceHub(
-    repo_id="google/flan-t5-small",
-    model_kwargs={"temperature": 0.7, "max_length": 100}
+model_id = "google/flan-t5-small" 
+tokenizer = AutoTokenizer.from_pretrained(model_id)
+model = AutoModelForCausalLM.from_pretrained(model_id)
+
+# Initialize the HuggingFace pipeline
+pipe = pipeline(
+    model=model,
+    tokenizer=tokenizer,
+    return_full_text=True,  # LangChain expects the full text
+    task='text-generation',
+    temperature=0.1,
+    repetition_penalty=1.1
 )
 
+# Wrap it with LangChain
+evaluator_llm = HuggingFacePipeline(pipeline=pipe)
+
 evaluation_dataset = EvaluationDataset.from_list(dataset)
-evaluator_llm = LangchainLLMWrapper(llm)
 
 result = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()],llm=evaluator_llm)
 print(result)
