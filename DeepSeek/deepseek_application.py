@@ -328,6 +328,7 @@ class DeepSeekApplication:
                 metadata = self.results_with_scores[0][0].metadata
 
             combined_texts = ' '.join(retrieved_bits)
+            print("COMBINED", combined_texts, "\n")
             combined_context = []
             
             # Truncate context if it is too long
