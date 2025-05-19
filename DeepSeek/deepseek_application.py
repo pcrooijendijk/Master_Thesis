@@ -435,5 +435,5 @@ class DeepSeekApplication:
             Question:
             {query}
 
-            Provide a full-sentence, informative, and clear response.
+            Provide a full-sentence, informative, short, and clear response.
             """
