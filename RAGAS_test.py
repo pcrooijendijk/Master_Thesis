@@ -99,7 +99,7 @@ for query,reference in zip(sample_queries,expected_responses):
     )
 
 llm = HuggingFaceHub(
-    repo_id="distilgpt2",  # Choose any model you want
+    repo_id="google/flan-t5-small",
     model_kwargs={"temperature": 0.7, "max_length": 100}
 )
 
