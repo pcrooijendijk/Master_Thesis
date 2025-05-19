@@ -314,9 +314,11 @@ class DeepSeekApplication:
             print("RELEVANT DOCS", relevant_document)
 
             if self.uploaded_doc_present:
+                print("SCORES", self.results_with_scores)
                 retrieved_bits = [
                     text.page_content for text, _ in self.results_with_scores
                 ]
+                print("RETRIEVED_BITS", retrieved_bits)
                 metadata = self.results_with_scores[0][0].metadata
             else: 
                 # Lower scores is more similar
