@@ -99,7 +99,7 @@ evaluation_dataset = EvaluationDataset.from_list(dataset)
 from ragas import evaluate
 from ragas.llms import LangchainLLMWrapper
 
-evaluator_llm = LangchainLLMWrapper(llm)
+evaluator_llm = LangchainLLMWrapper(deepseek)
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
 
 result = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()],llm=evaluator_llm)
