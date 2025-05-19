@@ -1,11 +1,9 @@
-from DeepSeek import DeepSeekApplication, Metadata
+from DeepSeek import DeepSeekApplication
 from typing import Optional
-from langchain import HuggingFaceHub
 from ragas import EvaluationDataset
 from ragas import evaluate
-from ragas.llms import LangchainLLMWrapper
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
-from langchain_community.chat_models import ChatOllama
+from langchain_ollama import ChatOllama
 import os
 
 os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
