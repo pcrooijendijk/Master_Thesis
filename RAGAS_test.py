@@ -21,7 +21,7 @@ temp: float = 0.1                                             # Temperature for 
 top_p: float = 0.75                                           # Top-p sampling
 top_k: int = 40                                               # Top-k filtering
 num_beams: int = 4                                            # Beam search size
-max_new_tokens: int = 128 
+max_new_tokens: int = 256
 
 # Initalize a DeepSeek application for processing documents
 deepseek = DeepSeekApplication(
@@ -44,6 +44,7 @@ if sample_docs:
             documents.append(content)
             metadata[file_name] = metadata_doc
 print(f"documents test: {documents}")
+
 # Load documents
 deepseek.load_documents(documents, metadata)
 
@@ -57,3 +58,46 @@ answer = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, ma
 print(f"Query: {query}")
 print(f"Relevant Document: {relevant_doc}")
 print(f"Answer: {answer}")
+
+sample_queries = [
+    "Who introduced the theory of relativity?",
+    "Who was the first computer programmer?",
+    "What did Isaac Newton contribute to science?",
+    "Who won two Nobel Prizes for research on radioactivity?",
+    "What is the theory of evolution by natural selection?"
+]
+
+expected_responses = [
+    "Albert Einstein proposed the theory of relativity, which transformed our understanding of time, space, and gravity.",
+    "Ada Lovelace is regarded as the first computer programmer for her work on Charles Babbage's early mechanical computer, the Analytical Engine.",
+    "Isaac Newton formulated the laws of motion and universal gravitation, laying the foundation for classical mechanics.",
+    "Marie Curie was a physicist and chemist who conducted pioneering research on radioactivity and won two Nobel Prizes.",
+    "Charles Darwin introduced the theory of evolution by natural selection in his book 'On the Origin of Species'."
+]
+
+dataset = []
+
+for query,reference in zip(sample_queries,expected_responses):
+
+    relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
+    response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
+    dataset.append(
+        {
+            "user_input":query,
+            "retrieved_contexts":relevant_docs,
+            "response":response,
+            "reference":reference
+        }
+    )
+
+from ragas import EvaluationDataset
+evaluation_dataset = EvaluationDataset.from_list(dataset)
+
+from ragas import evaluate
+from ragas.llms import LangchainLLMWrapper
+
+evaluator_llm = LangchainLLMWrapper(llm)
+from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
+
+result = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()],llm=evaluator_llm)
+print(result)
