@@ -1,16 +1,16 @@
 from DeepSeek import DeepSeekApplication
 from typing import Optional
-from ragas import EvaluationDataset
 from ragas import evaluate
-from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
 from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings import OllamaEmbeddings
-import os
-from ragas.run_config import RunConfig
-from datasets import Dataset
-import pickle
+from datasets import Dataset, DatasetDict
 
-os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
+from ragas.metrics import (
+    answer_relevancy,
+    faithfulness,
+    context_recall,
+    context_precision,
+)
 
 sample_docs = [
     "Albert Einstein proposed the theory of relativity, which transformed our understanding of time, space, and gravity.",
@@ -74,9 +74,6 @@ expected_responses = [
     "Charles Darwin introduced the theory of evolution by natural selection in his book 'On the Origin of Species'."
 ]
 
-from datasets import Dataset, DatasetDict
-
-# 👇 Assuming this is what you're building during evaluation:
 dataset = []
 
 for query, reference in zip(sample_queries, expected_responses):
@@ -92,23 +89,12 @@ for query, reference in zip(sample_queries, expected_responses):
 
 eval_set = Dataset.from_list(dataset)
 
-# Create a DatasetDict if you want splits
 ds_dict = DatasetDict({
     "eval": eval_set
 })
 
-with open("qa_dataset.pkl", "wb") as f:
-    pickle.dump(ds_dict, f)
-
 langchain_llm = ChatOllama(model="llama3")
 langchain_embeddings = OllamaEmbeddings(model="llama3")
-
-from ragas.metrics import (
-    answer_relevancy,
-    faithfulness,
-    context_recall,
-    context_precision,
-)
 
 result = evaluate(ds_dict['eval'],
         metrics=[
