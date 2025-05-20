@@ -3,9 +3,11 @@ from typing import Optional
 from ragas import EvaluationDataset
 from ragas import evaluate
 from ragas.metrics import LLMContextRecall, Faithfulness, FactualCorrectness
-from langchain_ollama import ChatOllama
-from langchain_ollama import OllamaEmbeddings
+from langchain_community.chat_models import ChatOllama
+from langchain_community.embeddings import OllamaEmbeddings
 import os
+from ragas.run_config import RunConfig
+from datasets import Dataset
 
 os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
 
@@ -51,21 +53,9 @@ if sample_docs:
             content, metadata_doc, file_name = deepseek.doc_processor.process_file(f"index_{index}.txt")
             documents.append(content)
             metadata[file_name] = metadata_doc
-print(f"documents test: {documents}")
 
 # Load documents
 deepseek.load_documents(documents, metadata)
-
-# Query and retrieve the most relevant document
-query = "Who introduced the theory of relativity?"
-relevant_doc = deepseek.retrieve_relevant_docs(query, 10, 0.5)
-
-# Generate an answer
-answer = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
-
-print(f"Query: {query}")
-print(f"Relevant Document: {relevant_doc}")
-print(f"Answer: {answer}")
 
 sample_queries = [
     "Who introduced the theory of relativity?",
@@ -83,25 +73,53 @@ expected_responses = [
     "Charles Darwin introduced the theory of evolution by natural selection in his book 'On the Origin of Species'."
 ]
 
+from datasets import Dataset, DatasetDict
+
+# 👇 Assuming this is what you're building during evaluation:
 dataset = []
 
-for query,reference in zip(sample_queries,expected_responses):
-
+for query, reference in zip(sample_queries, expected_responses):
     relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
-    response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
-    dataset.append(
-        {
-            "user_input":query,
-            "retrieved_contexts":[relevant_docs],
-            "response":response[0]['content'],
-            "reference":reference
-        }
+    response = deepseek.generate_response(
+        query=query,
+        context=relevant_docs,
+        top_k=top_k,
+        top_p=top_p,
+        num_beams=num_beams,
+        max_new_tokens=max_new_tokens,
+        temperature=temp,
+        stop_token=False
     )
+    
+    dataset.append({
+        "question": query,
+        "ground_truth": reference,
+        "answer": response[0]['content'],
+        "contexts": relevant_docs,  
+    })
 
-langchain_llm = ChatOllama(model="llama3")
-langchain_embeddings = OllamaEmbeddings(model="llama3")
+eval_set = Dataset.from_list(dataset)
 
-evaluation_dataset = EvaluationDataset.from_list(dataset)
+# Create a DatasetDict if you want splits
+ds_dict = DatasetDict({
+    "eval": eval_set
+})
 
-result = evaluate(dataset=evaluation_dataset,metrics=[LLMContextRecall(), Faithfulness(), FactualCorrectness()],llm=langchain_llm, embeddings=langchain_embeddings)
+langchain_llm = ChatOllama(model="llama3.2")
+langchain_embeddings = OllamaEmbeddings(model="llama3.2")
+
+from ragas.metrics import (
+    answer_relevancy,
+    faithfulness,
+    context_recall,
+    context_precision,
+)
+
+result = evaluate(amnesty_subset,
+        metrics=[
+        context_precision,
+        faithfulness,
+        answer_relevancy,
+        context_recall], llm=langchain_llm,embeddings=langchain_embeddings)
+
 print(result)
