@@ -8,6 +8,7 @@ from langchain_community.embeddings import OllamaEmbeddings
 import os
 from ragas.run_config import RunConfig
 from datasets import Dataset
+import pickle
 
 os.environ['HUGGINGFACEHUB_API_TOKEN'] = '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'
 
@@ -80,22 +81,13 @@ dataset = []
 
 for query, reference in zip(sample_queries, expected_responses):
     relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
-    response = deepseek.generate_response(
-        query=query,
-        context=relevant_docs,
-        top_k=top_k,
-        top_p=top_p,
-        num_beams=num_beams,
-        max_new_tokens=max_new_tokens,
-        temperature=temp,
-        stop_token=False
-    )
+    response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
     
     dataset.append({
         "question": query,
         "ground_truth": reference,
         "answer": response[0]['content'],
-        "contexts": relevant_docs,  
+        "contexts": [relevant_docs],  
     })
 
 eval_set = Dataset.from_list(dataset)
@@ -105,8 +97,11 @@ ds_dict = DatasetDict({
     "eval": eval_set
 })
 
-langchain_llm = ChatOllama(model="llama3.2")
-langchain_embeddings = OllamaEmbeddings(model="llama3.2")
+with open("qa_dataset.pkl", "wb") as f:
+    pickle.dump(ds_dict, f)
+
+langchain_llm = ChatOllama(model="llama3")
+langchain_embeddings = OllamaEmbeddings(model="llama3")
 
 from ragas.metrics import (
     answer_relevancy,
@@ -115,7 +110,7 @@ from ragas.metrics import (
     context_precision,
 )
 
-result = evaluate(amnesty_subset,
+result = evaluate(ds_dict['eval'],
         metrics=[
         context_precision,
         faithfulness,
