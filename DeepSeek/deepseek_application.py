@@ -327,8 +327,8 @@ class DeepSeekApplication:
 
             prompt = self.construct_prompt(query, combined_context)
 
-            inputs = deepseek.tokenizer(prompt, return_tensors="pt")
-            input_ids = inputs["input_ids"].to(device)
+            # inputs = deepseek.tokenizer(prompt, return_tensors="pt")
+            # input_ids = inputs["input_ids"].to(device)
             generation_config = GenerationConfig(
                 temperature=temp,
                 top_p=top_p,
@@ -338,14 +338,14 @@ class DeepSeekApplication:
 
             with torch.no_grad():
                 generated_output = deepseek.model.generate(
-                    input_ids=input_ids,
+                    prompt.to(device),
                     generation_config=generation_config,
-                    return_dict_in_generate=True,
-                    output_scores=True,
-                    max_new_tokens=max_new_tokens,
+                    do_sample=True,
+                    max_new_tokens=2000,
                 )
-            s = generated_output.sequences[0]
-            output = deepseek.tokenizer.decode(s)
+                
+            input_length = prompt.shape[0]
+            output = deepseek.tokenizer.batch_decode(generated_output[:, input_length:], skip_special_tokens=True)[0]
 
             answer = {
                 'content': self.post_processing(output),
@@ -364,7 +364,7 @@ class DeepSeekApplication:
 
     def post_processing(self, output: str) -> str:
         # Try to extract answer after "Final Answer:"
-        match = re.search(r"Final Answer:\s*(.*)", output)
+        match = re.search(r"</think>\s*(.*)", output)
         if match:
             answer = match.group(1).strip()
             # Optionally, strip tags or boxed formatting
@@ -403,6 +403,30 @@ class DeepSeekApplication:
 
 
     def construct_prompt(self, query: str, context: str) -> str: 
+
+        messages = [
+            {"role": "system", "content": """You are an expert assistant designed to answer questions accurately and helpfully.
+
+            By the user, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
+            
+            Instructions:
+            - If the context is relevant and useful, base your answer on it.
+            - If the context is insufficient or empty, answer using your own understanding and general knowledge.
+            - Always respond in complete, well-structured short sentences. 
+            - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
+            - Your goal is to provide the best possible answer regardless of context quality.""",},
+
+            {"role": "user", "content": f"""
+                Context (may be empty or partial):
+                {context}
+
+                Question:
+                {query}
+            """},
+        ]
+        tokenized_chat = self.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
+        return tokenized_chat
+
         if context:
             return f"""
             You are an expert assistant designed to answer questions accurately and helpfully.
