@@ -24,6 +24,28 @@ def run(
         prompt_template,
     )
 
+    def format_qa_pair(pair: list[str]) -> str:
+        question, answer = pair
+        return f"Question: {question}\n\nAnswer: {answer}\n\n"
+
+
+    def format_metadata_html(metadata: dict):
+        flat_data = {}
+        for k, v in metadata.items():
+            if isinstance(v, dict):
+                for sub_k, sub_v in v.items():
+                    flat_data[sub_k] = sub_v
+            else:
+                flat_data[k] = v
+
+        html = "<ul style='list-style: none; padding-left: 0;'>"
+        for k, v in flat_data.items():
+            label = k.replace("_", " ").capitalize()
+            value = v if v else "N/A"
+            html += f"<li><strong>{label}:</strong> {value}</li>"
+        html += "</ul>"
+        return html
+
     def evaluate(
         question: str, # The question to be asked
         uploaded_documents: str = None, # The corresponding document(s)
@@ -36,7 +58,6 @@ def run(
     ):  
         documents = []
         metadata = {}
-        output_history = []
 
         # If there are documents uploaded, then the documents are processed and used for generating the prompt
         if uploaded_documents['files']:
@@ -45,8 +66,8 @@ def run(
                 documents.append(content)
                 metadata[file_name] = metadata_doc
 
-            deepseek.load_documents(documents, metadata)
-            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
+            deepseek.load_documents(documents, metadata[file_name])
+            response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         # If there is manual input from the user, treat it as if it is a document and append to the total list of documents
         elif custom_text:  
             content_custom = custom_text.strip()
@@ -59,77 +80,110 @@ def run(
                     processing_time=0.0
                 )
             deepseek.load_documents(documents, metadata)
-            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
+            response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         # If there are no documents uploaded, generate a prompt without extra context
         else:
-            response = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, False)
-        return (response['content'], metadata) if uploaded_documents['files'] or custom_text else (response, metadata)
+            deepseek.load_documents([], metadata)
+            response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
+        # For the output history
+        OUTPUT_HISTORY.append(question)
+        OUTPUT_HISTORY.append(response['content'])
+        return (response['content'], format_metadata_html(metadata), format_qa_pair(OUTPUT_HISTORY), content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_html(response['metadata']), format_qa_pair(OUTPUT_HISTORY), content_doc)
 
-    # The Gradio interface for fetching the question, documents, custom input and parameters
-    UI = gr.Interface(
-        fn=evaluate,
-        inputs=[
-            gr.components.Textbox(
-                lines=2,
-                label="❓Question",
-                info="Upload documents below to ask questions about the content.",
-            ),
-            gr.MultimodalTextbox(
-                file_count='multiple',
-                placeholder="Upload your documents here.",
-                label="📁 Document Input",
-                show_label=True,
-                info="Supported formats: PDF, DOCX, TXT"
-            ),
-            gr.components.Textbox(
-                lines=1,
-                label="📃 Or paste text",
-                info="Enter text directly. Each paragraph will be processed seperately."
-            ),
-            gr.components.Slider(
-                minimum=0, maximum=1, value=0.6, label="🌡️ Temperature"
-            ),
-            gr.components.Slider(
-                minimum=0, maximum=1, value=0.75, label="Top p"
-            ),
-            gr.components.Slider(
-                minimum=0, maximum=100, step=1, value=40, label="Top k"
-            ),
-            gr.components.Slider(
-                minimum=1, maximum=4, step=1, value=4, label="Beams"
-            ),
-            gr.components.Slider(
-                minimum=1, maximum=2000, step=1, value=1500, label="Max tokens"
-            ),
-        ],
-        outputs=[
-            gr.Textbox(
-                lines=10,
-                label="🔮 Output",
-                info="Output of the DeepSeek model."
-            ),
-            gr.Textbox(
-                lines=10, 
-                label="📊 Document Info",
-                info="Meta Data of the input documents."
-            ),
-            gr.Textbox(
-                lines=20, 
-                label="Output History",
-                info="Questions and answers are displayed here."
-            ),
-        ],
-        title="🔎 DeepSeek Q&A",
-        description=""" 
-            ### Document Analysis and Question Answering.
-            # Upload documents or paste text to ask questions about the content.
-        """ ,
-        theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.blue),
-        submit_btn="Generate Response",
-        flagging_mode="never"
-    ).queue()
 
-    UI.launch(share=True, server_port=7860)
+    def show_document():
+        return gr.update(visible=True, interactive=False)
+    
+    with gr.Blocks(title="🔎 DeepSeek Q&A", theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.blue)) as UI:
+        gr.Markdown("""
+        # 🔎 DeepSeek Document Q&A
+        ### Document Analysis and Question Answering.
+        Upload documents or paste text to ask questions about the content.
+        """)
+
+        with gr.Row():
+            # Left Column: Inputs
+            with gr.Column(scale=1):
+                question_input = gr.Textbox(
+                    lines=2,
+                    label="❓ Question",
+                    info="Upload documents below to ask questions about the content.", 
+                    placeholder="What is this document about?"
+                )
+
+                document_input = gr.MultimodalTextbox(
+                    file_count='multiple',
+                    placeholder="Upload your documents here.",
+                    label="📁 Document Input",
+                    show_label=True,
+                    info="Supported formats: PDF, DOCX, TXT"
+                )
+
+                pasted_text_input = gr.Textbox(
+                    lines=1,
+                    label="📃 Or paste text",
+                    info="Enter text directly. Each paragraph will be processed separately.",
+                    placeholder="Paste additional or alternative content here."
+                )
+
+                with gr.Accordion("⚙️ Advanced Generation Settings", open=False):
+                    temperature_slider = gr.Slider(minimum=0, maximum=1, value=0.6, label="🌡️ Temperature (Randomness Control)")
+                    top_p_slider = gr.Slider(minimum=0, maximum=1, value=0.75, label="Top p")
+                    top_k_slider = gr.Slider(minimum=0, maximum=100, step=1, value=40, label="Top k")
+                    beams_slider = gr.Slider(minimum=1, maximum=4, step=1, value=4, label="Beams")
+                    max_tokens_slider = gr.Slider(minimum=1, maximum=2000, step=1, value=1500, label="Max tokens")
+
+                generate_btn = gr.Button("💬 Generate Response")
+
+            # Right Column: Outputs
+            with gr.Column(scale=1):
+                output_box = gr.Textbox(
+                    lines=10,
+                    label="🔮 Output",
+                    info="Output of the DeepSeek model.",
+                    interactive=False
+                )
+
+                with gr.Accordion("📊 Document Info", open=False):
+                    metadata_box = gr.HTML()
+
+                history_box = gr.Textbox(
+                    lines=10,
+                    label="📖 Output History",
+                    info="Questions and answers are displayed here.",
+                    interactive=False
+                )
+
+                # Button to show full document
+                show_doc_btn = gr.Button("📂 Show Full Document")
+
+                # Hidden textbox for full document content
+                full_doc_view = gr.Textbox(
+                    label="📄 Full Document Content",
+                    lines=20,
+                    visible=False,
+                    interactive=False
+                )
+
+        # Events
+        generate_btn.click(
+            fn=evaluate,
+            inputs=[
+                question_input,
+                document_input,
+                pasted_text_input,
+                temperature_slider,
+                top_p_slider,
+                top_k_slider,
+                beams_slider,
+                max_tokens_slider
+            ],
+            outputs=[output_box, metadata_box, history_box, full_doc_view]
+        )
+
+        show_doc_btn.click(fn=show_document, outputs=full_doc_view)
+
+    UI.queue().launch(share=True)
 
 if __name__ == "__main__":
     fire.Fire(run)

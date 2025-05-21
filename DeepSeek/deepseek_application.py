@@ -7,16 +7,15 @@ import time
 import os
 import re
 import pickle
-import faiss
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 
-from utils.prompt_template import PromptHelper
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
-from langchain_text_splitters import CharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
+from langchain_chroma import Chroma
 
 from peft import (
     PeftModel,
@@ -81,8 +80,9 @@ class Processor:
             raise ValueError(f"Failed to process PDF: {str(e)}")
 
     def process_text(self, document):
-        try: 
-            data = document.getvalue()
+        try:
+            with open(document, "rb") as f:
+                data = f.read()
             result = chardet.detect(data)
             encodings = [result['encoding'], 'utf-8', 'latin-1', 'ascii']
                 
@@ -93,7 +93,7 @@ class Processor:
                 except UnicodeDecodeError:
                     continue
                 
-                raise ValueError("Unable to decode file with any supported encoding")
+            raise ValueError("Unable to decode file with any supported encoding")
         except Exception as e:
             logger.error(f"Error processing text file: {str(e)}")
             raise ValueError(f"Failed to process text file: {str(e)}")
@@ -154,7 +154,6 @@ class DeepSeekApplication:
         self.client.set_managers(user_permissions_resource)
     
     def init_model(self):
-        self.prompter = PromptHelper(self.prompt_template)
         config = AutoConfig.from_pretrained(self.ori_model, trust_remote_code=True)
         self.model = AutoModelForCausalLM.from_pretrained(
             self.ori_model,
@@ -167,6 +166,11 @@ class DeepSeekApplication:
         self.text_splitter = CharacterTextSplitter(
             chunk_size=self.chunk_size, 
             chunk_overlap=self.chunk_overlap,
+        )
+
+        self.recursive_text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=2000, 
+            chunk_overlap=500,
         )
 
         model_kwargs = {
@@ -209,6 +213,13 @@ class DeepSeekApplication:
                 k=top_k
             )
 
+            # Splitting the documents recursively 
+            text_splits = self.recursive_text_splitter.split_documents([scores[0]])
+            # Making a vector representation of the documents using embeddings
+            vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
+            # Getting the most relevant bits of the documents 
+            self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
+
             return scores[0].page_content
 
         except Exception as e: 
@@ -219,6 +230,14 @@ class DeepSeekApplication:
         document = ' '.join(document.split())
         document = document.replace('\t', ' ').strip()
         return document
+    
+    def clean_metadata(self, metadata: dict) -> dict:
+        return {
+            k: str(v) if v is not None else ""  # or remove it with a conditional
+            for k, v in metadata.items()
+            if v is not None  # Optional: skip None entirely
+        }
+
     
     def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None) -> None:
         try:
@@ -232,29 +251,38 @@ class DeepSeekApplication:
                     documents_array = (
                         Document(
                             page_content=doc["context"], 
-                            metadata={"space_key_index": doc["space_key_index"]}
+                            metadata=self.clean_metadata(doc["metadata"])
                         )
                         for doc in documents
                     )
-                else: 
-                    documents_array = (
-                        Document(
-                            page_content=doc, 
-                            metadata=metadata
-                        )
-                        for doc in documents
-                    )
-                return documents_array
+                else:
+                    for idx, data in enumerate(metadata):
+                        doc = documents[idx]
+                        documents_array.append(Document(
+                            page_content = doc,
+                            metadata = {
+                                "filename": metadata[data].filename,
+                                "chunk_count": metadata[data].chunk_count,
+                                "total_tokens": metadata[data].total_tokens,
+                                "processing_time": metadata[data].processing_time,
+                            }
+                        ))
+
+                return tuple(documents_array)
             
-            if documents: 
-                self.documents_array = loading_documents(documents, documents_array) # Adding additional documents to the chunks
-            self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
+            if documents:
+                self.uploaded_doc_present = True
+                self.documents_array = loading_documents(documents, documents_array, dict=False) # Adding additional documents to the chunks
+            else: 
+                self.uploaded_doc_present = False
+                self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
 
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
+
+            if not splitted_docs:
+                raise ValueError("No documents to index. Check the output of your document processing step.")
+
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
-            
-            if metadata:
-                self.document_metadata.update(metadata)
             
             logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
             
@@ -278,14 +306,27 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            context_documents = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
-            
-            # Truncate context if it is too long
-            if len(context_documents) > max_context_length:
-                combined_context = context_documents[:max_context_length] + "..."
-            
+            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
+
+            if self.uploaded_doc_present:
+                retrieved_bits = [
+                    text.page_content for text, _ in self.results_with_scores
+                ]
+                metadata = self.results_with_scores[0][0].metadata
+            else: 
+                # Lower scores is more similar
+                retrieved_bits = [
+                    text.page_content for text, score in self.results_with_scores if score <= 0.7
+                ]
+                metadata = self.results_with_scores[0][0].metadata
+
+            combined_texts = ' '.join(retrieved_bits)
+
+            # Truncate or assign the full text as needed
+            combined_context = combined_texts[:max_context_length] + "..." if len(combined_texts) > max_context_length else combined_texts
+
             prompt = self.construct_prompt(query, combined_context)
-            print("prompt", prompt)
+
             inputs = deepseek.tokenizer(prompt, return_tensors="pt")
             input_ids = inputs["input_ids"].to(device)
             generation_config = GenerationConfig(
@@ -294,6 +335,7 @@ class DeepSeekApplication:
                 top_k=top_k,
                 num_beams=num_beams
             )
+
             with torch.no_grad():
                 generated_output = deepseek.model.generate(
                     input_ids=input_ids,
@@ -308,44 +350,86 @@ class DeepSeekApplication:
             answer = {
                 'content': self.post_processing(output),
                 'metadata': {
+                    'text_metadata': metadata,
                     'processing_time': time.time() - start_time,
                     'context_length': len(combined_context),
                     'query_length': len(query)
                 }
             }
-            return answer
+            return answer, relevant_document
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             raise
 
     def post_processing(self, output: str) -> str:
-        answer = re.split(r"Answer:*?", output) # Extracting the answer
-        think_answer = re.split(r"</think>", answer[2]) # Removing the think caps
-        final_answer = re.split(r"<｜end▁of▁sentence｜>", think_answer[1]) # Removing the end of sentence token
+        # Try to extract answer after "Final Answer:"
+        match = re.search(r"Final Answer:\s*(.*)", output)
+        if match:
+            answer = match.group(1).strip()
+            # Optionally, strip tags or boxed formatting
+            answer = re.sub(r"[\\]boxed\{(.*?)}", r"\1", answer)
+            return answer.strip()
+
+        # Fallback if pattern not found
+        return output.strip()
+    
+    def test_generation(self, prompt: str, context: str, max_context_length: int, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
+        # Truncate context if it is too long
+        combined_context = context[:max_context_length] + "..." if len(context) > max_context_length else context
         
-        return final_answer[0].split('\n')[-1]
+        prompt = self.construct_prompt(prompt, combined_context)
+        
+        inputs = self.tokenizer(prompt, return_tensors="pt")
+        input_ids = inputs["input_ids"].to(device)
+        generation_config = GenerationConfig(
+            temperature=temp,
+            top_p=top_p,
+            top_k=top_k,
+            num_beams=num_beams
+        )
+        with torch.no_grad():
+            generated_output = self.model.generate(
+                input_ids=input_ids,
+                generation_config=generation_config,
+                return_dict_in_generate=True,
+                output_scores=True,
+                max_new_tokens=max_new_tokens,
+            )
+        s = generated_output.sequences[0]
+        output = self.tokenizer.decode(s)
 
-    def construct_prompt(self, query: str, context: str) -> str:
-        """Construct an enhanced prompt template"""
-        return f"""
-        You are given a context document and a related question. Your task is to generate a comprehensive answer based on the context.
+        return self.post_processing(output)
 
-        Context:
-        {context}
 
-        Question:
-        {query}
+    def construct_prompt(self, query: str, context: str) -> str: 
+        if context:
+            return f"""
+            You are an expert assistant designed to answer questions accurately and helpfully.
 
-        Instructions:
-        - Answer based only on the given context if it's relevant.
-        - If the context is insufficient or empty, provide the best answer using your own knowledge.
-        - Based on the context above, explain your answer in complete sentences.
-        - Ensure your answer is:
-        1. Directly relevant
-        2. Accurate and fact-based
-        3. Complete and informative
-        4. Clear and well-structured
+            Below, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
 
-        Please answer in a full sentence without using boxed notation or letter choices.:
-        """
+            Context (may be empty or partial):
+            {context}
+
+            Question:
+            {query}
+
+            Instructions:
+            - If the context is relevant and useful, base your answer on it.
+            - If the context is insufficient or empty, answer using your own understanding and general knowledge.
+            - Always respond in complete, well-structured sentences.
+            - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
+            - Your goal is to provide the best possible answer regardless of context quality.
+
+            Final Answer:
+            """
+        else: 
+            return f"""
+            You are a well-informed assistant. Answer the question briefly and clearly based on your understanding.
+
+            Question:
+            {query}
+
+            Final Answer:
+            """

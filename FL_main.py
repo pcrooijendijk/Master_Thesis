@@ -4,12 +4,13 @@ from utils import SpaceManagement, PromptHelper, Users
 import torch
 import fire
 import pickle
+import tenseal as ts
 from typing import List
-import argparse
 from peft import (
     LoraConfig,
     get_peft_model,
     prepare_model_for_kbit_training,
+    set_peft_model_state_dict,
 )
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from tqdm import tqdm
@@ -35,6 +36,36 @@ user_permissions_resource = management.get_user_permissions_resource()
 with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
     pickle.dump(user_permissions_resource, f)
 
+# def decrypt_model_weights(model, encrypted_aggregated):
+#     decrypted_state = {}
+
+#     for name, encrypted_vec in encrypted_aggregated.items():
+#         flat_weights = encrypted_vec.decrypt()
+#         original_shape = model.state_dict()[name].shape
+#         decrypted_state[name] = torch.tensor(flat_weights).view(original_shape)
+
+#     # model.load_state_dict(decrypted_state, strict=False)
+#     return decrypted_state
+
+def decrypt_model_weights(model, encrypted_aggregated):
+    decrypted_state = {}
+
+    for name, encrypted_chunks in encrypted_aggregated.items():
+        flat_weights = []
+
+        # Handle multiple chunks per parameter
+        for chunk in encrypted_chunks:
+            flat_weights.extend(chunk.decrypt())
+
+        # Reshape to original tensor shape
+        original_shape = model.state_dict()[name].shape
+        decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
+        decrypted_state[name] = decrypted_tensor
+
+    return decrypted_state
+
+
+
 # Main federated learning function
 def federated_privacy_learning(
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', # The global model
@@ -59,7 +90,7 @@ def federated_privacy_learning(
     template: str = 'utils/prompt_template.json', # Prompt template 
 ):
     assert global_model, "Please specify a global model, for instance: deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
-    gradient_steps = batch_size // micro_batch_size
+
     device_map = "auto"
 
     # Helper functions for the training process
@@ -98,10 +129,10 @@ def federated_privacy_learning(
     dataset_length = dict()
 
     model = AutoModelForCausalLM.from_pretrained(
-    global_model,
-    load_in_8bit=True,
-    torch_dtype=torch.float16,
-    device_map=device_map,
+        global_model,
+        load_in_8bit=True,
+        torch_dtype=torch.float16,
+        device_map=device_map,
     )
 
     tokenizer = AutoTokenizer.from_pretrained(global_model)
@@ -167,7 +198,7 @@ def federated_privacy_learning(
             client.train()
 
             print("\nEnding the local training of client {}".format(client_id))
-            dataset_length, selected_clients, last_client = client.end_local_training(
+            dataset_length, selected_clients, _ = client.end_local_training(
                 epoch, dataset_length, selected_clients, output_dir
                 )
             
@@ -180,7 +211,9 @@ def federated_privacy_learning(
             torch.cuda.empty_cache()
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
-        model = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
+        model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
+        decrypted_weights = decrypt_model_weights(model, model_weights)
+        set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir) 
 

@@ -29,7 +29,7 @@ class Dataset:
             
         return documents
 
-    def convert_to_json(self) -> None:
+    def convert_to_json(self, qa_index: int, output_file: str) -> None:
         # Function to convert the questions, documents and answers to JSON format instead of
         # PDF and seperate JSON file
         documents = []
@@ -46,13 +46,14 @@ class Dataset:
                 space_key_index = random.randint(0, 3) # For the space key
                 documents.append(
                     {
-                        "question": q_list[0],
+                        "question": q_list[qa_index],
                         "context": chr(12).join([page.get_text().replace('\n', '') for page in file]),
-                        "answer": a_list[0],
-                        "space_key_index": space_key_index
+                        "answer": a_list[qa_index],
+                        "space_key_index": space_key_index,
+                        "metadata": file.metadata,
                     }
                 )
-        with open('documents.json', 'w', encoding='utf-8') as f: 
+        with open(output_file, 'w', encoding='utf-8') as f: 
             json.dump(documents, f, ensure_ascii=False, indent=4)
 
 class Document: 
