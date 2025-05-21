@@ -83,7 +83,6 @@ class Processor:
         try:
             with open(document, "rb") as f:
                 data = f.read()
-            print(f"data read: {data}")
             result = chardet.detect(data)
             encodings = [result['encoding'], 'utf-8', 'latin-1', 'ascii']
                 
@@ -110,7 +109,6 @@ class Processor:
             raise ValueError(f"Unsupported file type: {file_extension}")
         
         processor = self.supported_extensions[file_extension]
-        print(f"document in process: {document}")
         content = processor(document)
         
         # Calculate basic metrics
@@ -258,7 +256,6 @@ class DeepSeekApplication:
                         for doc in documents
                     )
                 else:
-                    print(documents)
                     for idx, data in enumerate(metadata):
                         doc = documents[idx]
                         documents_array.append(Document(

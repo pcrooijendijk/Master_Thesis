@@ -14,14 +14,9 @@ from ragas.metrics import (
 )
 
 all_documents = load_dataset("json", data_files="test_documents.json")
-
-sample_docs = [
-    "Albert Einstein proposed the theory of relativity, which transformed our understanding of time, space, and gravity.",
-    "Marie Curie was a physicist and chemist who conducted pioneering research on radioactivity and won two Nobel Prizes.",
-    "Isaac Newton formulated the laws of motion and universal gravitation, laying the foundation for classical mechanics.",
-    "Charles Darwin introduced the theory of evolution by natural selection in his book 'On the Origin of Species'.",
-    "Ada Lovelace is regarded as the first computer programmer for her work on Charles Babbage's early mechanical computer, the Analytical Engine."
-]
+questions = all_documents['train']['question']
+contexts = all_documents['train']['context']
+answers = all_documents
 
 client_id: int = 9
 ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"  # The original model
@@ -48,37 +43,20 @@ deepseek = DeepSeekApplication(
 documents = []
 metadata = {}
 
-if sample_docs: 
-    for index, doc in enumerate(sample_docs):
-        with open(f"index_{index}.txt", "w") as file:
-            file.write(doc)
-            file.flush()
-            content, metadata_doc, file_name = deepseek.doc_processor.process_file(f"index_{index}.txt")
-            documents.append(content)
-            metadata[file_name] = metadata_doc
+for index, doc in enumerate(contexts):
+    with open(f"index_{index}.txt", "w") as file:
+        file.write(doc)
+        file.flush()
+        content, metadata_doc, file_name = deepseek.doc_processor.process_file(f"index_{index}.txt")
+        documents.append(content)
+        metadata[file_name] = metadata_doc
 
 # Load documents
 deepseek.load_documents(documents, metadata)
 
-sample_queries = [
-    "Who introduced the theory of relativity?",
-    "Who was the first computer programmer?",
-    "What did Isaac Newton contribute to science?",
-    "Who won two Nobel Prizes for research on radioactivity?",
-    "What is the theory of evolution by natural selection?"
-]
-
-expected_responses = [
-    "Albert Einstein proposed the theory of relativity, which transformed our understanding of time, space, and gravity.",
-    "Ada Lovelace is regarded as the first computer programmer for her work on Charles Babbage's early mechanical computer, the Analytical Engine.",
-    "Isaac Newton formulated the laws of motion and universal gravitation, laying the foundation for classical mechanics.",
-    "Marie Curie was a physicist and chemist who conducted pioneering research on radioactivity and won two Nobel Prizes.",
-    "Charles Darwin introduced the theory of evolution by natural selection in his book 'On the Origin of Species'."
-]
-
 dataset = []
 
-for query, reference in zip(sample_queries, expected_responses):
+for query, reference in zip(questions, answers):
     relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
     

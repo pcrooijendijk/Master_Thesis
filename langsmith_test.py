@@ -1,9 +1,11 @@
 from DeepSeek import DeepSeekApplication
 from datasets import load_dataset
-from tqdm import tqdm
 from typing import List, Optional, Dict
+from utils import Dataset
 import ollama
 
+# dataset = Dataset("data_DocBench_test")
+# dataset.convert_to_json(0, "test2.json")
 
 all_documents = load_dataset("json", data_files="test_documents.json")
 temp_doc = []
