@@ -343,7 +343,6 @@ class DeepSeekApplication:
                     do_sample=True,
                     max_new_tokens=2000,
                 )
-                
             input_length = prompt.shape[0]
             output = deepseek.tokenizer.batch_decode(generated_output[:, input_length:], skip_special_tokens=True)[0]
 

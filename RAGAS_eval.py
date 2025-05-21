@@ -61,16 +61,16 @@ dataset = []
 for query, reference in zip(questions, answers):
     relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
-    
+
     dataset.append({
         "question": query,
         "ground_truth": reference,
         "answer": response[0]['content'],
         "contexts": [relevant_docs],  
     })
-    import pickle
-    with open("eval_dataset.pkl", "wb") as f:
-        pickle.dump(dataset, f)
+    import json
+    with open("eval_dataset.json", 'w', encoding='utf-8') as f: 
+      json.dump(dataset, f, ensure_ascii=False, indent=4)
 
 eval_set = Dataset.from_list(dataset)
 
