@@ -5,6 +5,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain_community.embeddings import OllamaEmbeddings
 from datasets import Dataset, DatasetDict
 from datasets import load_dataset
+import os
 
 from ragas.metrics import (
     answer_relevancy,
@@ -16,7 +17,7 @@ from ragas.metrics import (
 all_documents = load_dataset("json", data_files="test_documents.json")
 questions = all_documents['train']['question']
 contexts = all_documents['train']['context']
-answers = all_documents
+answers = all_documents['train']['answer']
 
 client_id: int = 9
 ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"  # The original model
@@ -50,6 +51,7 @@ for index, doc in enumerate(contexts):
         content, metadata_doc, file_name = deepseek.doc_processor.process_file(f"index_{index}.txt")
         documents.append(content)
         metadata[file_name] = metadata_doc
+    os.remove(f"index_{index}.txt")
 
 # Load documents
 deepseek.load_documents(documents, metadata)
@@ -66,6 +68,9 @@ for query, reference in zip(questions, answers):
         "answer": response[0]['content'],
         "contexts": [relevant_docs],  
     })
+    import pickle
+    with open("eval_dataset.pkl", "wb") as f:
+        pickle.dump(dataset, f)
 
 eval_set = Dataset.from_list(dataset)
 

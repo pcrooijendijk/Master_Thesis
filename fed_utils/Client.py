@@ -14,7 +14,6 @@ import tenseal as ts
 from typing import List
 from collections import OrderedDict
 from torch.utils.data import DataLoader
-from transformers import TrainerCallback
 
 from sklearn.model_selection import train_test_split
 from peft import (
@@ -78,16 +77,6 @@ class Client:
             context_bytes = f.read()
         context = ts.context_from(context_bytes)
         return context
-
-    # def encrypt_model_weights(self, state_dict, context):
-    #     encrypted_layers = {}
-
-    #     for name, param in state_dict.items():
-    #         if isinstance(param, torch.Tensor):
-    #             tensor = param.detach().cpu().numpy().flatten().tolist()
-    #             encrypted_layers[name] = ts.ckks_vector(context, tensor)
-
-    #     return encrypted_layers
 
     def encrypt_model_weights(self, state_dict, context, chunk_size=32768//2):
         encrypted_layers = {}

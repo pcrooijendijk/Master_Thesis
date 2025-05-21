@@ -1,14 +1,7 @@
 import torch
 import os
-import gc
 import pickle
 import tenseal as ts
-from torch.nn.functional import normalize
-from transformers import AutoTokenizer, AutoModelForCausalLM
-
-from peft import (
-    set_peft_model_state_dict,
-)
 
 class Server:
     def __init__(self, num_clients, global_model):
@@ -32,10 +25,6 @@ class Server:
         context.global_scale = 2**40
         context.generate_galois_keys()
         return context
-    
-    def load_public_context(self):
-        with open("tenseal_public_context.tenseal", "rb") as f:
-            return ts.context_from(f.read())
     
     def load_encrypted_weights(self, input_path, context):
         with open(input_path, 'rb') as f:

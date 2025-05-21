@@ -29,11 +29,13 @@ class Dataset:
             
         return documents
 
-    def convert_to_json(self, qa_index: int, output_file: str) -> None:
+    def convert_to_json(self, qa_index: int, output_file: str, last_file: int) -> None:
         # Function to convert the questions, documents and answers to JSON format instead of
         # PDF and seperate JSON file
         documents = []
         directory_length = len(next(os.walk(self.path))[1])
+        directory_length = directory_length if last_file == 0 or None else last_file
+        print(directory_length)
 
         for cur_folder_num in range(directory_length): 
             print("Appending document {} to the JSON file.".format(cur_folder_num))

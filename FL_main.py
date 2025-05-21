@@ -36,17 +36,6 @@ user_permissions_resource = management.get_user_permissions_resource()
 with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
     pickle.dump(user_permissions_resource, f)
 
-# def decrypt_model_weights(model, encrypted_aggregated):
-#     decrypted_state = {}
-
-#     for name, encrypted_vec in encrypted_aggregated.items():
-#         flat_weights = encrypted_vec.decrypt()
-#         original_shape = model.state_dict()[name].shape
-#         decrypted_state[name] = torch.tensor(flat_weights).view(original_shape)
-
-#     # model.load_state_dict(decrypted_state, strict=False)
-#     return decrypted_state
-
 def decrypt_model_weights(model, encrypted_aggregated):
     decrypted_state = {}
 
