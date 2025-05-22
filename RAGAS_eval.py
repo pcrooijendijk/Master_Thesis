@@ -20,6 +20,7 @@ dataset = Dataset("data")
 dataset.convert_to_json(1, "test_documents.json", 10)
 
 all_documents = load_dataset("json", data_files="test_documents.json")
+print(f"all documents {all_documents.__str__}")
 questions = all_documents['train']['question']
 contexts = all_documents['train']['context']
 answers = all_documents['train']['answer']
@@ -49,15 +50,18 @@ deepseek = DeepSeekApplication(
 documents = []
 metadata = {}
 
+print("Starting loop for contexts")
 for index, doc in enumerate(contexts):
     with open(f"index_{index}.txt", "w") as file:
         file.write(doc)
         file.flush()
+        print("file written")
         content, metadata_doc, file_name = deepseek.doc_processor.process_file(f"index_{index}.txt")
         documents.append(content)
         metadata[file_name] = metadata_doc
     os.remove(f"index_{index}.txt")
 
+print("Ended loop and now loading documents")
 # Load documents
 deepseek.load_documents(documents, metadata)
 
