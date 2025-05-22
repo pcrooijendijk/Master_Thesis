@@ -70,7 +70,7 @@ for query, reference in zip(questions, answers):
     })
     import json
     with open("eval_dataset.json", 'w', encoding='utf-8') as f: 
-      json.dump(dataset, f, ensure_ascii=False, indent=4)
+        json.dump(dataset, f, ensure_ascii=False, indent=4)
 
 eval_set = Dataset.from_list(dataset)
 
@@ -78,14 +78,14 @@ ds_dict = DatasetDict({
     "eval": eval_set
 })
 
-langchain_llm = ChatOllama(model="llama3")
-langchain_embeddings = OllamaEmbeddings(model="llama3")
+# langchain_llm = ChatOllama(model="llama3")
+# langchain_embeddings = OllamaEmbeddings(model="llama3")
 
-result = evaluate(ds_dict['eval'],
-        metrics=[
-        context_precision,
-        faithfulness,
-        answer_relevancy,
-        context_recall], llm=langchain_llm,embeddings=langchain_embeddings)
+# result = evaluate(ds_dict['eval'],
+#         metrics=[
+#         context_precision,
+#         faithfulness,
+#         answer_relevancy,
+#         context_recall], llm=langchain_llm,embeddings=langchain_embeddings)
 
-print(result)
+# print(result)
