@@ -16,7 +16,7 @@ from ragas.metrics import (
 
 from utils import Dataset
 
-dataset = Dataset("data")
+dataset = Dataset("data/")
 dataset.convert_to_json(1, "test_documents.json", 3)
 
 all_documents = load_dataset("json", data_files="test_documents.json")
