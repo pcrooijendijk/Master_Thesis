@@ -16,7 +16,7 @@ from ragas.metrics import (
 
 from utils import Dataset
 
-dataset = Dataset("/content/drive/MyDrive/data_DocBench/data")
+dataset = Dataset("data")
 dataset.convert_to_json(1, "test_documents.json", 10)
 
 all_documents = load_dataset("json", data_files="test_documents.json")
@@ -63,9 +63,12 @@ deepseek.load_documents(documents, metadata)
 
 dataset = []
 
+print("Retrieving answers:\n")
+
 for query, reference in zip(questions, answers):
     relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
+    print("Response", response, "\n")
 
     dataset.append({
         "question": query,
