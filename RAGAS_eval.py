@@ -14,6 +14,11 @@ from ragas.metrics import (
     context_precision,
 )
 
+from utils import Dataset
+
+dataset = Dataset("/content/drive/MyDrive/data_DocBench/data")
+dataset.convert_to_json(1, "test_documents.json", 10)
+
 all_documents = load_dataset("json", data_files="test_documents.json")
 questions = all_documents['train']['question']
 contexts = all_documents['train']['context']

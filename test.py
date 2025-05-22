@@ -1,6 +1,4 @@
-import pickle
+from utils import Dataset
 
-with open("eval_dataset.pkl", 'rb') as f:
-    dataset = pickle.load(f)
-
-print(dataset[0])
+dataset = Dataset("/content/drive/MyDrive/data_DocBench")
+dataset.convert_to_json(0, "test_documents.json")

@@ -345,6 +345,8 @@ class DeepSeekApplication:
                 )
             input_length = prompt.shape[0]
             output = deepseek.tokenizer.batch_decode(generated_output[:, input_length:], skip_special_tokens=True)[0]
+            print("OUTPUT", output)
+            print("--------------------------------------------------------------\n")
 
             answer = {
                 'content': self.post_processing(output),
