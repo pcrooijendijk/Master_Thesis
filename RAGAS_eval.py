@@ -90,6 +90,8 @@ ds_dict = DatasetDict({
     "eval": eval_set
 })
 
+ds_dict.save_to_disk("eval_dataset")
+
 # langchain_llm = ChatOllama(model="llama3")
 # langchain_embeddings = OllamaEmbeddings(model="llama3")
 
