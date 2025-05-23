@@ -6,7 +6,7 @@ import glob
 import json
 import os
 
-class Dataset:
+class Custom_Dataset:
     def __init__(self, path: str):
         self.path = path
 
