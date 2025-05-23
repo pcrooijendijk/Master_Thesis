@@ -406,7 +406,7 @@ class DeepSeekApplication:
     def construct_prompt(self, query: str, context: str) -> str: 
 
         messages = [
-            {"role": "system", "content": """You are an expert assistant designed to answer questions accurately and helpfully.
+            {"role": "system", "content": """You are an expert assistant designed to answer questions accurately, helpfully and concise.
 
             By the user, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
             
@@ -414,6 +414,8 @@ class DeepSeekApplication:
             - If the context is relevant and useful, base your answer on it.
             - If the context is insufficient or empty, answer using your own understanding and general knowledge.
             - Always respond in complete, well-structured short sentences. 
+            - Do not explain steps or show reasoning unless explicitly asked.
+            - Avoid unnecessary sentences or filler. Be direct and informative.
             - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
             - Your goal is to provide the best possible answer regardless of context quality.""",},
 
@@ -427,34 +429,3 @@ class DeepSeekApplication:
         ]
         tokenized_chat = self.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
         return tokenized_chat
-
-        if context:
-            return f"""
-            You are an expert assistant designed to answer questions accurately and helpfully.
-
-            Below, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
-
-            Context (may be empty or partial):
-            {context}
-
-            Question:
-            {query}
-
-            Instructions:
-            - If the context is relevant and useful, base your answer on it.
-            - If the context is insufficient or empty, answer using your own understanding and general knowledge.
-            - Always respond in complete, well-structured sentences. Not one letter answers.
-            - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
-            - Your goal is to provide the best possible answer regardless of context quality.
-
-            Final Answer:
-            """
-        else: 
-            return f"""
-            You are a well-informed assistant. Answer the question briefly and clearly based on your understanding.
-
-            Question:
-            {query}
-
-            Final Answer:
-            """
