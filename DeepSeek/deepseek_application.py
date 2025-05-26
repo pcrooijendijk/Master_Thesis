@@ -239,7 +239,7 @@ class DeepSeekApplication:
         }
 
     
-    def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None) -> None:
+    def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None, custom_text: bool = False) -> None:
         try:
             doc_chunks = []
             self.documents = documents
@@ -255,7 +255,7 @@ class DeepSeekApplication:
                         )
                         for doc in documents
                     )
-                else:
+                elif custom_text:
                     for idx, data in enumerate(metadata):
                         doc = documents[idx]
                         documents_array.append(Document(
@@ -267,7 +267,20 @@ class DeepSeekApplication:
                                 "processing_time": metadata[data].processing_time,
                             }
                         ))
-
+                else:
+                    documents_array = (
+                        Document(
+                            page_content=doc, 
+                            metadata={
+                                "filename": metadata.filename,
+                                "chunk_count": metadata.chunk_count,
+                                "total_tokens": metadata.total_tokens,
+                                "processing_time": metadata.processing_time
+                            }
+                        )
+                        for doc in documents
+                    )
+                    
                 return tuple(documents_array)
             
             if documents:
@@ -327,8 +340,6 @@ class DeepSeekApplication:
 
             prompt = self.construct_prompt(query, combined_context)
 
-            # inputs = deepseek.tokenizer(prompt, return_tensors="pt")
-            # input_ids = inputs["input_ids"].to(device)
             generation_config = GenerationConfig(
                 temperature=temp,
                 top_p=top_p,
@@ -345,8 +356,6 @@ class DeepSeekApplication:
                 )
             input_length = prompt.shape[0]
             output = deepseek.tokenizer.batch_decode(generated_output[:, input_length:], skip_special_tokens=True)[0]
-            print("OUTPUT", output)
-            print("--------------------------------------------------------------\n")
 
             answer = {
                 'content': self.post_processing(output),
