@@ -93,7 +93,6 @@ def run(
         OUTPUT_HISTORY.append([question, response['content']])
         return (response['content'], format_metadata_html(metadata), format_qa_pair(OUTPUT_HISTORY), content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_html(response['metadata']), format_qa_pair(OUTPUT_HISTORY), content_doc)
 
-
     def show_document():
         return gr.update(visible=True, interactive=False)
     

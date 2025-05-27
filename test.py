@@ -1,4 +1,6 @@
-from utils import Dataset
+from utils import Users
 
-dataset = Dataset("/content/drive/MyDrive/data_DocBench")
-dataset.convert_to_json(0, "test_documents.json")
+space_keys = [0, 1, 2, 3]
+
+# Making the users object to get the users and clients from
+users = Users(space_keys)

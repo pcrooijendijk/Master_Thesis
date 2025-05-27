@@ -373,11 +373,9 @@ class DeepSeekApplication:
             raise
 
     def post_processing(self, output: str) -> str:
-        # Try to extract answer after "Final Answer:"
         match = re.search(r"</think>\s*(.*)", output)
         if match:
             answer = match.group(1).strip()
-            # Optionally, strip tags or boxed formatting
             answer = re.sub(r"[\\]boxed\{(.*?)}", r"\1", answer)
             return answer.strip()
 
@@ -436,5 +434,6 @@ class DeepSeekApplication:
                 {query}
             """},
         ]
+
         tokenized_chat = self.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
         return tokenized_chat

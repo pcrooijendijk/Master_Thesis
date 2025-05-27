@@ -1,8 +1,8 @@
-import copy
 from perm_utils import Role
 from typing import List
 from fed_utils import Client
 from perm_utils.UserPermissionManagement import UserPermissionsResource
+import json
 
 class Users():
     def __init__(self, space_keys: List):
@@ -79,7 +79,6 @@ class Users():
 
     def set_clients(self, user_permissions_resource: UserPermissionsResource) -> None:
         for user in self.users:
-            # model_copy = copy.deepcopy(model)
             self.clients.append(
                 Client(
                     client_id=self.users[user]['id'], 
