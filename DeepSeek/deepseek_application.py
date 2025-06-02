@@ -220,7 +220,7 @@ class DeepSeekApplication:
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
 
-            return scores[0].page_content
+            return scores
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -255,18 +255,6 @@ class DeepSeekApplication:
                         )
                         for doc in documents
                     )
-                elif custom_text:
-                    for idx, data in enumerate(metadata):
-                        doc = documents[idx]
-                        documents_array.append(Document(
-                            page_content = doc,
-                            metadata = {
-                                "filename": metadata[data].filename,
-                                "chunk_count": metadata[data].chunk_count,
-                                "total_tokens": metadata[data].total_tokens,
-                                "processing_time": metadata[data].processing_time,
-                            }
-                        ))
                 else:
                     documents_array = (
                         Document(
@@ -319,7 +307,7 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
+            relevant_document = self.retrieve_relevant_docs[0].page_content(query, top_k, similarity_threshold)
 
             if self.uploaded_doc_present:
                 retrieved_bits = [
