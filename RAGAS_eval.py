@@ -6,6 +6,7 @@ from langchain_community.embeddings import OllamaEmbeddings
 from datasets import Dataset, DatasetDict
 from datasets import load_dataset
 import os
+import json
 
 from ragas.metrics import (
     answer_relevancy,
@@ -62,15 +63,18 @@ for index, doc in enumerate(contexts):
     os.remove(f"index_{index}.txt")
 
 print("Ended loop and now loading documents")
+
 # Load documents
 deepseek.load_documents(documents, metadata)
 
 dataset = []
+revelant_documents = []
 
 print("Retrieving answers:\n")
 
 for query, reference in zip(questions, answers):
     relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
+    revelant_documents.append(relevant_docs)
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
     print("Response", response, "\n")
 
@@ -80,7 +84,10 @@ for query, reference in zip(questions, answers):
         "answer": response[0]['content'],
         "contexts": [relevant_docs],  
     })
-    import json
+
+    with open("retrieved_docs.json", 'w', encoding='utf-8') as f: 
+        json.dump(revelant_documents, f, indent=4)
+    
     with open("eval_dataset.json", 'w', encoding='utf-8') as f: 
         json.dump(dataset, f, ensure_ascii=False, indent=4)
 
