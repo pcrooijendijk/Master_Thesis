@@ -221,6 +221,9 @@ class DeepSeekApplication:
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
+            for doc, score in self.results_with_scores:
+                print(f"Score: {score:.4f}")
+                print(f"Content: {doc.page_content}\n")
 
             return scores
 
