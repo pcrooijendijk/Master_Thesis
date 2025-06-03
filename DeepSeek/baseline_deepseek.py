@@ -121,7 +121,7 @@ class Processor:
         
         return content, metadata, file_name
 
-class DeepSeekApplication:
+class BaselineDeepSeekApplication:
     def __init__(
         self,
         client_id: int, 
