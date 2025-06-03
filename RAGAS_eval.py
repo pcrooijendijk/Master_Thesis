@@ -89,10 +89,10 @@ for query, reference in zip(questions, answers):
         "contexts": [chunks[-1].page_content],  
     })
 
-    with open("retrieved_docs.json", 'w', encoding='utf-8') as f: 
+    with open(f"retrieved_docs{client_id}.json", 'w', encoding='utf-8') as f: 
         json.dump(revelant_documents, f, indent=4)
     
-    with open("eval_dataset.json", 'w', encoding='utf-8') as f: 
+    with open(f"eval_dataset{client_id}.json", 'w', encoding='utf-8') as f: 
         json.dump(dataset, f, ensure_ascii=False, indent=4)
 
 # with open("eval_dataset.json") as f: 
