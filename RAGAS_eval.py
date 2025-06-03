@@ -1,4 +1,4 @@
-from DeepSeek.baseline_deepseek import DeepSeekApplication
+from DeepSeek import DeepSeekApplication
 from typing import Optional
 from ragas import evaluate
 from langchain_community.chat_models import ChatOllama
@@ -90,6 +90,9 @@ for query, reference in zip(questions, answers):
     
     with open("eval_dataset.json", 'w', encoding='utf-8') as f: 
         json.dump(dataset, f, ensure_ascii=False, indent=4)
+
+with open("eval_dataset.json") as f: 
+    dataset = json.load(f)
 
 eval_set = Dataset.from_list(dataset)
 
