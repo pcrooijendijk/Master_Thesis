@@ -82,7 +82,7 @@ for query, reference in zip(questions, answers):
         "question": query,
         "ground_truth": reference,
         "answer": response[0]['content'],
-        "contexts": [relevant_docs],  
+        "contexts": [relevant_docs[0].page_content],  
     })
 
     with open("retrieved_docs.json", 'w', encoding='utf-8') as f: 
