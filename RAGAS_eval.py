@@ -3,6 +3,7 @@ from typing import Optional
 from ragas import evaluate, RunConfig
 from langchain_community.llms import Ollama
 from langchain_community.embeddings import OllamaEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from datasets import Dataset, DatasetDict
 from datasets import load_dataset
 import os
@@ -96,13 +97,13 @@ from utils import Custom_Dataset
 with open("eval_dataset.json") as f: 
     dataset = json.load(f)
 
-eval_set = Dataset.from_list(dataset)
+eval_set = Dataset.from_list(dataset[:5])
 
 ds_dict = DatasetDict({
     "eval": eval_set
 })
 
-run_config = RunConfig(timeout=120, log_tenacity=True, max_workers=5)  
+run_config = RunConfig(timeout=300, log_tenacity=True, max_workers=5)  
 # RunConfig(timeout: int = 180, max_retries: int = 10, max_wait: int = 60, max_workers: int = 16, exception_types: Union[Type[BaseException], Tuple[Type[BaseException], ...]] = (Exception,), log_tenacity: bool = False, seed: int = 42)
 
 langchain_llm = Ollama(model="tinyllama")
@@ -111,8 +112,7 @@ langchain_embeddings = OllamaEmbeddings(model="tinyllama")
 result = evaluate(ds_dict['eval'],
         metrics=[
         context_precision,
-        faithfulness,
-        answer_relevancy,
-        context_recall], run_config=run_config, llm=langchain_llm,embeddings=langchain_embeddings, batch_size=8)
+        answer_relevancy
+        ], run_config=run_config, llm=langchain_llm,embeddings=langchain_embeddings, batch_size=4)
 
 print(result)

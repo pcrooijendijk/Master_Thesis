@@ -213,6 +213,8 @@ class DeepSeekApplication:
                 k=top_k
             )
 
+            print(scores)
+
             # Splitting the documents recursively 
             text_splits = self.recursive_text_splitter.split_documents([scores[0]])
             # Making a vector representation of the documents using embeddings

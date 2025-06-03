@@ -1,36 +1,42 @@
-from datasets import Dataset
-from ragas import evaluate
+from datasets import load_dataset
+
+# loading the V2 dataset
+amnesty_qa = load_dataset("explodinggradients/amnesty_qa", "english_v2")
+
+amnesty_subset = amnesty_qa["eval"].select(range(2))
+
+eval_dataset = amnesty_qa["eval"].select(range(1,3))
+eval_dataset.to_pandas()
+
+amnesty_subset.to_pandas()
+
 from ragas.metrics import (
-    faithfulness,
     answer_relevancy,
-    answer_correctness,
-    context_precision,
+    faithfulness,
     context_recall,
+    context_precision,
 )
 
-# Example data
-data = {
-    "user_input": ["What is the capital of France?"],
-    "response": ["Paris is the capital of France."],
-    "retrieved_contexts": [["Paris is the capital of France. It is a major European city known for its culture."]],
-    "reference": ["Paris is the capital of France."]
-}
+from langchain_community.chat_models import ChatOllama
+from ragas import evaluate, RunConfig
+from langchain_community.embeddings import OllamaEmbeddings
+# information found here: https://docs.ragas.io/en/latest/howtos/customisations/bring-your-own-llm-or-embs.html
 
-# Convert the data to a Hugging Face Dataset
-dataset = Dataset.from_dict(data)
+llm_llama3 = ChatOllama(model="tinyllama",verbose=False,timeout=600,num_ctx=8192,disable_streaming=False)
+embeddings_llama3 = OllamaEmbeddings(model="tinyllama")
 
-# Define the metrics you want to evaluate
-metrics = [
-    faithfulness,
-    answer_relevancy,
-    answer_correctness,
-    context_precision,
-    context_recall,
-]
+result = evaluate(
+    eval_dataset,
+    metrics=[
+        context_precision,
+        faithfulness,
+        answer_relevancy,
+        context_recall,
+    ],
+    llm=llm_llama3,
+    embeddings=embeddings_llama3,
+    run_config =RunConfig(timeout=600, max_retries=20, max_wait=50,log_tenacity=False),
+    raise_exceptions=True
+)
 
-# Evaluate the dataset using the selected metrics
-results = evaluate(dataset, metrics)
-
-# Display the results
-for metric_name, score in results.items():
-    print(f"{metric_name}: {score:.2f}")
+result.to_pandas()
