@@ -219,9 +219,6 @@ class DeepSeekApplication:
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
-            for doc, score in self.results_with_scores:
-                print(f"Score: {score:.4f}")
-                print(f"Content: {doc.page_content}\n")
 
             return scores
 
@@ -371,6 +368,9 @@ class DeepSeekApplication:
 
         # Fallback if pattern not found
         return output.strip()
+
+    def return_relevant_chunks(self):
+        return self.results_with_scores
     
     def test_generation(self, prompt: str, context: str, max_context_length: int, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
         # Truncate context if it is too long

@@ -44,5 +44,11 @@ deepseek = DeepSeekApplication(
 
 deepseek.load_documents([], [])
 response, content_doc = deepseek.generate_response("What is one limitation of using Google Ngrams for studying semantic shifts?", deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
+chunks = deepseek.return_relevant_chunks()
+
+print("RETRIEVED CHUNKS :)")
+for doc, score in chunks:
+    print(f"Score: {score:.4f}")
+    print(f"Content: {doc.page_content}\n")
 
 documents = []
