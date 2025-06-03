@@ -77,7 +77,7 @@ print("Retrieving answers:\n")
 
 for query, reference in zip(questions, answers):
     relevant_docs = deepseek.retrieve_relevant_docs(query, 10, 0.5)
-    chunks = deepseek.return_relevant_chunks()
+    chunks, _ = deepseek.return_relevant_chunks()
     revelant_documents.append([doc.page_content for doc in relevant_docs])
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
     print("Response", response, "\n")
