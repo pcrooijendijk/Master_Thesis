@@ -86,7 +86,7 @@ for query, reference in zip(questions, answers):
         "question": query,
         "ground_truth": reference,
         "answer": response[0]['content'],
-        "contexts": [chunks[-1].page_content],  
+        "contexts": [chunks.page_content],  
     })
 
     with open(f"retrieved_docs{client_id}.json", 'w', encoding='utf-8') as f: 
