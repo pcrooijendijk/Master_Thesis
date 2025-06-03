@@ -1,4 +1,4 @@
-from DeepSeek import DeepSeekApplication
+from DeepSeek.baseline_deepseek import DeepSeekApplication
 from typing import Optional
 from ragas import evaluate
 from langchain_community.chat_models import ChatOllama
