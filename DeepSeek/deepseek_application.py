@@ -256,18 +256,17 @@ class DeepSeekApplication:
                         for doc in documents
                     )
                 else:
-                    documents_array = (
-                        Document(
-                            page_content=doc, 
-                            metadata={
-                                "filename": metadata.filename,
-                                "chunk_count": metadata.chunk_count,
-                                "total_tokens": metadata.total_tokens,
-                                "processing_time": metadata.processing_time
+                    for idx, data in enumerate(metadata):
+                        doc = documents[idx]
+                        documents_array.append(Document(
+                            page_content = doc,
+                            metadata = {
+                                "filename": metadata[data].filename,
+                                "chunk_count": metadata[data].chunk_count,
+                                "total_tokens": metadata[data].total_tokens,
+                                "processing_time": metadata[data].processing_time,
                             }
-                        )
-                        for doc in documents
-                    )
+                        ))
                     
                 return tuple(documents_array)
             
