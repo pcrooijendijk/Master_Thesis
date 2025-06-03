@@ -1,14 +1,15 @@
+from DeepSeek import DeepSeekApplication
+from typing import Optional
+from ragas import evaluate, RunConfig
+from langchain_community.llms import Ollama
+from langchain_community.embeddings import OllamaEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from datasets import Dataset, DatasetDict
 from datasets import load_dataset
+import os
+import json
 
-# loading the V2 dataset
-amnesty_qa = load_dataset("explodinggradients/amnesty_qa", "english_v2")
-
-amnesty_subset = amnesty_qa["eval"].select(range(2))
-
-eval_dataset = amnesty_qa["eval"].select(range(1,3))
-eval_dataset.to_pandas()
-
-amnesty_subset.to_pandas()
+os.environ["RAGAS_DEBUG"] = "true"
 
 from ragas.metrics import (
     answer_relevancy,
@@ -17,26 +18,31 @@ from ragas.metrics import (
     context_precision,
 )
 
-from langchain_community.chat_models import ChatOllama
-from ragas import evaluate, RunConfig
-from langchain_community.embeddings import OllamaEmbeddings
-# information found here: https://docs.ragas.io/en/latest/howtos/customisations/bring-your-own-llm-or-embs.html
+from utils import Custom_Dataset
 
-llm_llama3 = ChatOllama(model="tinyllama",verbose=False,timeout=600,num_ctx=8192,disable_streaming=False)
-embeddings_llama3 = OllamaEmbeddings(model="tinyllama")
+client_id: int = 9
+ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"  # The original model
+lora_weights_path: str = "FL_output/pytorch_model.bin"        # Path to the weights after LoRA
+lora_config_path: str = "FL_output"                           # Path to the config.json file after LoRA
+prompt_template: str = 'utils/prompt_template.json'           # Prompt template for LLM
+uploaded_documents: Optional[str] = None                      # The corresponding document(s)
+custom_text: Optional[str] = None                             # Custom text input instead of documents
+temp: float = 0.1                                             # Temperature for token sampling
+top_p: float = 0.75                                           # Top-p sampling
+top_k: int = 40                                               # Top-k filtering
+num_beams: int = 4                                            # Beam search size
+max_new_tokens: int = 256
 
-result = evaluate(
-    eval_dataset,
-    metrics=[
-        context_precision,
-        faithfulness,
-        answer_relevancy,
-        context_recall,
-    ],
-    llm=llm_llama3,
-    embeddings=embeddings_llama3,
-    run_config =RunConfig(timeout=600, max_retries=20, max_wait=50,log_tenacity=False),
-    raise_exceptions=True
+# Initalize a DeepSeek application for processing documents
+deepseek = DeepSeekApplication(
+    client_id, 
+    ori_model,
+    lora_weights_path,
+    lora_config_path,
+    prompt_template,
 )
 
-result.to_pandas()
+deepseek.load_documents([], [])
+response, content_doc = deepseek.generate_response("What is one limitation of using Google Ngrams for studying semantic shifts?", deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
+
+documents = []
