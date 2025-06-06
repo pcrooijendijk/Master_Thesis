@@ -6,6 +6,8 @@ import glob
 import json
 import os
 
+random.seed(42)
+
 class Custom_Dataset:
     def __init__(self, path: str):
         self.path = path
@@ -35,7 +37,6 @@ class Custom_Dataset:
         documents = []
         directory_length = len(next(os.walk(self.path))[1])
         directory_length = directory_length if last_file == 0 or None else last_file
-        print(directory_length)
 
         for cur_folder_num in range(directory_length): 
             print("Appending document {} to the JSON file.".format(cur_folder_num))
