@@ -374,6 +374,9 @@ class BaselineDeepSeekApplication:
         # Fallback if pattern not found
         return output.strip()
     
+    def return_relevant_chunks(self):
+        return self.results_with_scores
+    
     def test_generation(self, prompt: str, context: str, max_context_length: int, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
         # Truncate context if it is too long
         combined_context = context[:max_context_length] + "..." if len(context) > max_context_length else context
