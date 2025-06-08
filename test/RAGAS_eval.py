@@ -74,24 +74,14 @@ eval_dataset = []
 retrieved_documents_log = []
 
 print("Generating responses...\n")
-for question, reference in zip(questions, answers):
-    relevant_docs = deepseek.retrieve_relevant_docs(question, top_k=10, sim_threshold=0.5)
+for query, reference in zip(questions, answers):
+    relevant_docs = deepseek.retrieve_relevant_docs(query, top_k=10, sim_threshold=0.5)
     chunks, _ = deepseek.return_relevant_chunks()[0]
 
-    response = deepseek.generate_response(
-        query=question,
-        deepseek=deepseek,
-        top_k=top_k,
-        top_p=top_p,
-        num_beams=num_beams,
-        max_new_tokens=max_new_tokens,
-        repetition_penalty=0.28,
-        temperature=temp,
-        stream_output=False
-    )
+    response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
 
     eval_dataset.append({
-        "question": question,
+        "question": query,
         "ground_truth": reference,
         "answer": response[0]["content"],
         "contexts": [chunks.page_content],
