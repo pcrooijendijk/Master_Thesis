@@ -10,6 +10,7 @@ import pickle
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
+from datasets import load_dataset
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
 from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
