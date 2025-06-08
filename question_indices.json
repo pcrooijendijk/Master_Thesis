@@ -1,0 +1,322 @@
+{
+    "118": {
+        "space_key_index": 3,
+        "question": "What institution or agency released the report?"
+    },
+    "115": {
+        "space_key_index": 3,
+        "question": "On which page does the report detail the Bureau Objective 4.2?"
+    },
+    "70": {
+        "space_key_index": 3,
+        "question": "What method does SHELL MIDSTREAM PARTNERS, L.P. use to depreciate property, plant, and equipment?"
+    },
+    "50": {
+        "space_key_index": 3,
+        "question": "Did cash provided by operating activities increase from 2019 to 2020?"
+    },
+    "43": {
+        "space_key_index": 3,
+        "question": "Is the Pearson correlation for ESIM higher than 0.95 for the de-cs language pair?"
+    },
+    "163": {
+        "space_key_index": 3,
+        "question": "Can the input VAT paid by a mining company be deducted in Spain?"
+    },
+    "12": {
+        "space_key_index": 3,
+        "question": "Did BERT's best performance on the Argument Reasoning Comprehension Task surpass the average untrained human baseline?"
+    },
+    "11": {
+        "space_key_index": 3,
+        "question": "What is the original figure number associated with the automatically generated knowledge graph?"
+    },
+    "211": {
+        "space_key_index": 3,
+        "question": "How many figures are there in the document?"
+    },
+    "112": {
+        "space_key_index": 3,
+        "question": "How many times does the document mention \"INSSG\"?"
+    },
+    "56": {
+        "space_key_index": 3,
+        "question": "How has the expenditure on research, development, and engineering of this company changed over the three years?"
+    },
+    "119": {
+        "space_key_index": 3,
+        "question": "Are the approval and revision times the same for this document?"
+    },
+    "127": {
+        "space_key_index": 3,
+        "question": "How does the Bureau plan to enhance its involvement in peace processes according to the strategic framework?"
+    },
+    "6": {
+        "space_key_index": 3,
+        "question": "Are LIME and Alvarez-Melis and Jaakkola (2017) methods dependent on model properties?"
+    },
+    "123": {
+        "space_key_index": 3,
+        "question": "Are surplus lines insurers subject to approval by the Department of Insurance according to Louisiana law?"
+    },
+    "46": {
+        "space_key_index": 3,
+        "question": "How does CodeBERT differ in its approach for the natural language code search when compared to the models reported by Code- searchnet challenge"
+    },
+    "147": {
+        "space_key_index": 3,
+        "question": "What did the Swedish Supreme Court highlight as outdated in its press release?"
+    },
+    "140": {
+        "space_key_index": 3,
+        "question": "Is it possible for someone to be granted a subclass 202 (Global Special Humanitarian visa) if they are in Australia?"
+    },
+    "145": {
+        "space_key_index": 3,
+        "question": "How many pages does the document have in total?"
+    },
+    "122": {
+        "space_key_index": 3,
+        "question": "What specific measures does Prosper Africa intend to implement to enhance trade relationships between the U.S. and Africa?"
+    },
+    "98": {
+        "space_key_index": 1,
+        "question": "What is the primary method mentioned for containing expenditures in the office?"
+    },
+    "47": {
+        "space_key_index": 1,
+        "question": "Does the presented data collection process prioritize precision or comprehensiveness?"
+    },
+    "133": {
+        "space_key_index": 1,
+        "question": "Does Law No. 32 of 2007 in Tunisia set the same minimum age for marriage for both males and females?"
+    },
+    "175": {
+        "space_key_index": 1,
+        "question": "What is the most common abbreviation in the document?"
+    },
+    "55": {
+        "space_key_index": 1,
+        "question": "Which segment has the highest number of manufacturing facilities located in Texas, USA?"
+    },
+    "1": {
+        "space_key_index": 1,
+        "question": "How many Facebook comments were provided in the dataset for training purposes?"
+    },
+    "37": {
+        "space_key_index": 1,
+        "question": "Which model achieved the highest average human score for the oEffect relation?"
+    },
+    "100": {
+        "space_key_index": 1,
+        "question": "What is the purpose of applying data and analytics as per the Department's goals?"
+    },
+    "87": {
+        "space_key_index": 1,
+        "question": "How much did Lovisa Holdings pay in income taxes in 2020?"
+    },
+    "207": {
+        "space_key_index": 1,
+        "question": "Was the newspaper released on weekdays?"
+    },
+    "33": {
+        "space_key_index": 1,
+        "question": "What evaluation metrics are used for the citation prediction tasks?"
+    },
+    "42": {
+        "space_key_index": 1,
+        "question": "What loss function is optimized in the Translation Ranking model architecture?"
+    },
+    "187": {
+        "space_key_index": 1,
+        "question": "What was Nury Martinez's position when she made disparaging remarks about Oaxacans?"
+    },
+    "28": {
+        "space_key_index": 1,
+        "question": "Which defense mechanism resulted in the highest recovery of the original accuracy in the BERT model under the 'all' attack setting?"
+    },
+    "26": {
+        "space_key_index": 1,
+        "question": "What does the trend of accuracy indicate about the generator's capability as the adversarial training progresses?"
+    },
+    "92": {
+        "space_key_index": 1,
+        "question": "Is Objective 1.3 of NSDI Goal 1 the responsibility of the FGDC?"
+    },
+    "169": {
+        "space_key_index": 1,
+        "question": "Is the EU sanctions framework applicable worldwide?"
+    },
+    "88": {
+        "space_key_index": 1,
+        "question": "What was the year-on-year percentage change in Toyota's operating income for fiscal 2021?"
+    },
+    "192": {
+        "space_key_index": 1,
+        "question": "Did Steve Scalise withdraw from the race for the speakership?"
+    },
+    "39": {
+        "space_key_index": 1,
+        "question": "Does XLM outperform M-BERT in Vietnamese and Chinese for the XLT task?"
+    },
+    "167": {
+        "space_key_index": 0,
+        "question": "Is it possible for foreign nationals to own land in the United Arab Emirates?"
+    },
+    "79": {
+        "space_key_index": 0,
+        "question": "What is the future minimum payment for finance leases in 2025?"
+    },
+    "223": {
+        "space_key_index": 0,
+        "question": "Has the New York Times' racial equity audit of the Administration for Children’s Services been publicly released?"
+    },
+    "20": {
+        "space_key_index": 0,
+        "question": "Does the Entity-GCN model use recurrent document encoders?"
+    },
+    "204": {
+        "space_key_index": 0,
+        "question": "Did the gene-editing in chickens completely prevent avian influenza infections?"
+    },
+    "113": {
+        "space_key_index": 0,
+        "question": "What is the title of the document?"
+    },
+    "137": {
+        "space_key_index": 0,
+        "question": "Is there a database in South Africa for tracing individuals suspected to have been in contact with COVID-19 patients?"
+    },
+    "44": {
+        "space_key_index": 0,
+        "question": "Is the GYAFC dataset the largest corpus for formality style transfer?"
+    },
+    "103": {
+        "space_key_index": 0,
+        "question": "What will happen if the government fails to establish the relevance of Exhibits 6F and 11C?"
+    },
+    "38": {
+        "space_key_index": 0,
+        "question": "What tools or techniques were used to handle the character sequence in the NER system to achieve better performance?"
+    },
+    "159": {
+        "space_key_index": 0,
+        "question": "Is it mandatory for individuals to register their activities if they are arranging or carrying out political influence activities in the UK under the direction of a foreign power?"
+    },
+    "82": {
+        "space_key_index": 0,
+        "question": "Did the revenues for the manufacturing, service, and retailing businesses of K-47 increase from 2020 to 2021?"
+    },
+    "170": {
+        "space_key_index": 0,
+        "question": "Is the Belt and Road Initiative expected to have a negative impact on Pakistan's local fauna and flora?"
+    },
+    "168": {
+        "space_key_index": 0,
+        "question": "Has Greece enacted legislation regarding the registration of Artificial Intelligence systems?"
+    },
+    "102": {
+        "space_key_index": 0,
+        "question": "What is the objective number of the Bureau Cross-Cutting Management Objective discussed in the text?"
+    },
+    "162": {
+        "space_key_index": 0,
+        "question": "What is the title of the document?"
+    },
+    "64": {
+        "space_key_index": 0,
+        "question": "On which page does the report provide information on executive compensation?"
+    },
+    "30": {
+        "space_key_index": 0,
+        "question": "In Figure 4, what is the function of the components marked as 'Word LSTM-B' and 'Word LSTM-F'?"
+    },
+    "222": {
+        "space_key_index": 0,
+        "question": "What are the major news conveyed by the front page?"
+    },
+    "72": {
+        "space_key_index": 0,
+        "question": "How much goodwill was allocated to Siemens Healthineers' Imaging segment from the Varian acquisition?"
+    },
+    "217": {
+        "space_key_index": 2,
+        "question": "How much does this newspaper cost?"
+    },
+    "69": {
+        "space_key_index": 2,
+        "question": "What were the total restructuring charges for the year 2020?"
+    },
+    "14": {
+        "space_key_index": 2,
+        "question": "Which method is used to learn short-term user representations?"
+    },
+    "57": {
+        "space_key_index": 2,
+        "question": "What was the underlying cause of the net discrete tax gains in 2020?"
+    },
+    "19": {
+        "space_key_index": 2,
+        "question": "Does the method described project word embeddings into a shared space for translation?"
+    },
+    "96": {
+        "space_key_index": 2,
+        "question": "Is the trade policy described in Bureau Objective 2.3 worker-centered?"
+    },
+    "68": {
+        "space_key_index": 2,
+        "question": "What was the total score for company trust among diabetes specialists according to the report?"
+    },
+    "129": {
+        "space_key_index": 2,
+        "question": "How many persons were convicted for money laundering offenses in Cyprus in 2018?"
+    },
+    "174": {
+        "space_key_index": 2,
+        "question": "Are cosmetic manufacturers required to list all ingredients on the product label in Canada?"
+    },
+    "94": {
+        "space_key_index": 2,
+        "question": "What is the purpose of Bureau Objective 1.3?"
+    },
+    "35": {
+        "space_key_index": 2,
+        "question": "What is the name of the language model used for contextual augmentation in this paper?"
+    },
+    "181": {
+        "space_key_index": 2,
+        "question": "How many Ukrainians had arrived in the United States by mid-April under various programs?"
+    },
+    "89": {
+        "space_key_index": 2,
+        "question": "What are the primary concerns addressed by Bureau Objective 1.3?"
+    },
+    "54": {
+        "space_key_index": 2,
+        "question": "How many shares did Novartis repurchase to mitigate dilution related to employees' participation plans in the year 2021?"
+    },
+    "193": {
+        "space_key_index": 2,
+        "question": "What did the Microsoft team report to in August 2022?"
+    },
+    "10": {
+        "space_key_index": 2,
+        "question": "Did multilingual pre-training benefit all language pairs in this research?"
+    },
+    "180": {
+        "space_key_index": 2,
+        "question": "Is Donald J. Trump's legal team planning to change the level of independence currently held by the Justice Department?"
+    },
+    "153": {
+        "space_key_index": 2,
+        "question": "What approach has the EUAA recommended for conducting personal interviews in light of the COVID-19 pandemic?"
+    },
+    "58": {
+        "space_key_index": 2,
+        "question": "What are the three levels in the fair value hierarchy?"
+    },
+    "157": {
+        "space_key_index": 2,
+        "question": "What was the main objective of the Kolarctic CBC programme that funded the Raja-Jooseppi LPOE project?"
+    }
+}
