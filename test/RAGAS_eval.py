@@ -1,4 +1,4 @@
-from ..DeepSeek.deepseek_application import DeepSeekApplication
+from DeepSeek.deepseek_application import DeepSeekApplication
 from typing import Optional
 from ragas import evaluate, RunConfig
 from langchain_community.llms import Ollama
