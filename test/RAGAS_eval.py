@@ -75,7 +75,7 @@ retrieved_documents_log = []
 
 print("Generating responses...\n")
 for question, reference in zip(questions, answers):
-    relevant_docs = deepseek.retrieve_relevant_docs(question, k=10, threshold=0.5)
+    relevant_docs = deepseek.retrieve_relevant_docs(question, top_k=10, sim_threshold=0.5)
     chunks, _ = deepseek.return_relevant_chunks()[0]
 
     response = deepseek.generate_response(
