@@ -316,7 +316,7 @@ class DeepSeekApplication:
             else: 
                 # Lower scores is more similar
                 retrieved_bits = [
-                    text.page_content for text, score in self.results_with_scores if score <= 0.7
+                    text.page_content for text, score in self.results_with_scores if score <= 0.4
                 ]
                 metadata = self.results_with_scores[0][0].metadata
 

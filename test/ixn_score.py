@@ -1,5 +1,11 @@
 from typing import List, Dict
 import json
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--path1", help="Put in the path of the first retrieved documents dataset.", required=True)
+parser.add_argument("--path2", help="Put in the path of the second retrieved documents dataset.", required=True)
+args = parser.parse_args()
 
 def compute_ixn_score(
     baseline_docs: List[str],
@@ -25,10 +31,10 @@ def evaluate_ixn_for_users(
     print("IXN scores:", ixn_scores)
     return {"avg_ixn": avg_score}
 
-with open("retrieved_docs_9.json") as f: 
+with open(args.path1) as f: 
     revelant_documents_9 = json.load(f)
 
-with open("retrieved_docs_2.json") as f: 
+with open(args.path2) as f: 
     revelant_documents_2 = json.load(f)
 
 evaluate_ixn_for_users(revelant_documents_9, revelant_documents_2)

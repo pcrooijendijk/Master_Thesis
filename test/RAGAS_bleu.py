@@ -1,17 +1,16 @@
 from ragas.metrics import RougeScore, BleuScore
 from ragas import SingleTurnSample
+from datasets import load_dataset
+import csv
+import argparse
 
-example = {
-    "question": "How many categories of aggression were participants asked to classify texts into?",
-    "ground_truth": "3 categories: overt aggression, covert aggression, and non-aggression.",
-    "answer": "Participants were asked to classify texts into three categories: overt aggression, covert aggression, and non-aggression. The task aimed to assess their ability to perform a top-level classification of aggression in a language-agnostic manner.",
-}
+parser = argparse.ArgumentParser()
+parser.add_argument("--path", help="Put in the path to the evaluation dataset.", required=True)
+parser.add_argument("--output", help="Output CSV filename", default="scores.csv")
+args = parser.parse_args()
 
-sample = SingleTurnSample(
-    user_input=example["question"],
-    response=example["answer"],
-    reference=example["ground_truth"]
-)
+# Loading the dataset
+all_questions = load_dataset("json", data_files=args.path)["train"]
 
 metrics = {
     "BLEU": BleuScore(),
@@ -22,6 +21,20 @@ metrics = {
     }
 }
 
-for name, metric in metrics.items():
-    score = metric.single_turn_score(sample)
-    print(f"{name:<30} {score:.4f}")
+results = []
+for i, data in enumerate(all_questions):
+    sample = SingleTurnSample(
+        user_input=data["question"],
+        response=data["answer"],
+        reference=data["ground_truth"]
+    )
+
+    row = {"index": i}
+    for name, metric in metrics.items():
+        row[name] = round(metric.single_turn_score(sample), 4)
+    results.append(row)
+
+with open(args.output, "w", newline="") as f:
+    writer = csv.DictWriter(f, fieldnames=["index"] + list(metrics.keys()))
+    writer.writeheader()
+    writer.writerows(results)

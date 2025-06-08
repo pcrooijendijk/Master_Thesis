@@ -2,6 +2,7 @@ import os
 import json
 import sys
 from typing import Optional
+import argparse
 
 from datasets import load_dataset, Dataset, DatasetDict
 from ragas import evaluate, RunConfig
@@ -9,21 +10,25 @@ from ragas.metrics import answer_relevancy, faithfulness, context_recall, contex
 from langchain_community.llms import Ollama
 from langchain_community.embeddings import OllamaEmbeddings
 
-# Mode selector
-mode = next((arg.split("=")[1] for arg in sys.argv if arg.startswith("--mode=")), "full").lower()
+parser = argparse.ArgumentParser()
+parser.add_argument("--mode", help="Choose evaluation mode. Use --mode full or --mode base", required=True, default="full")
+parser.add_argument("--client_id", help="Choose which client to evaluate.", required=True, default=2)
+args = parser.parse_args()
 
-if mode == "full":
+client_id: int = args.client_id
+
+if args.mode == "full":
     from DeepSeek.deepseek_application import DeepSeekApplication
-elif mode == "base":
+    output_path_retrieved = f"retrieved_docs/retrieved_docs_{client_id}.json"
+    output_path_evaluation = f"eval_dataset/eval_dataset_{client_id}.json"
+elif args.mode == "base":
     from DeepSeek.baseline_deepseek import BaselineDeepSeekApplication as DeepSeekApplication
-else:
-    print("Invalid evaluation mode. Use --mode=full or --mode=base")
-    sys.exit(1)
+    output_path_retrieved = f"retrieved_docs/retrieved_docs_{client_id}_b.json"
+    output_path_evaluation = f"eval_dataset/eval_dataset_{client_id}_b.json"
 
 os.environ["RAGAS_DEBUG"] = "true"
 
 # Variables for the client
-client_id: int = 2
 ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"  # The original model
 lora_weights_path: str = "FL_output/pytorch_model.bin"        # Path to the weights after LoRA
 lora_config_path: str = "FL_output"                           # Path to the config.json file after LoRA
@@ -93,10 +98,10 @@ for query, reference in zip(questions, answers):
 os.makedirs("retrieved_docs", exist_ok=True)
 os.makedirs("eval_dataset", exist_ok=True)
 
-with open(f"retrieved_docs/retrieved_docs_{client_id}_b.json", "w", encoding="utf-8") as f:
+with open(output_path_retrieved, "w", encoding="utf-8") as f:
     json.dump(retrieved_documents_log, f, indent=4)
 
-with open(f"eval_dataset/eval_dataset_{client_id}_b.json", "w", encoding="utf-8") as f:
+with open(output_path_evaluation, "w", encoding="utf-8") as f:
     json.dump(eval_dataset, f, ensure_ascii=False, indent=4)
 
 # ------------------------------------------------------------------------------------------------------

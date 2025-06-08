@@ -1,24 +1,13 @@
-import json
-import glob
-import random
-import pymupdf
-import os
+from ragas.metrics import RougeScore, BleuScore
+from ragas import SingleTurnSample
 from datasets import load_dataset
+import argparse
 
-random.seed(42)
+parser = argparse.ArgumentParser()
+parser.add_argument("--path", help="Put in the path to the evaluation dataset.")
+args = parser.parse_args()
+print(args.path)
 
-all_documents = load_dataset("json", data_files="utils/documents.json")
-
-data = []
-counter = 0
-
-for index in range(len(all_documents['train'])):
-    counter += 1
-    if all_documents["train"][index]["question"].lower() == "Does SenseBERT employ a whole-word-masking strategy for out-of-vocabulary words?".lower():
-        print("counter", counter)
-        break
-
-from collections import Counter
-
-counts = Counter(data)
-print(counts)
+# Loading the dataset
+all_documents = load_dataset("json", data_files=args.path)["train"]
+print(all_documents)
