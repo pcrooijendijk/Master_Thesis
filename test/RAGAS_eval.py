@@ -1,3 +1,6 @@
+import sys
+sys.path.append("DeepSeek")
+
 from DeepSeek import DeepSeekApplication
 from typing import Optional
 from ragas import evaluate, RunConfig
@@ -17,8 +20,6 @@ from ragas.metrics import (
     context_recall,
     context_precision,
 )
-
-from utils import Custom_Dataset
 
 all_documents = load_dataset("json", data_files="test_documents.json")
 print(f"all documents {all_documents.__str__}")
