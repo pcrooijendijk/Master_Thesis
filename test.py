@@ -13,12 +13,12 @@ from langchain_community.embeddings import OllamaEmbeddings
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", help="Choose evaluation mode. Use --mode full or --mode base", required=True, default="full")
 parser.add_argument("--client_id", help="Choose which client to evaluate.", required=True, default=2)
-parser.add_argument("eval", help="Whether to perform evaluation with RAGAS.")
+parser.add_argument("--eval", help="Whether to perform evaluation with RAGAS. Use --eval eval to enabl evaluation.")
 args = parser.parse_args()
 
 client_id: int = args.client_id
 print(client_id)
 
 # ------------------------------------------------------------------------------------------------------
-if args.eval:
+if args.eval == "eval":
     print("heeeyy")

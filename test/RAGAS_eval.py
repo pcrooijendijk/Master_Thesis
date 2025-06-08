@@ -13,7 +13,7 @@ from langchain_community.embeddings import OllamaEmbeddings
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", help="Choose evaluation mode. Use --mode full or --mode base", required=True, default="full")
 parser.add_argument("--client_id", help="Choose which client to evaluate.", required=True, default=2)
-parser.add_argument("eval", help="Whether to perform evaluation with RAGAS.")
+parser.add_argument("--eval", help="Whether to perform evaluation with RAGAS. Use --eval eval to enabl evaluation.")
 args = parser.parse_args()
 
 client_id: int = args.client_id
@@ -106,7 +106,7 @@ with open(output_path_evaluation, "w", encoding="utf-8") as f:
     json.dump(eval_dataset, f, ensure_ascii=False, indent=4)
 
 # ------------------------------------------------------------------------------------------------------
-if args.eval:
+if args.eval == "eval":
     with open(f"eval_dataset/eval_dataset_{client_id}_b.json") as f: 
         dataset = json.load(f)
 
