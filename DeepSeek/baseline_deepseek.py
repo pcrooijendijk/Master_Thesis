@@ -145,14 +145,6 @@ class BaselineDeepSeekApplication:
         self.doc_processor = Processor()
         self.document_store = None
         self.document_metadata = {}
-        
-        with open(self.lora_config_path + "/client_{}.pkl".format(self.client_id), "rb") as f:
-            self.client = pickle.load(f)
-        
-        with open(self.lora_config_path + "/user_permission_resource.pkl", "rb") as f:
-            user_permissions_resource = pickle.load(f)
-        
-        self.client.set_managers(user_permissions_resource)
     
     def init_model(self):
         config = AutoConfig.from_pretrained(self.ori_model, trust_remote_code=True)
@@ -190,10 +182,6 @@ class BaselineDeepSeekApplication:
 
         # Loading the model
         self.model = prepare_model_for_kbit_training(self.model)
-        lora_weights = torch.load(self.lora_weights_path) # Get the LoRA weights
-        config_peft = LoraConfig.from_pretrained(self.lora_config_path)
-        self.model = PeftModel(self.model, config_peft)
-        set_peft_model_state_dict(self.model, lora_weights, "default")
 
         self.tokenizer = AutoTokenizer.from_pretrained(self.ori_model)    
         self.tokenizer.pad_token_id = (
@@ -321,7 +309,7 @@ class BaselineDeepSeekApplication:
             else: 
                 # Lower scores is more similar
                 retrieved_bits = [
-                    text.page_content for text, score in self.results_with_scores if score <= 0.7
+                    text.page_content for text, score in self.results_with_scores if score <= 0.4
                 ]
                 metadata = self.results_with_scores[0][0].metadata
 
