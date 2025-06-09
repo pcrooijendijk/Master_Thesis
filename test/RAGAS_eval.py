@@ -59,21 +59,7 @@ deepseek = DeepSeekApplication(
     prompt_template
 )
 
-# Process and load documents 
-documents, metadata = [], {}
-
-print("Processing documents...")
-for idx, context in enumerate(contexts):
-    file_path = f"tmp_{idx}.txt"
-    with open(file_path, "w") as f:
-        f.write(context)
-
-    content, meta, file_name = deepseek.doc_processor.process_file(file_path)
-    documents.append(content)
-    metadata[file_name] = meta
-    os.remove(file_path)
-
-deepseek.load_documents(documents, metadata)
+deepseek.load_documents([], [])
 
 # Generate responses using the local LLM's of the clients
 eval_dataset = []

@@ -190,6 +190,11 @@ class BaselineDeepSeekApplication:
         self.tokenizer.padding_side = "left"
 
         self.model.eval() # Set the model to evaluation mode 
+
+        self.all_documents = load_dataset("json", data_files="documents1.json")
+        self.temp_doc = []
+        for index, _ in enumerate(self.all_documents['train']):
+            self.temp_doc.append(self.all_documents["train"][index])
     
     def retrieve_relevant_docs(self, question: str, top_k: int, sim_threshold: float) -> List[str]:
         if self.document_store is None: 
@@ -259,18 +264,12 @@ class BaselineDeepSeekApplication:
                 return tuple(documents_array)
             
             if documents: 
-                print("If documents")
-                print(documents)
                 self.uploaded_doc_present = True
                 self.documents_array = loading_documents(documents, documents_array, dict=False) # Adding additional documents to the chunks
             else: 
                 print("All documents!")
-                self.uploaded_doc_present = False
-                all_documents = load_dataset("json", data_files="documents1.json")
-                temp_doc = []
-                for index, _ in enumerate(all_documents['train']):
-                    temp_doc.append(all_documents["train"][index])
-                self.documents_array = loading_documents(temp_doc, documents_array, dict=True) # Adding the documents of the clients they have access to
+                self.uploaded_doc_present = False  
+                self.documents_array = loading_documents(self.temp_doc, documents_array, dict=True) # Adding the documents of the clients they have access to
 
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
 
