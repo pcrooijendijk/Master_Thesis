@@ -16,9 +16,10 @@ parser.add_argument("--client_id", help="Choose which client to evaluate.", defa
 parser.add_argument("--eval", help="Whether to perform evaluation with RAGAS. Use --eval eval to enable evaluation.")
 args = parser.parse_args()
 
+client_id: int = args.client_id
+
 if args.mode == "full":
     from DeepSeek.deepseek_application import DeepSeekApplication
-    client_id: int = args.client_id
     output_path_retrieved = f"retrieved_docs/retrieved_docs_{client_id}.json"
     output_path_evaluation = f"eval_dataset/eval_dataset_{client_id}.json"
 elif args.mode == "base":
