@@ -189,7 +189,6 @@ class BaselineDeepSeekApplication:
         )
         self.tokenizer.padding_side = "left"
 
-        self.model.half()
         self.model.eval() # Set the model to evaluation mode 
     
     def retrieve_relevant_docs(self, question: str, top_k: int, sim_threshold: float) -> List[str]:
