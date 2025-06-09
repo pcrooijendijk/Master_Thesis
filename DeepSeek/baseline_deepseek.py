@@ -264,6 +264,7 @@ class BaselineDeepSeekApplication:
                 return tuple(documents_array)
             
             if documents: 
+                print("Other documents?")
                 self.uploaded_doc_present = True
                 self.documents_array = loading_documents(documents, documents_array, dict=False) # Adding additional documents to the chunks
             else: 

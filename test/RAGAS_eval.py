@@ -1,6 +1,5 @@
 import os
 import json
-import sys
 from typing import Optional
 import argparse
 
