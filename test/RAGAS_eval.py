@@ -12,8 +12,8 @@ from langchain_community.embeddings import OllamaEmbeddings
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", help="Choose evaluation mode. Use --mode full or --mode base", required=True, default="full")
-parser.add_argument("--client_id", help="Choose which client to evaluate.", required=True, default=2)
-parser.add_argument("--eval", help="Whether to perform evaluation with RAGAS. Use --eval eval to enabl evaluation.")
+parser.add_argument("--client_id", help="Choose which client to evaluate.", default=2)
+parser.add_argument("--eval", help="Whether to perform evaluation with RAGAS. Use --eval eval to enable evaluation.")
 args = parser.parse_args()
 
 client_id: int = args.client_id
@@ -24,8 +24,8 @@ if args.mode == "full":
     output_path_evaluation = f"eval_dataset/eval_dataset_{client_id}.json"
 elif args.mode == "base":
     from DeepSeek.baseline_deepseek import BaselineDeepSeekApplication as DeepSeekApplication
-    output_path_retrieved = f"retrieved_docs/retrieved_docs_{client_id}_b.json"
-    output_path_evaluation = f"eval_dataset/eval_dataset_{client_id}_b.json"
+    output_path_retrieved = f"retrieved_docs/retrieved_docs_baseline.json"
+    output_path_evaluation = f"eval_dataset/eval_dataset_baseline.json"
 
 os.environ["RAGAS_DEBUG"] = "true"
 
