@@ -259,11 +259,14 @@ class BaselineDeepSeekApplication:
                 return tuple(documents_array)
             
             if documents: 
+                print("If documents")
+                print(documents)
                 self.uploaded_doc_present = True
                 self.documents_array = loading_documents(documents, documents_array, dict=False) # Adding additional documents to the chunks
             else: 
+                print("All documents!")
                 self.uploaded_doc_present = False
-                all_documents = load_dataset("json", data_files="utils/documents1.json")
+                all_documents = load_dataset("json", data_files="documents1.json")
                 temp_doc = []
                 for index, _ in enumerate(all_documents['train']):
                     temp_doc.append(all_documents["train"][index])
