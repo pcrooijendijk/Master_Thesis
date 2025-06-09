@@ -40,7 +40,7 @@ class Custom_Dataset:
             directory_length = random_files
         else: 
             directory_length = len(next(os.walk(self.path))[1])
-            directory_length = range(directory_length) if last_file == 0 or None else range(last_file)
+            directory_length = range(directory_length) if last_file == 0 or last_file == None else range(last_file)
 
         for index, cur_folder_num in enumerate(directory_length): 
             print("Appending document {} to the JSON file.".format(cur_folder_num))
@@ -50,19 +50,23 @@ class Custom_Dataset:
 
             # Append the documents to texts lists to get the content of the documents
             with pymupdf.open(pdf_path) as file:
+                temp_qa_index = qa_index
                 try:
-                    question = q_list[qa_index]
+                    question = q_list[temp_qa_index]
+                    answer = a_list[temp_qa_index]
                 except IndexError:
-                    qa_index -= 1
+                    temp_qa_index = max(0, qa_index - 1)  # fallback to a safe index
+                    question = q_list[temp_qa_index]
+                    answer = a_list[temp_qa_index]
                 if space_indices:
                     space_key_index = space_indices[index]
                 else:
                     space_key_index = random.randint(0, 3) # For the space key
                 documents.append(
                     {
-                        "question": q_list[qa_index],
+                        "question": question,
                         "context": chr(12).join([page.get_text().replace('\n', '') for page in file]),
-                        "answer": a_list[qa_index],
+                        "answer": answer,
                         "space_key_index": space_key_index,
                         "metadata": file.metadata,
                     }

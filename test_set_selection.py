@@ -1,22 +1,22 @@
 import random
+import json
 from collections import Counter, defaultdict
 from datasets import load_dataset
 from utils.dataset import Custom_Dataset
-import json
+from collections import defaultdict
 
 # Setting seed for reproducability
 random.seed(42)
 
-# Target indices
 target_indices = [
-    167, 159, 204, 168, 170,  # space_key_index: 0
-    133, 55, 187, 88, 39,     # space_key_index: 1
-    129, 174, 181, 54, 153,   # space_key_index: 2
-    163, 6, 123, 46, 122      # space_key_index: 3
+    107, 132, 199, 186, 151, # space_key_index: 0
+    25, 17, 136, 193, 130, # space_key_index: 1
+    139, 152, 82, 46, 24, # space_key_index: 2
+    214, 180, 172, 146, 176 # space_key_index: 3
 ]
 
 # Load source dataset
-dataset = load_dataset("json", data_files="utils/documents.json")["train"]
+dataset = load_dataset("json", data_files="documents1.json")["train"]
 
 # Group entries by space_key_index
 grouped = defaultdict(list)
@@ -59,12 +59,12 @@ space_indices = [filtered_questions[str(idx)]["space_key_index"] for idx in targ
 # Create dataset subset
 Custom_Dataset("data/").convert_to_json(
     qa_index=1,
-    output_file="test_documents.json",
+    output_file="test_documents_1.json",
     random_files=target_indices,
     space_indices=space_indices
 )
 
 # Verify and print distribution
-test_data = load_dataset("json", data_files="test_documents.json")["train"]
+test_data = load_dataset("json", data_files="test_documents_1.json")["train"]
 counts = Counter([item["space_key_index"] for item in test_data])
 print("Test set distribution by space_key_index:", counts)

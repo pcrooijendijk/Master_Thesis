@@ -45,7 +45,7 @@ num_beams: int = 4                                            # Beam search size
 max_new_tokens: int = 256                                     # Max tokens to generate
 
 # Loading the dataset
-all_documents = load_dataset("json", data_files="test_documents.json")["train"]
+all_documents = load_dataset("json", data_files="test_documents_1.json")["train"]
 questions = all_documents["question"]
 contexts = all_documents["context"]
 answers = all_documents["answer"]
