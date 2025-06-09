@@ -12,8 +12,8 @@ from langchain_community.embeddings import OllamaEmbeddings
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", help="Choose evaluation mode. Use --mode full or --mode base", required=True, default="full")
-parser.add_argument("--client_id", help="Choose which client to evaluate.", required=True, default=2)
-parser.add_argument("--eval", help="Whether to perform evaluation with RAGAS. Use --eval eval to enabl evaluation.")
+parser.add_argument("--client_id", help="Choose which client to evaluate.", default=2)
+parser.add_argument("--eval", help="Whether to perform evaluation with RAGAS. Use --eval eval to enable evaluation.")
 args = parser.parse_args()
 
 if args.mode == "full":
