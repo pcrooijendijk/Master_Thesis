@@ -201,6 +201,8 @@ def federated_privacy_learning(
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
         model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir) 
+        gc.collect()
+        torch.cuda.empty_cache()
 
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)

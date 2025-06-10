@@ -4,6 +4,7 @@ from perm_utils import Permission
 from perm_utils.UserPermissionManagement import UserPermissionsResource
 
 import os
+import gc
 import torch
 import pickle
 import copy
@@ -120,10 +121,6 @@ class Client:
                     encrypted_layers[name] = encrypted_chunks
 
         return encrypted_layers
-
-    # def decrypt_model_weights(self, enc_update_bytes, context):
-    #     enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
-    #     return torch.tensor(enc_vector.decrypt())
     
     def decrypt_model_weights(self, model, encrypted_aggregated):
         decrypted_state = {}
@@ -140,6 +137,8 @@ class Client:
             original_shape = model.state_dict()[name].shape
             decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
             decrypted_state[name] = decrypted_tensor
+            del flat_weights
+            gc.collect()
 
         return decrypted_state
     
