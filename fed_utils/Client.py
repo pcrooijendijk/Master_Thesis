@@ -271,8 +271,7 @@ class Client:
         if not model_weights:
             self.model = model
         else:
-            full_context = "client_contexts{}/full_context.tenseal".format(self.client_id)
-            decrypted_weights = self.decrypt_model_weights(model_weights, full_context) 
+            decrypted_weights = self.decrypt_model_weights(model_weights, self.load_full_context()) 
             set_peft_model_state_dict(model, decrypted_weights, "default")
     
     def set_managers(self, user_permissions_resource) -> None: 
