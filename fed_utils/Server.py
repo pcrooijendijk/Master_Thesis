@@ -17,7 +17,7 @@ class Server:
             }
         return encrypted_weights
     
-    def load_public_context(context_path):
+    def load_public_context(self, context_path):
         with open(context_path, "rb") as f:
             return ts.context_from(f.read()) 
     
