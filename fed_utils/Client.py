@@ -62,7 +62,7 @@ class Client:
         self.name = name
         self.user_permissions_resource = user_permissions_resource
 
-        self.context_dir = os.path.join("client_contexts", self.client_id)
+        self.context_dir = "client_contexts{}".format(self.client_id)
         os.makedirs(self.context_dir, exist_ok=True)
 
         self.context = self.generate_context()
