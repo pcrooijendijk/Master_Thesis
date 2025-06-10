@@ -267,8 +267,13 @@ class Client:
     def get_client_id(self) -> int:
         return self.client_id
     
-    def set_model(self, model) -> None: 
-        self.model = model
+    def set_model(self, model, model_weights) -> None: 
+        if not model_weights:
+            self.model = model
+        else:
+            full_context = "client_contexts{}/full_context.tenseal".format(self.client_id)
+            decrypted_weights = self.decrypt_model_weights(model_weights, full_context) 
+            set_peft_model_state_dict(model, decrypted_weights, "default")
     
     def set_managers(self, user_permissions_resource) -> None: 
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
