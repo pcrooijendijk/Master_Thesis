@@ -25,8 +25,12 @@ def run(
     )
 
     def format_qa_pair(pair: list[str]) -> str:
-        question, answer = pair
-        return f"Question: {question}\n\nAnswer: {answer}\n\n"
+        formatted_str = ""
+        for qa in pair:
+            question, answer = qa
+            formatted_str += f"Question: {question}\n\nAnswer: {answer}\n\n"
+            formatted_str += "\n---------------------------------------------------------------------\n"
+        return formatted_str
 
 
     def format_metadata_html(metadata: dict):
@@ -79,17 +83,15 @@ def run(
                     total_tokens=len(content_custom.split()),
                     processing_time=0.0
                 )
-            deepseek.load_documents(documents, metadata)
+            deepseek.load_documents(documents, metadata, custom_text=True)
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         # If there are no documents uploaded, generate a prompt without extra context
         else:
             deepseek.load_documents([], metadata)
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
         # For the output history
-        OUTPUT_HISTORY.append(question)
-        OUTPUT_HISTORY.append(response['content'])
+        OUTPUT_HISTORY.append([question, response['content']])
         return (response['content'], format_metadata_html(metadata), format_qa_pair(OUTPUT_HISTORY), content_doc) if uploaded_documents['files'] or custom_text else (response['content'], format_metadata_html(response['metadata']), format_qa_pair(OUTPUT_HISTORY), content_doc)
-
 
     def show_document():
         return gr.update(visible=True, interactive=False)

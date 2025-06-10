@@ -220,7 +220,7 @@ class DeepSeekApplication:
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
 
-            return scores[0].page_content
+            return scores
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -239,11 +239,12 @@ class DeepSeekApplication:
         }
 
     
-    def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None) -> None:
+    def load_documents(self, documents: List[str], metadata: Optional[Dict[str, Metadata]] = None, custom_text: bool = False) -> None:
         try:
             doc_chunks = []
             self.documents = documents
             documents_array = []
+            print("foutje?")
 
             def loading_documents(documents: List, documents_array: List, dict: bool = False):
                 # Getting the documents content into the Document Langchain object
@@ -267,7 +268,7 @@ class DeepSeekApplication:
                                 "processing_time": metadata[data].processing_time,
                             }
                         ))
-
+                    
                 return tuple(documents_array)
             
             if documents:
@@ -306,7 +307,7 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)
+            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)[0].page_content
 
             if self.uploaded_doc_present:
                 retrieved_bits = [
@@ -316,7 +317,7 @@ class DeepSeekApplication:
             else: 
                 # Lower scores is more similar
                 retrieved_bits = [
-                    text.page_content for text, score in self.results_with_scores if score <= 0.7
+                    text.page_content for text, score in self.results_with_scores if score <= 0.4
                 ]
                 metadata = self.results_with_scores[0][0].metadata
 
@@ -327,8 +328,6 @@ class DeepSeekApplication:
 
             prompt = self.construct_prompt(query, combined_context)
 
-            # inputs = deepseek.tokenizer(prompt, return_tensors="pt")
-            # input_ids = inputs["input_ids"].to(device)
             generation_config = GenerationConfig(
                 temperature=temp,
                 top_p=top_p,
@@ -341,9 +340,8 @@ class DeepSeekApplication:
                     prompt.to(device),
                     generation_config=generation_config,
                     do_sample=True,
-                    max_new_tokens=2000,
+                    max_new_tokens=5000,
                 )
-                
             input_length = prompt.shape[0]
             output = deepseek.tokenizer.batch_decode(generated_output[:, input_length:], skip_special_tokens=True)[0]
 
@@ -363,16 +361,17 @@ class DeepSeekApplication:
             raise
 
     def post_processing(self, output: str) -> str:
-        # Try to extract answer after "Final Answer:"
         match = re.search(r"</think>\s*(.*)", output)
         if match:
             answer = match.group(1).strip()
-            # Optionally, strip tags or boxed formatting
             answer = re.sub(r"[\\]boxed\{(.*?)}", r"\1", answer)
             return answer.strip()
 
         # Fallback if pattern not found
         return output.strip()
+
+    def return_relevant_chunks(self):
+        return self.results_with_scores
     
     def test_generation(self, prompt: str, context: str, max_context_length: int, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
         # Truncate context if it is too long
@@ -403,9 +402,8 @@ class DeepSeekApplication:
 
 
     def construct_prompt(self, query: str, context: str) -> str: 
-
         messages = [
-            {"role": "system", "content": """You are an expert assistant designed to answer questions accurately and helpfully.
+            {"role": "system", "content": """You are an expert assistant designed to answer questions accurately, helpfully and concise.
 
             By the user, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
             
@@ -413,6 +411,8 @@ class DeepSeekApplication:
             - If the context is relevant and useful, base your answer on it.
             - If the context is insufficient or empty, answer using your own understanding and general knowledge.
             - Always respond in complete, well-structured short sentences. 
+            - Do not explain steps or show reasoning unless explicitly asked.
+            - Avoid unnecessary sentences or filler. Be direct and informative.
             - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
             - Your goal is to provide the best possible answer regardless of context quality.""",},
 
@@ -424,36 +424,6 @@ class DeepSeekApplication:
                 {query}
             """},
         ]
+
         tokenized_chat = self.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
         return tokenized_chat
-
-        if context:
-            return f"""
-            You are an expert assistant designed to answer questions accurately and helpfully.
-
-            Below, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
-
-            Context (may be empty or partial):
-            {context}
-
-            Question:
-            {query}
-
-            Instructions:
-            - If the context is relevant and useful, base your answer on it.
-            - If the context is insufficient or empty, answer using your own understanding and general knowledge.
-            - Always respond in complete, well-structured sentences. Not one letter answers.
-            - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
-            - Your goal is to provide the best possible answer regardless of context quality.
-
-            Final Answer:
-            """
-        else: 
-            return f"""
-            You are a well-informed assistant. Answer the question briefly and clearly based on your understanding.
-
-            Question:
-            {query}
-
-            Final Answer:
-            """

@@ -6,7 +6,9 @@ import glob
 import json
 import os
 
-class Dataset:
+random.seed(42)
+
+class Custom_Dataset:
     def __init__(self, path: str):
         self.path = path
 
@@ -29,15 +31,18 @@ class Dataset:
             
         return documents
 
-    def convert_to_json(self, qa_index: int, output_file: str, last_file: int) -> None:
+    def convert_to_json(self, qa_index: int, output_file: str, last_file: int = None, random_files: List = None, space_indices: List = None) -> None:
         # Function to convert the questions, documents and answers to JSON format instead of
         # PDF and seperate JSON file
         documents = []
-        directory_length = len(next(os.walk(self.path))[1])
-        directory_length = directory_length if last_file == 0 or None else last_file
-        print(directory_length)
+        
+        if random_files:
+            directory_length = random_files
+        else: 
+            directory_length = len(next(os.walk(self.path))[1])
+            directory_length = range(directory_length) if last_file == 0 or last_file == None else range(last_file)
 
-        for cur_folder_num in range(directory_length): 
+        for index, cur_folder_num in enumerate(directory_length): 
             print("Appending document {} to the JSON file.".format(cur_folder_num))
             q_list = [json.loads(line)['question'] for line in open(f'{self.path}/{cur_folder_num}/{cur_folder_num}_qa.jsonl').readlines()]
             a_list = [json.loads(line)['answer'] for line in open(f'{self.path}/{cur_folder_num}/{cur_folder_num}_qa.jsonl').readlines()]
@@ -45,18 +50,29 @@ class Dataset:
 
             # Append the documents to texts lists to get the content of the documents
             with pymupdf.open(pdf_path) as file:
-                space_key_index = random.randint(0, 3) # For the space key
+                temp_qa_index = qa_index
+                try:
+                    question = q_list[temp_qa_index]
+                    answer = a_list[temp_qa_index]
+                except IndexError:
+                    temp_qa_index = max(0, qa_index - 1)  # fallback to a safe index
+                    question = q_list[temp_qa_index]
+                    answer = a_list[temp_qa_index]
+                if space_indices:
+                    space_key_index = space_indices[index]
+                else:
+                    space_key_index = random.randint(0, 3) # For the space key
                 documents.append(
                     {
-                        "question": q_list[qa_index],
+                        "question": question,
                         "context": chr(12).join([page.get_text().replace('\n', '') for page in file]),
-                        "answer": a_list[qa_index],
+                        "answer": answer,
                         "space_key_index": space_key_index,
                         "metadata": file.metadata,
                     }
                 )
         with open(output_file, 'w', encoding='utf-8') as f: 
-            json.dump(documents, f, ensure_ascii=False, indent=4)
+            json.dump(documents, f, ensure_ascii=False, indent=4, separators=(",", ": "))
 
 class Document: 
     def __init__(self, content: str, metadata: str, space_key_index: str):

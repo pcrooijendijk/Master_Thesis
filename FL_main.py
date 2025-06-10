@@ -16,8 +16,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from tqdm import tqdm
 from datasets import load_dataset
 
-global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B'
-local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B'
+global_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
+local_model = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B'
 output_dir = 'FL_output/'
 
 documents = load_dataset("json", data_files="utils/documents.json")
@@ -53,13 +53,11 @@ def decrypt_model_weights(model, encrypted_aggregated):
 
     return decrypted_state
 
-
-
 # Main federated learning function
 def federated_privacy_learning(
-    global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', # The global model
+    global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
-    client_frac: float = 0.2, # The fraction of clients chosen from the total number of clients
+    client_frac: float = 0.5, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
     num_clients: int = 10, # Number of clients
     batch_size = 2, # Batch size for the local models
