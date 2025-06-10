@@ -24,7 +24,7 @@ class Server:
         encrypted_weights_dicts = {
             cid: self.load_encrypted_weights(
                 os.path.join(output_dir, str(epoch), f"local_output_{cid}", "encrypted_weights.pkl"),
-                self.server_context
+                "client_contexts{}/public_context.tenseal".format(cid)
             )
             for cid in selected_clients
         }
