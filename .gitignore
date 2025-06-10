@@ -7,4 +7,6 @@ __pycache__/
 *.py[cod]
 /eval_dataset
 /retrieved_docs
+__pycache__/
+*.pyc
 
