@@ -121,9 +121,26 @@ class Client:
 
         return encrypted_layers
 
-    def decrypt_model_weights(self, enc_update_bytes, context):
-        enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
-        return torch.tensor(enc_vector.decrypt())
+    # def decrypt_model_weights(self, enc_update_bytes, context):
+    #     enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
+    #     return torch.tensor(enc_vector.decrypt())
+    
+    def decrypt_model_weights(self, model, encrypted_aggregated):
+        decrypted_state = {}
+
+        for name, encrypted_chunks in encrypted_aggregated.items():
+            flat_weights = []
+
+            # Handle multiple chunks per parameter
+            for chunk in encrypted_chunks:
+                flat_weights.extend(chunk.decrypt())
+
+            # Reshape to original tensor shape
+            original_shape = model.state_dict()[name].shape
+            decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
+            decrypted_state[name] = decrypted_tensor
+
+        return decrypted_state
     
     def save_encrypted_weights(self, encrypted_weights, output_path, ouput_file: str="encrypted_weights.pkl"):
         output_dir = output_path + "/" + ouput_file
@@ -271,8 +288,11 @@ class Client:
         if not model_weights:
             self.model = model
         else:
-            decrypted_weights = self.decrypt_model_weights(model_weights, self.load_full_context()) 
+            # model, encrypted_aggregated
+            decrypted_weights = self.decrypt_model_weights(model, model_weights)
+            # decrypted_weights = self.decrypt_model_weights(model_weights, self.load_full_context()) 
             set_peft_model_state_dict(model, decrypted_weights, "default")
+            self.model = model
     
     def set_managers(self, user_permissions_resource) -> None: 
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
