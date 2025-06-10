@@ -17,6 +17,10 @@ class Server:
             }
         return encrypted_weights
     
+    def load_public_context(context_path):
+        with open(context_path, "rb") as f:
+            return ts.context_from(f.read()) 
+    
     def FedAvg(self, model, selected_clients, dataset_length, epoch, output_dir):
         weights_array = torch.tensor([dataset_length[int(cid)] for cid in selected_clients], dtype=torch.float32)
         weights_array = torch.nn.functional.normalize(weights_array, p=1, dim=0)
@@ -24,7 +28,7 @@ class Server:
         encrypted_weights_dicts = {
             cid: self.load_encrypted_weights(
                 os.path.join(output_dir, str(epoch), f"local_output_{cid}", "encrypted_weights.pkl"),
-                "client_contexts{}/public_context.tenseal".format(cid)
+                self.load_public_context("client_contexts{}/public_context.tenseal".format(cid))
             )
             for cid in selected_clients
         }
