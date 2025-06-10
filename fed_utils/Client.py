@@ -62,6 +62,12 @@ class Client:
         self.name = name
         self.user_permissions_resource = user_permissions_resource
 
+        self.context_dir = os.path.join("client_contexts", self.client_id)
+        os.makedirs(self.context_dir, exist_ok=True)
+
+        self.context = self.generate_context()
+        self.save_contexts()
+
         self.permissions = set()
         self.spaces = set()
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
@@ -71,12 +77,29 @@ class Client:
 
         self.spaces_permissions_init()
         self.filter_documents()
-
-    def load_public_context(self, path: str="tenseal_full_context.tenseal"):
-        with open(path, "rb") as f:
-            context_bytes = f.read()
-        context = ts.context_from(context_bytes)
+    
+    def generate_context(self):
+        context = ts.context(
+            ts.SCHEME_TYPE.CKKS,
+            poly_modulus_degree=32768,
+            coeff_mod_bit_sizes=[60, 40, 40, 60]
+        )
+        context.global_scale = 2**40
+        context.generate_galois_keys()
         return context
+    
+    def save_contexts(self):
+        # Save private (full) context for local encryption/decryption
+        with open(os.path.join(self.context_dir, "full_context.tenseal"), "wb") as f:
+            f.write(self.context.serialize(save_secret_key=True))
+
+        # Save public context for server
+        with open(os.path.join(self.context_dir, "public_context.tenseal"), "wb") as f:
+            f.write(self.context.serialize(save_secret_key=False))
+
+    def load_full_context(self):
+        with open(os.path.join(self.context_dir, "full_context.tenseal"), "rb") as f:
+            return ts.context_from(f.read())
 
     def encrypt_model_weights(self, state_dict, context, chunk_size=32768//2):
         encrypted_layers = {}
@@ -98,7 +121,6 @@ class Client:
 
         return encrypted_layers
 
-    
     def decrypt_model_weights(self, enc_update_bytes, context):
         enc_vector = ts.ckks_vector_from(context, enc_update_bytes)
         return torch.tensor(enc_vector.decrypt())
@@ -216,7 +238,7 @@ class Client:
         output_dir = os.path.join(output_dir, str(epoch), "local_output_{}".format(self.client_id))
         os.makedirs(output_dir, exist_ok=True)
         lora_state_dict = {k: v for k, v in new_weight.items() if 'lora_' in k} # Getting the lora weights
-        encrypted_weights = self.encrypt_model_weights(lora_state_dict, self.load_public_context()) # Encrypting the weights
+        encrypted_weights = self.encrypt_model_weights(lora_state_dict, self.load_full_context()) # Encrypting the weights
         self.save_encrypted_weights(encrypted_weights, output_dir) # Saving the weights
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
 

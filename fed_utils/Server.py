@@ -7,24 +7,6 @@ class Server:
     def __init__(self, num_clients, global_model):
         self.global_model = global_model
         self.num_clients = num_clients
-
-        self.server_context = self.generate_context()
-
-        with open("tenseal_full_context.tenseal", "wb") as f:
-            f.write(self.server_context.serialize(save_secret_key=True))
-
-        with open("tenseal_public_context.tenseal", "wb") as f:
-            f.write(self.server_context.serialize(save_secret_key=False))
-
-    def generate_context(self):
-        context = ts.context(
-            ts.SCHEME_TYPE.CKKS,
-            poly_modulus_degree=32768,
-            coeff_mod_bit_sizes=[60, 40, 40, 60]
-        )
-        context.global_scale = 2**40
-        context.generate_galois_keys()
-        return context
     
     def load_encrypted_weights(self, input_path, context):
         with open(input_path, 'rb') as f:
@@ -70,6 +52,5 @@ class Server:
 
         return aggregated
 
-    
     def get_server_context(self):
         return self.server_context
