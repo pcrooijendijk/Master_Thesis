@@ -402,7 +402,6 @@ class DeepSeekApplication:
 
 
     def construct_prompt(self, query: str, context: str) -> str: 
-
         messages = [
             {"role": "system", "content": """You are an expert assistant designed to answer questions accurately, helpfully and concise.
 
