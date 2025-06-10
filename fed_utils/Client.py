@@ -133,7 +133,7 @@ class Client:
 
             # Handle multiple chunks per parameter
             for chunk in encrypted_chunks:
-                vector_chunk = ts.ckks_vector_from(self.load_full_context(), chunk)
+                vector_chunk = ts.ckks_tensor_from(self.load_full_context(), chunk)
                 flat_weights.extend(vector_chunk.decrypt())
 
             # Reshape to original tensor shape
