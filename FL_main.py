@@ -199,8 +199,8 @@ def federated_privacy_learning(
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
         model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
-        decrypted_weights = decrypt_model_weights(model, model_weights)
-        set_peft_model_state_dict(model, decrypted_weights, "default")
+        # decrypted_weights = decrypt_model_weights(model, model_weights)
+        set_peft_model_state_dict(model, model_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir) 
 
