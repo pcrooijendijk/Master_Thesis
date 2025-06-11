@@ -163,6 +163,7 @@ def federated_privacy_learning(
 
         # Initialize the server
         server = Server(num_clients=len(clients), global_model=global_model)
+        client = None
 
         for client_id in selected_clients_index:
             client = clients[client_id] 
