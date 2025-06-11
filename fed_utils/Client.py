@@ -131,8 +131,8 @@ class Client:
 
             # Handle multiple chunks per parameter
             for chunk in encrypted_chunks:
-                vector_chunk = ts.ckks_tensor_from(context, chunk.serialize())
-                flat_weights.extend(vector_chunk.decrypt())
+                # vector_chunk = ts.ckks_tensor_from(context, chunk.serialize())
+                flat_weights.extend(chunk.decrypt())
 
             # Reshape to original tensor shape
             original_shape = model.state_dict()[name].shape
@@ -289,9 +289,7 @@ class Client:
         if not model_weights:
             self.model = model
         else:
-            # model, encrypted_aggregated
             decrypted_weights = self.decrypt_model_weights(model, model_weights)
-            # decrypted_weights = self.decrypt_model_weights(model_weights, self.load_full_context()) 
             set_peft_model_state_dict(model, decrypted_weights, "default")
             self.model = model
     
