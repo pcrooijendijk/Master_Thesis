@@ -254,6 +254,7 @@ class Client:
         os.makedirs(output_dir, exist_ok=True)
         lora_state_dict = {k: v for k, v in new_weight.items() if 'lora_' in k} # Getting the lora weights
         self.context = self.generate_context()
+        print("saving for client", self.client_id)
         self.save_contexts()
         encrypted_weights = self.encrypt_model_weights(lora_state_dict, self.load_full_context()) # Encrypting the weights
         self.save_encrypted_weights(encrypted_weights, output_dir) # Saving the weights
