@@ -30,7 +30,7 @@ class Users():
                 "id":3, 
                 "space": self.space_keys[2],
                 "is_admin": False,
-                "permissions": Role.get_role_permissions()["viewer"]
+                "permissions": Role.get_role_permissions()["editor"]
             }, 
             "user3": {
                 "id":4, 
@@ -48,7 +48,7 @@ class Users():
                 "id":6, 
                 "space": self.space_keys[1],
                 "is_admin": False,
-                "permissions": Role.get_role_permissions()["editor"]
+                "permissions": Role.get_role_permissions()["viewer"]
             }, 
             "user6": {
                 "id":7, 
@@ -60,13 +60,13 @@ class Users():
                 "id":8, 
                 "space": self.space_keys[3],
                 "is_admin": False,
-                "permissions": Role.get_role_permissions()["editor"]
+                "permissions": Role.get_role_permissions()["viewer"]
             }, 
             "user8": {
                 "id":9, 
                 "space": self.space_keys[0],
                 "is_admin": False,
-                "permissions": Role.get_role_permissions()["viewer"]
+                "permissions": Role.get_role_permissions()["editor"]
             }, 
             "user9": {
                 "id":10, 
