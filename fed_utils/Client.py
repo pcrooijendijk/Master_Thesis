@@ -124,13 +124,14 @@ class Client:
     
     def decrypt_model_weights(self, model, encrypted_aggregated):
         decrypted_state = {}
+        context = self.load_full_context()
 
         for name, encrypted_chunks in encrypted_aggregated.items():
             flat_weights = []
 
             # Handle multiple chunks per parameter
             for chunk in encrypted_chunks:
-                vector_chunk = ts.ckks_tensor_from(self.load_full_context(), chunk.serialize())
+                vector_chunk = ts.ckks_tensor_from(context, chunk.serialize())
                 flat_weights.extend(vector_chunk.decrypt())
 
             # Reshape to original tensor shape
