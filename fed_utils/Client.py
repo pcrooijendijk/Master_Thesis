@@ -122,7 +122,7 @@ class Client:
 
         return encrypted_layers
     
-    def decrypt_model_weights(self, model, encrypted_aggregated):
+    def decrypt_model_weights(self, encrypted_aggregated):
         decrypted_state = {}
         context = self.load_full_context()
 
@@ -135,7 +135,7 @@ class Client:
                 flat_weights.extend(vector_chunk.decrypt())
 
             # Reshape to original tensor shape
-            original_shape = model.state_dict()[name].shape
+            original_shape = self.model.state_dict()[name].shape
             decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
             decrypted_state[name] = decrypted_tensor
             del flat_weights
