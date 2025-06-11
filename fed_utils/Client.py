@@ -82,7 +82,7 @@ class Client:
     def generate_context(self):
         context = ts.context(
             ts.SCHEME_TYPE.CKKS,
-            poly_modulus_degree=16384,
+            poly_modulus_degree=32768,
             coeff_mod_bit_sizes=[60, 40, 40, 60]
         )
         context.global_scale = 2**40
