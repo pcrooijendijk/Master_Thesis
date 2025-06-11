@@ -122,68 +122,23 @@ class Client:
 
         return encrypted_layers
     
-    # def decrypt_model_weights(self, model, encrypted_aggregated):
-    #     decrypted_state = {}
-    #     context = self.load_full_context()
-
-    #     for name, encrypted_chunks in encrypted_aggregated.items():
-    #         flat_weights = []
-
-    #         # Handle multiple chunks per parameter
-    #         for chunk in encrypted_chunks:
-    #             vector_chunk = ts.ckks_tensor_from(context, chunk.serialize())
-    #             flat_weights.extend(vector_chunk.decrypt())
-
-    #         # Reshape to original tensor shape
-    #         original_shape = model.state_dict()[name].shape
-    #         decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
-    #         decrypted_state[name] = decrypted_tensor
-    #         del flat_weights
-    #         gc.collect()
-
-    #     return decrypted_state
-
     def decrypt_model_weights(self, model, encrypted_aggregated):
         decrypted_state = {}
-        context = self.load_full_context()  # Must include the secret key
+        context = self.load_full_context()
 
         for name, encrypted_chunks in encrypted_aggregated.items():
-            original_shape = model.state_dict()[name].shape
-            total_elements = torch.prod(torch.tensor(original_shape)).item()
             flat_weights = []
 
-            print(f"\n🔓 Decrypting: {name} ({len(encrypted_chunks)} chunks, shape={original_shape})")
+            # Handle multiple chunks per parameter
+            for chunk in encrypted_chunks:
+                vector_chunk = ts.ckks_tensor_from(context, chunk.serialize())
+                flat_weights.extend(vector_chunk.decrypt())
 
-            for i, chunk in enumerate(encrypted_chunks):
-                try:
-                    # Deserialize only when needed
-                    serialized_chunk = chunk.serialize()
-                    chunk_tensor = ts.ckks_tensor_from(context, serialized_chunk)
-                    
-                    # Decrypt and delete as soon as possible
-                    chunk_weights = chunk_tensor.decrypt()
-                    del chunk_tensor
-                    gc.collect()
-
-                    # Extend flat_weights in-place
-                    flat_weights += chunk_weights
-                    del chunk_weights
-                    gc.collect()
-
-                except Exception as e:
-                    print(f"  ❌ Error decrypting chunk {i+1}/{len(encrypted_chunks)}: {e}")
-                    raise
-
-            # Convert list to tensor once at the end
-            try:
-                decrypted_tensor = torch.tensor(flat_weights, dtype=torch.float32).view(original_shape)
-                decrypted_state[name] = decrypted_tensor
-            except Exception as e:
-                print(f"  ❌ Error reshaping for {name}: {e}")
-                raise
-
-            # Clean up
-            del flat_weights, decrypted_tensor
+            # Reshape to original tensor shape
+            original_shape = model.state_dict()[name].shape
+            decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
+            decrypted_state[name] = decrypted_tensor
+            del flat_weights
             gc.collect()
 
         return decrypted_state
@@ -330,13 +285,8 @@ class Client:
     def get_client_id(self) -> int:
         return self.client_id
     
-    def set_model(self, model, model_weights) -> None: 
-        if not model_weights:
-            self.model = model
-        else:
-            decrypted_weights = self.decrypt_model_weights(model, model_weights)
-            set_peft_model_state_dict(model, decrypted_weights, "default")
-            self.model = model
+    def set_model(self, model) -> None: 
+        self.model = model
     
     def set_managers(self, user_permissions_resource) -> None: 
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()

@@ -167,7 +167,7 @@ def federated_privacy_learning(
         for client_id in selected_clients_index:
             client = clients[client_id] 
             print("\nSetting the model")
-            client.set_model(model, model_weights)
+            client.set_model(model)
             # client.model_init(lora_rank, lora_alpha, lora_dropout, lora_module)
             print("\nPreparing the local dataset and trainer for client {}".format(client_id))
             client.local_dataset_init(generate_and_tokenize_prompt)
@@ -201,9 +201,11 @@ def federated_privacy_learning(
             torch.cuda.empty_cache()
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
-        model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir) 
-        gc.collect()
-        torch.cuda.empty_cache()
+        model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
+        decrypted_weights = client.decrypt_model_weights(model_weights, server.get_server_context())
+        set_peft_model_state_dict(model, decrypted_weights, "default")
+        torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
+        lora_config.save_pretrained(output_dir)
 
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)
