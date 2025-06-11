@@ -1,5 +1,7 @@
 from fed_utils import client_selection, Server
 from utils import SpaceManagement, PromptHelper, Users
+import faulthandler
+faulthandler.enable()
 
 import torch
 import fire
@@ -183,6 +185,9 @@ def federated_privacy_learning(
 
             print("\nInitializing the local training of client {}".format(client_id))
             client.local_training()
+
+            print("Memory allocated:", torch.cuda.memory_allocated() / 1e6, "MB")
+            print("Max memory allocated:", torch.cuda.max_memory_allocated() / 1e6, "MB")
 
             print("\nStarting local training...")
             client.train()
