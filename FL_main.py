@@ -57,7 +57,7 @@ def decrypt_model_weights(model, encrypted_aggregated):
 def federated_privacy_learning(
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
-    client_frac: float = 0.1, # The fraction of clients chosen from the total number of clients
+    client_frac: float = 0.3, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
     num_clients: int = 10, # Number of clients
     batch_size = 2, # Batch size for the local models
@@ -163,7 +163,6 @@ def federated_privacy_learning(
 
         # Initialize the server
         server = Server(num_clients=len(clients), global_model=global_model)
-        client = None
 
         for client_id in selected_clients_index:
             client = clients[client_id] 
@@ -196,7 +195,6 @@ def federated_privacy_learning(
             with open(output_dir + "/client_{}.pkl".format(client.get_client_id()), "wb") as f:
                 pickle.dump(client, f)
 
-            del client # Ensuring that there is enough space on GPU
             import gc 
             gc.collect()
             torch.cuda.empty_cache()
