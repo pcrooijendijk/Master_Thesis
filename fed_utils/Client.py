@@ -66,7 +66,6 @@ class Client:
         self.context_dir = "client_contexts{}".format(self.client_id)
         os.makedirs(self.context_dir, exist_ok=True)
 
-        self.context = self.generate_context()
         self.save_contexts()
 
         self.permissions = set()
@@ -256,6 +255,7 @@ class Client:
         output_dir = os.path.join(output_dir, str(epoch), "local_output_{}".format(self.client_id))
         os.makedirs(output_dir, exist_ok=True)
         lora_state_dict = {k: v for k, v in new_weight.items() if 'lora_' in k} # Getting the lora weights
+        self.context = self.generate_context()
         encrypted_weights = self.encrypt_model_weights(lora_state_dict, self.load_full_context()) # Encrypting the weights
         self.save_encrypted_weights(encrypted_weights, output_dir) # Saving the weights
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
