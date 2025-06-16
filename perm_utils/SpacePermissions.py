@@ -79,10 +79,11 @@ class SpacePermissionManager:
             return None
     
     # Save permission on a space for a user
-    def save_permission(self, space: Space, username: str, permission_type: List) -> None:
-        if space.name not in self.permissions:
-            self.permissions[space.name] = {}
-        self.permissions[space.name][username] = [perm.value for perm in permission_type]
+    def save_permission(self, spaces: List, username: str, permission_type: List) -> None:
+        for space in spaces:
+            if space.name not in self.permissions:
+                self.permissions[space.name] = {}
+            self.permissions[space.name][username] = [perm.value for perm in permission_type]
     
     def get_permissions(self) -> dict:
         return self.permissions
