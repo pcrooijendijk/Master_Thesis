@@ -15,7 +15,7 @@ class Users():
         self.users = {
             "admin": {
                 "id": 1, 
-                "space": self.space_keys[0],
+                "space": [self.space_keys[0], self.space_keys[1]],
                 "is_admin": True,
                 "permissions": Role.get_role_permissions()["admin"]
             }, 

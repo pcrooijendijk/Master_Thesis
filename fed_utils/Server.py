@@ -30,41 +30,6 @@ class Server:
             encrypted_avg = encrypted_sum * (1.0 / len(encrypted_updates))
             aggregated_update[k] = encrypted_avg
         return aggregated_update
-    
-    # def FedAvg(self, model, selected_clients, dataset_length, epoch, output_dir):
-    #     weights_array = torch.tensor([dataset_length[int(cid)] for cid in selected_clients], dtype=torch.float32)
-    #     weights_array = torch.nn.functional.normalize(weights_array, p=1, dim=0)
-
-    #     encrypted_weights_dicts = {
-    #         cid: self.load_encrypted_weights(
-    #             os.path.join(output_dir, str(epoch), f"local_output_{cid}", "encrypted_weights.pkl"),
-    #             self.load_public_context("tenseal_context/public_context.tenseal".format(cid))
-    #         )
-    #         for cid in selected_clients
-    #     }
-
-    #     for index, client_id in enumerate(selected_clients):
-    #         encrypted_weights = encrypted_weights_dicts[client_id]
-    #         weight_scalar = weights_array[index].item()
-
-    #         # Multiply each encrypted chunk by scalar
-    #         scaled_encrypted_weights = {
-    #             name: [chunk * weight_scalar for chunk in vec]
-    #             for name, vec in encrypted_weights.items()
-    #         }
-
-    #         if index == 0:
-    #             aggregated = scaled_encrypted_weights
-    #         else:
-    #             aggregated = {
-    #                 name: [
-    #                     aggregated[name][i] + scaled_encrypted_weights[name][i]
-    #                     for i in range(len(scaled_encrypted_weights[name]))
-    #                 ]
-    #                 for name in aggregated
-    #             }
-
-    #     return aggregated
 
     def get_server_context(self):
         return self.server_context

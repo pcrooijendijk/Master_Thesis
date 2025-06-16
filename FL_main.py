@@ -15,7 +15,6 @@ from peft import (
     get_peft_model,
     prepare_model_for_kbit_training,
     set_peft_model_state_dict,
-    get_peft_model_state_dict,
 )
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from tqdm import tqdm
@@ -40,23 +39,6 @@ user_permissions_resource = management.get_user_permissions_resource()
 
 with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
     pickle.dump(user_permissions_resource, f)
-
-def decrypt_model_weights(model, encrypted_aggregated):
-    decrypted_state = {}
-
-    for name, encrypted_chunks in encrypted_aggregated.items():
-        flat_weights = []
-
-        # Handle multiple chunks per parameter
-        for chunk in encrypted_chunks:
-            flat_weights.extend(chunk.decrypt())
-
-        # Reshape to original tensor shape
-        original_shape = model.state_dict()[name].shape
-        decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
-        decrypted_state[name] = decrypted_tensor
-
-    return decrypted_state
 
 # Main federated learning function
 def federated_privacy_learning(
