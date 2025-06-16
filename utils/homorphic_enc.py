@@ -37,6 +37,16 @@ class HomomorphicEncryption:
     def load_public_context(self):
         with open(os.path.join(self.context_dir, "public_context.tenseal"), "rb") as f:
             return ts.context_from(f.read())
+    
+    def load_encrypted_weights(self, serialized):
+        context = self.load_full_context()
+        
+        encrypted_weights = {}
+        for k, chunks_serialized in serialized.items():
+            chunks = [ts.ckks_vector_from(context, chunk_bytes) for chunk_bytes in chunks_serialized]
+            encrypted_weights[k] = chunks
+
+        return encrypted_weights
         
     def encrypt_model_weights(self, state_dict, context, chunk_size=32768//2):
         encrypted_layers = {}
