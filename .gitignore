@@ -9,4 +9,5 @@ __pycache__/
 /retrieved_docs
 __pycache__/
 *.pyc
+test/data_pics.py
 
