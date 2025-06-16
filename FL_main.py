@@ -142,13 +142,13 @@ def federated_privacy_learning(
     he.save_contexts()
 
     training_loss = [[] for _ in range(num_clients)]
-    output_file = os.path.join(output_dir, "HE_training_loss.csv")
 
-    for epoch in tqdm(range(comm_rounds)):
+    for round in tqdm(range(comm_rounds)):
         local_models = []
-        print("Selecting clients...")
+        print("Selecting clients...\n")
         # Selecting the indices of the clients which will be used for FL 
-        selected_clients_index = client_selection(num_clients, client_frac)
+        selected_clients_index = client_selection(num_clients, client_frac, round)
+        print(f"Selected clients:\n{selected_clients_index}")
 
         # Setting and getting all the clients
         users.set_clients(user_permissions_resource)
@@ -186,7 +186,7 @@ def federated_privacy_learning(
 
             print("\nEnding the local training of client {}".format(client_id))
             dataset_length, selected_clients, _, encrypted_weights = client.end_local_training(
-                epoch, dataset_length, selected_clients, output_dir, he
+                round, dataset_length, selected_clients, output_dir, he
                 )
             
             with open(output_dir + "/client_{}.pkl".format(client.get_client_id()), "wb") as f:
@@ -199,22 +199,14 @@ def federated_privacy_learning(
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
         model_weights = server.FedAvg(local_models, he.load_full_context())
-        # model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
         decrypted_weights = he.decrypt_model_weights(model_weights, model.state_dict())
         set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
 
-    flat_losses = []
-    for x in training_loss:
-        if isinstance(x, (list, np.ndarray)):
-            flat_losses.extend(x)
-        else:
-            flat_losses.append(x)
-
     np.save(
         os.path.join(output_dir, "training_loss.npy"),
-        np.array(flat_losses),
+        np.array(training_loss),
     )
 
 if __name__ == "__main__":

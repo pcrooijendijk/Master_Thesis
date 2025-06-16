@@ -1,9 +1,7 @@
 import numpy as np
 import os
 
-output_dir = "FL_output"
-
-training_loss = np.load(os.path.join(output_dir, "training_loss.npy"))
+training_loss = np.load("training_loss.npy")
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,3 +15,5 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.savefig("loss.png")
+
+print(training_loss)

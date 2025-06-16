@@ -22,12 +22,12 @@ from peft import (
     set_peft_model_state_dict,
 )
 
-np.random.seed(42)
 MAX_GRAD_NORM = 0.1
 
 logger = logging.getLogger(__name__)
 
-def client_selection(num_clients, client_frac):
+def client_selection(num_clients, client_frac, round):
+    np.random.seed(round)
     selected_clients = max(int(client_frac * num_clients), 1)
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
