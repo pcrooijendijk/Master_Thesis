@@ -46,7 +46,7 @@ def federated_privacy_learning(
     output_dir: str = 'FL_output/', # The output directory
     client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
-    num_clients: int = 10, # Number of clients
+    num_clients: int = 11, # Number of clients
     batch_size = 2, # Batch size for the local models
     micro_batch_size: int = 1, # Micro batch size for the local models
     epochs: int = 1, # Number of total epochs for the local models to train on
