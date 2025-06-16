@@ -162,6 +162,7 @@ def federated_privacy_learning(
     output_file = os.path.join(output_dir, "HE_training_loss.csv")
 
     for epoch in tqdm(range(comm_rounds)):
+        local_models = []
         print("Selecting clients...")
         # Selecting the indices of the clients which will be used for FL 
         selected_clients_index = client_selection(num_clients, client_frac)
@@ -197,10 +198,11 @@ def federated_privacy_learning(
             client.local_training()
 
             print("\nStarting local training...")
-            client.train()
+            results = client.train()
+            training_loss[client_id].append(results.training_loss)
 
             print("\nEnding the local training of client {}".format(client_id))
-            dataset_length, selected_clients, _ = client.end_local_training(
+            dataset_length, selected_clients, _, encrypted_weights = client.end_local_training(
                 epoch, dataset_length, selected_clients, output_dir, he
                 )
             
@@ -210,9 +212,11 @@ def federated_privacy_learning(
             import gc 
             gc.collect()
             torch.cuda.empty_cache()
+            local_models.append(encrypted_weights)
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
-        model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
+        model_weights = server.FedAvg(local_models, he.load_full_context())
+        # model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
         decrypted_weights = he.decrypt_model_weights(model_weights, get_peft_model_state_dict(model))
         set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")

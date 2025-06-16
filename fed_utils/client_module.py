@@ -147,7 +147,7 @@ class Client:
     def train(self) -> None:
         # Clear CUDA cache
         torch.cuda.empty_cache()
-        self.local_trainer.train()
+        return self.local_trainer.train()
     
     def local_training(self) -> None:
         self.model.config.use_cache = False
@@ -186,7 +186,7 @@ class Client:
         torch.cuda.empty_cache()
         del self.model
 
-        return dataset_length, selected_clients, last_client_id
+        return dataset_length, selected_clients, last_client_id, encrypted_weights
 
     def get_parameters(self) -> List[np.ndarray]:
         return [val.cpu().numpy() for _, val in self.model.state_dict().items()]
