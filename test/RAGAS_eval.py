@@ -101,7 +101,7 @@ if args.eval == "eval":
     print("Evaluating...\n")
     evaluation = evaluate(
         ds_dict["eval"],
-        metrics=[context_precision, answer_relevancy, faithfulness, context_recall],
+        metrics=[context_precision, answer_relevancy, faithfulness, context_recall], # Use context relevancy?
         run_config=RunConfig(timeout=300, log_tenacity=True, max_workers=5),
         llm=Ollama(model="llama3"),
         embeddings=OllamaEmbeddings(model="llama3"),

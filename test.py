@@ -1,19 +1,22 @@
 import numpy as np
-import os
+import pickle
 
-training_loss = np.load("training_loss.npy")
+with open("training_loss.pkl", "rb") as f:
+    training_loss = pickle.load(f)
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-plt.figure(figsize=(8, 4))
-plt.plot(training_loss, label='Training Loss')
-plt.xlabel('Step')
-plt.ylabel('Loss')
-plt.title('Training Loss Over Time')
+# Plot each sublist
+plt.figure(figsize=(10, 6))
+for i, sublist in enumerate(training_loss):
+    plt.plot(sublist, label=f"Series {i}")
+
+plt.xlabel("Index within series")
+plt.ylabel("Loss value")
+plt.title("Loss Values over Time for Each Series")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
+plt.show()
 plt.savefig("loss.png")
-
-print(training_loss)

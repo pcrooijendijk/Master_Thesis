@@ -48,7 +48,7 @@ def federated_privacy_learning(
     num_clients: int = 11, # Number of clients
     batch_size = 2, # Batch size for the local models
     micro_batch_size: int = 1, # Micro batch size for the local models
-    epochs: int = 1, # Number of total epochs for the local models to train on
+    epochs: int = 2, # Number of total epochs for the local models to train on
     lr: float = 1e-2, # Learning rate for the local models
     save_steps: int = 3, # After this amount of steps there is a checkpoint
     max_length: int = 512, # After this length there is a cutoff 
