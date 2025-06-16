@@ -49,21 +49,38 @@ class HomomorphicEncryption:
 
         return encrypted_weights
     
-    def encrypt_model_weights(self, model_update, context):
+    def encrypt_model_weights(self, model_update, context, chunk_size=16384):
         encrypted_update = {}
+
         for k, v in tqdm(model_update.items(), desc="Encrypting"):
-            encrypted_weight = ts.ckks_vector(context, v.detach().cpu().numpy().flatten())
-            encrypted_update[k] = encrypted_weight
+            tensor_flat = v.detach().cpu().numpy().flatten()
+            encrypted_chunks = []
+
+            for i in range(0, len(tensor_flat), chunk_size):
+                chunk = tensor_flat[i : i + chunk_size]
+                encrypted_chunk = ts.ckks_vector(context, chunk.tolist())
+                encrypted_chunks.append(encrypted_chunk)
+
+            encrypted_update[k] = encrypted_chunks
+
         return encrypted_update
     
     def decrypt_model_weights(self, encrypted_update, model_state_dict):
         decrypted_update = {}
-        for name, encrypted_weight in tqdm(encrypted_update.items(), desc="Decrypting"):
-            decrypted_weight = encrypted_weight.decrypt()
-            decrypted_update[name] = torch.tensor(decrypted_weight).view_as(
-                model_state_dict[name]
-            ).to(model_state_dict[name].device)
+
+        for name, encrypted_chunks in tqdm(encrypted_update.items(), desc="Decrypting"):
+            # Decrypt and flatten each chunk
+            flat_weights = []
+            for chunk in encrypted_chunks:
+                flat_weights.extend(chunk.decrypt())
+
+            # Convert to tensor and reshape to the original shape
+            original_shape = model_state_dict[name].shape
+            decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
+            decrypted_update[name] = decrypted_tensor.to(model_state_dict[name].device)
+
         return decrypted_update
+
 
     def save_encrypted_weights(self, encrypted_weights, output_path, ouput_file: str="encrypted_weights.pkl"):
         output_dir = os.path.join(output_path, ouput_file)

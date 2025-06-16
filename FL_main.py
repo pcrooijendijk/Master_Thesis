@@ -8,7 +8,6 @@ import numpy as np
 import torch
 import fire
 import pickle
-import tenseal as ts
 from typing import List
 from peft import (
     LoraConfig,
@@ -204,10 +203,8 @@ def federated_privacy_learning(
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
 
-    np.save(
-        os.path.join(output_dir, "training_loss.npy"),
-        np.array(training_loss),
-    )
+    with open('training_loss.pkl', 'wb') as f:
+        pickle.dump(training_loss, f)
 
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)
