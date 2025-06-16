@@ -1,5 +1,5 @@
 from fed_utils import client_selection, Server
-from utils import SpaceManagement, PromptHelper, Users
+from utils import SpaceManagement, PromptHelper, Users, HomomorphicEncryption
 import faulthandler
 faulthandler.enable()
 
@@ -151,6 +151,10 @@ def federated_privacy_learning(
 
     model_weights = {}
 
+    he = HomomorphicEncryption()
+    he.generate_context()
+    he.save_contexts()
+
     for epoch in tqdm(range(comm_rounds)):
         print("Selecting clients...")
         # Selecting the indices of the clients which will be used for FL 
@@ -194,7 +198,7 @@ def federated_privacy_learning(
 
             print("\nEnding the local training of client {}".format(client_id))
             dataset_length, selected_clients, _ = client.end_local_training(
-                epoch, dataset_length, selected_clients, output_dir
+                epoch, dataset_length, selected_clients, output_dir, he
                 )
             
             with open(output_dir + "/client_{}.pkl".format(client.get_client_id()), "wb") as f:
@@ -206,7 +210,7 @@ def federated_privacy_learning(
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
         model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
-        decrypted_weights = client.decrypt_model_weights(model_weights)
+        decrypted_weights = he.decrypt_model_weights(model, model_weights)
         set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)

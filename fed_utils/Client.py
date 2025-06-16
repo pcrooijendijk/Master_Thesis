@@ -2,6 +2,7 @@
 
 from perm_utils import Permission
 from perm_utils.UserPermissionManagement import UserPermissionsResource
+from utils import HomomorphicEncryption
 
 import os
 import gc
@@ -11,7 +12,6 @@ import copy
 import numpy as np
 import transformers
 import logging
-import tenseal as ts
 from typing import List
 from collections import OrderedDict
 from torch.utils.data import DataLoader
@@ -63,9 +63,6 @@ class Client:
         self.name = name
         self.user_permissions_resource = user_permissions_resource
 
-        self.context_dir = "client_contexts{}".format(self.client_id)
-        os.makedirs(self.context_dir, exist_ok=True)
-
         self.permissions = set()
         self.spaces = set()
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
@@ -75,80 +72,6 @@ class Client:
 
         self.spaces_permissions_init()
         self.filter_documents()
-    
-    def generate_context(self):
-        context = ts.context(
-            ts.SCHEME_TYPE.CKKS,
-            poly_modulus_degree=32768,
-            coeff_mod_bit_sizes=[60, 40, 40, 60]
-        )
-        context.global_scale = 2**40
-        context.generate_galois_keys()
-        return context
-    
-    def save_contexts(self):
-        # Save private (full) context for local encryption/decryption
-        with open(os.path.join(self.context_dir, "full_context.tenseal"), "wb") as f:
-            f.write(self.context.serialize(save_secret_key=True))
-
-        # Save public context for server
-        with open(os.path.join(self.context_dir, "public_context.tenseal"), "wb") as f:
-            f.write(self.context.serialize(save_secret_key=False))
-
-    def load_full_context(self):
-        with open(os.path.join(self.context_dir, "full_context.tenseal"), "rb") as f:
-            return ts.context_from(f.read())
-
-    def encrypt_model_weights(self, state_dict, context, chunk_size=32768//2):
-        encrypted_layers = {}
-
-        for name, param in state_dict.items():
-            if isinstance(param, torch.Tensor):
-                tensor = param.detach().cpu().numpy().flatten().tolist()
-
-                if len(tensor) <= chunk_size:
-                    # Can fit into one ciphertext
-                    encrypted_layers[name] = [ts.ckks_vector(context, tensor)]
-                else:
-                    # Split into multiple chunks
-                    encrypted_chunks = []
-                    for i in range(0, len(tensor), chunk_size):
-                        chunk = tensor[i:i + chunk_size]
-                        encrypted_chunks.append(ts.ckks_vector(context, chunk))
-                    encrypted_layers[name] = encrypted_chunks
-
-        return encrypted_layers
-    
-    def decrypt_model_weights(self, encrypted_aggregated):
-        decrypted_state = {}
-        context = self.load_full_context()
-
-        for name, encrypted_chunks in encrypted_aggregated.items():
-            flat_weights = []
-
-            # Handle multiple chunks per parameter
-            for chunk in encrypted_chunks:
-                flat_weights.extend(chunk.decrypt())
-
-            # Reshape to original tensor shape
-            original_shape = self.model.state_dict()[name].shape
-            decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
-            decrypted_state[name] = decrypted_tensor
-            del flat_weights
-            gc.collect()
-
-        return decrypted_state
-    
-    def save_encrypted_weights(self, encrypted_weights, output_path, ouput_file: str="encrypted_weights.pkl"):
-        output_dir = output_path + "/" + ouput_file
-        with open(output_dir, 'wb') as f:
-            # Serialize each layer and store in a dict of bytes
-            serialized = {
-                k: [chunk.serialize() for chunk in v]  # v is a list of ckks_vector chunks
-                for k, v in encrypted_weights.items()
-            }
-            # Use pickle to write the entire dict
-            pickle.dump(serialized, f)
 
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
@@ -242,23 +165,19 @@ class Client:
             )
         ).__get__(self.model, type(self.model))
     
-    def load_public_context(self):
-        with open("tenseal_public_context.tenseal", "rb") as f:
-            return ts.context_from(f.read())
-    
-    def end_local_training(self, epoch, dataset_length, selected_clients, output_dir):
+    def end_local_training(self, epoch, dataset_length, selected_clients, output_dir, he: HomomorphicEncryption):
         dataset_length[self.client_id] = len(self.documents)
         new_weight = self.model.state_dict()
         output_dir = os.path.join(output_dir, str(epoch), "local_output_{}".format(self.client_id))
         os.makedirs(output_dir, exist_ok=True)
         lora_state_dict = {k: v for k, v in new_weight.items() if 'lora_' in k} # Getting the lora weights
-        self.context = self.generate_context()
-        print("saving for client", self.client_id)
-        self.save_contexts()
-        encrypted_weights = self.encrypt_model_weights(lora_state_dict, self.load_full_context()) # Encrypting the weights
-        self.save_encrypted_weights(encrypted_weights, output_dir) # Saving the weights
+
+        # Encrypting the weights
+        encrypted_weights = he.encrypt_model_weights(lora_state_dict, he.load_full_context()) # Encrypting the weights
+        he.save_encrypted_weights(encrypted_weights, output_dir) # Saving the weights
         torch.save(new_weight, output_dir + "/pytorch_model.bin")
 
+        # Getting the PEFT model
         old_weights = get_peft_model_state_dict(self.model, self.old_params, "default")
         set_peft_model_state_dict(self.model, old_weights, "default")
         last_client_id = self.client_id
