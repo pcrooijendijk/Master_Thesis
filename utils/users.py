@@ -1,6 +1,5 @@
 from perm_utils import Role
 from typing import List
-from fed_utils import Client
 from perm_utils.UserPermissionManagement import UserPermissionsResource
 import json
 
@@ -78,6 +77,7 @@ class Users():
         self.users_names = list(self.users.keys()) # Make a list of the keys 
 
     def set_clients(self, user_permissions_resource: UserPermissionsResource) -> None:
+        from fed_utils import Client
         for user in self.users:
             self.clients.append(
                 Client(
