@@ -46,9 +46,9 @@ def federated_privacy_learning(
     client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
     num_clients: int = 11, # Number of clients
-    batch_size = 2, # Batch size for the local models
+    batch_size = 8, # Batch size for the local models
     micro_batch_size: int = 1, # Micro batch size for the local models
-    epochs: int = 2, # Number of total epochs for the local models to train on
+    epochs: int = 10, # Number of total epochs for the local models to train on
     lr: float = 1e-2, # Learning rate for the local models
     save_steps: int = 3, # After this amount of steps there is a checkpoint
     max_length: int = 512, # After this length there is a cutoff 
@@ -181,7 +181,7 @@ def federated_privacy_learning(
 
             print("\nStarting local training...")
             results = client.train()
-            training_loss[client_id].append(results.training_loss)
+            training_loss.append((round, client_id, results.training_loss))
 
             print("\nEnding the local training of client {}".format(client_id))
             dataset_length, selected_clients, _, encrypted_weights = client.end_local_training(

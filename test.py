@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 
-with open("training_loss.pkl", "rb") as f:
+with open("training_loss2.pkl", "rb") as f:
     training_loss = pickle.load(f)
 
 import matplotlib.pyplot as plt
