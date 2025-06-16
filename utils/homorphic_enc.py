@@ -59,11 +59,10 @@ class HomomorphicEncryption:
     def decrypt_model_weights(self, encrypted_update, model_state_dict):
         decrypted_update = {}
         for name, encrypted_weight in tqdm(encrypted_update.items(), desc="Decrypting"):
-            flat_weights = []
-            for chunk in encrypted_weight:
-                flat_weights.extend(chunk.decrypt())
-            decrypted_tensor = torch.tensor(flat_weights).view_as(model_state_dict[name])
-            decrypted_update[name] = decrypted_tensor.to(model_state_dict[name].device)
+            decrypted_weight = encrypted_weight.decrypt()
+            decrypted_update[name] = torch.tensor(decrypted_weight).view_as(
+                model_state_dict[name]
+            ).to(model_state_dict[name].device)
         return decrypted_update
 
     def save_encrypted_weights(self, encrypted_weights, output_path, ouput_file: str="encrypted_weights.pkl"):

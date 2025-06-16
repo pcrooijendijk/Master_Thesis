@@ -3,6 +3,7 @@ from utils import SpaceManagement, PromptHelper, Users, HomomorphicEncryption
 import faulthandler
 faulthandler.enable()
 import os
+import numpy as np
 
 import torch
 import fire
@@ -221,6 +222,11 @@ def federated_privacy_learning(
         set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
+    
+    np.save(
+        os.path.join(output_dir, "training_loss.npy"),
+        np.array(training_loss),
+    )
 
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)
