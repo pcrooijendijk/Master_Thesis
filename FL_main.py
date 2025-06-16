@@ -62,7 +62,7 @@ def decrypt_model_weights(model, encrypted_aggregated):
 def federated_privacy_learning(
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
-    client_frac: float = 0.2, # The fraction of clients chosen from the total number of clients
+    client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
     num_clients: int = 10, # Number of clients
     batch_size = 2, # Batch size for the local models
@@ -222,10 +222,17 @@ def federated_privacy_learning(
         set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
         lora_config.save_pretrained(output_dir)
-    
+
+    flat_losses = []
+    for x in training_loss:
+        if isinstance(x, (list, np.ndarray)):
+            flat_losses.extend(x)
+        else:
+            flat_losses.append(x)
+
     np.save(
         os.path.join(output_dir, "training_loss.npy"),
-        np.array(training_loss),
+        np.array(flat_losses),
     )
 
 if __name__ == "__main__":
