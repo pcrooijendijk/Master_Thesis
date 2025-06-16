@@ -2,6 +2,7 @@ from fed_utils import client_selection, Server
 from utils import SpaceManagement, PromptHelper, Users, HomomorphicEncryption
 import faulthandler
 faulthandler.enable()
+import os
 
 import torch
 import fire
@@ -152,9 +153,13 @@ def federated_privacy_learning(
 
     model_weights = {}
 
+    # Initialize HE
     he = HomomorphicEncryption()
     he.generate_context()
     he.save_contexts()
+
+    training_loss = [[] for _ in range(num_clients)]
+    output_file = os.path.join(output_dir, "HE_training_loss.csv")
 
     for epoch in tqdm(range(comm_rounds)):
         print("Selecting clients...")
@@ -190,9 +195,6 @@ def federated_privacy_learning(
 
             print("\nInitializing the local training of client {}".format(client_id))
             client.local_training()
-
-            print("Memory allocated:", torch.cuda.memory_allocated() / 1e6, "MB")
-            print("Max memory allocated:", torch.cuda.max_memory_allocated() / 1e6, "MB")
 
             print("\nStarting local training...")
             client.train()

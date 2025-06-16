@@ -48,26 +48,7 @@ class HomomorphicEncryption:
             encrypted_weights[k] = chunks
 
         return encrypted_weights
-        
-    # def encrypt_model_weights(self, state_dict, context, chunk_size=32768//2):
-    #     encrypted_layers = {}
-
-    #     for name, param in state_dict.items():
-    #         if isinstance(param, torch.Tensor):
-    #             tensor = param.detach().cpu().numpy().flatten().tolist()
-
-    #             if len(tensor) <= chunk_size:
-    #                 # Can fit into one ciphertext
-    #                 encrypted_layers[name] = [ts.ckks_vector(context, tensor)]
-    #             else:
-    #                 # Split into multiple chunks
-    #                 encrypted_chunks = []
-    #                 for i in range(0, len(tensor), chunk_size):
-    #                     chunk = tensor[i:i + chunk_size]
-    #                     encrypted_chunks.append(ts.ckks_vector(context, chunk))
-    #                 encrypted_layers[name] = encrypted_chunks
-
-    #     return encrypted_layers   
+    
     def encrypt_model_weights(self, model_update, context):
         encrypted_update = {}
         for k, v in tqdm(model_update.items(), desc="Encrypting"):
@@ -78,31 +59,12 @@ class HomomorphicEncryption:
     def decrypt_model_weights(self, encrypted_update, model_state_dict):
         decrypted_update = {}
         for name, encrypted_weight in tqdm(encrypted_update.items(), desc="Decrypting"):
-            decrypted_weight = encrypted_weight.decrypt()
-            decrypted_update[name] = torch.tensor(decrypted_weight).view_as(
-                model_state_dict[name]
-            ).to(model_state_dict[name].device)
+            flat_weights = []
+            for chunk in encrypted_weight:
+                flat_weights.extend(chunk.decrypt())
+            decrypted_tensor = torch.tensor(flat_weights).view_as(model_state_dict[name])
+            decrypted_update[name] = decrypted_tensor.to(model_state_dict[name].device)
         return decrypted_update
-    
-    # def decrypt_model_weights(self, model, encrypted_aggregated):
-    #     decrypted_state = {}
-    #     context = self.load_full_context()
-
-    #     for name, encrypted_chunks in encrypted_aggregated.items():
-    #         flat_weights = []
-
-    #         # Handle multiple chunks per parameter
-    #         for chunk in encrypted_chunks:
-    #             flat_weights.extend(chunk.decrypt())
-
-    #         # Reshape to original tensor shape
-    #         original_shape = model.state_dict()[name].shape
-    #         decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
-    #         decrypted_state[name] = decrypted_tensor
-    #         del flat_weights
-    #         gc.collect()
-
-    #     return decrypted_state
 
     def save_encrypted_weights(self, encrypted_weights, output_path, ouput_file: str="encrypted_weights.pkl"):
         output_dir = os.path.join(output_path, ouput_file)
