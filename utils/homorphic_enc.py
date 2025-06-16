@@ -105,12 +105,11 @@ class HomomorphicEncryption:
     #     return decrypted_state
 
     def save_encrypted_weights(self, encrypted_weights, output_path, ouput_file: str="encrypted_weights.pkl"):
-        output_dir = output_path + "/" + ouput_file
+        output_dir = os.path.join(output_path, ouput_file)
         with open(output_dir, 'wb') as f:
-            # Serialize each layer and store in a dict of bytes
-            serialized = {
-                k: [chunk.serialize() for chunk in v]  # v is a list of ckks_vector chunks
-                for k, v in encrypted_weights.items()
-            }
-            # Use pickle to write the entire dict
+            serialized = {}
+            for k, v in encrypted_weights.items():
+                # Wrap single CKKSVector in list for uniformity
+                vectors = v if isinstance(v, list) else [v]
+                serialized[k] = [chunk.serialize() for chunk in vectors]
             pickle.dump(serialized, f)
