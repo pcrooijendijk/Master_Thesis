@@ -5,12 +5,24 @@ class Server:
         
     def FedAvg(self, encrypted_updates, context):
         aggregated_update = {}
+
         for k in encrypted_updates[0].keys():
-            encrypted_sum = encrypted_updates[0][k]
+            # Get the number of chunks for this parameter
+            num_chunks = len(encrypted_updates[0][k])
+
+            # Initialize the chunk-wise sum
+            chunk_sums = [encrypted_updates[0][k][i] for i in range(num_chunks)]
+
+            # Accumulate each chunk from the remaining updates
             for update in encrypted_updates[1:]:
-                encrypted_sum += update[k]
-            encrypted_avg = encrypted_sum * (1.0 / len(encrypted_updates))
-            aggregated_update[k] = encrypted_avg
+                for i in range(num_chunks):
+                    chunk_sums[i] += update[k][i]
+
+            # Average each chunk
+            chunk_avg = [chunk * (1.0 / len(encrypted_updates)) for chunk in chunk_sums]
+
+            aggregated_update[k] = chunk_avg
+
         return aggregated_update
 
     def get_server_context(self):
