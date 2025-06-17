@@ -244,7 +244,6 @@ class DeepSeekApplication:
             doc_chunks = []
             self.documents = documents
             documents_array = []
-            print("foutje?")
 
             def loading_documents(documents: List, documents_array: List, dict: bool = False):
                 # Getting the documents content into the Document Langchain object

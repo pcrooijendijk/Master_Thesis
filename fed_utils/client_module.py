@@ -93,7 +93,7 @@ class Client:
 
     def local_dataset_init(self, generate_and_tokenize_prompt) -> None:
         X_train, y_test = train_test_split(
-            self.documents, test_size=0.7, shuffle=True
+            self.documents, test_size=0.3, shuffle=True
         )
         self.local_train_dataset = list(map(generate_and_tokenize_prompt, X_train))
         self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))

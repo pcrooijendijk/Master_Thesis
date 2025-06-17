@@ -23,7 +23,7 @@ grouped = defaultdict(list)
 for idx, item in enumerate(dataset):
     grouped[item["space_key_index"]].append((idx, item))
 
-# Pick 20 random samples from the first 4 eligible categories (at least 5 items)
+# Pick 20 random questions
 eligible_keys = [k for k, items in grouped.items() if len(items) >= 5]
 random.shuffle(eligible_keys)
 selected = [sample for k in eligible_keys[:4] for sample in random.sample(grouped[k], 20)]
