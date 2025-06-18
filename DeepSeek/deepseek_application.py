@@ -7,7 +7,7 @@ import time
 import os
 import re
 import pickle
-from langchain_community.vectorstores import Qdrant 
+from langchain_community.vectorstores import FAISS 
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 
@@ -207,7 +207,8 @@ class DeepSeekApplication:
         if self.document_store is None: 
             raise ValueError("There are no documents uploaded.")
         
-        try: 
+        try:
+            print(self.document_store)
             scores = self.document_store.similarity_search(
                 query=question, 
                 k=top_k
@@ -220,7 +221,7 @@ class DeepSeekApplication:
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
 
-            return scores
+            return self.results_with_scores
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -278,11 +279,11 @@ class DeepSeekApplication:
                 self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
 
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
+            self.splitted_docs = splitted_docs
 
             if not splitted_docs:
                 raise ValueError("No documents to index. Check the output of your document processing step.")
 
-            self.document_store = Qdrant.from_documents(splitted_docs, self.embeddings)
             
             logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
             
