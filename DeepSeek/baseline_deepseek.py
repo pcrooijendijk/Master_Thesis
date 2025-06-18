@@ -213,7 +213,7 @@ class BaselineDeepSeekApplication:
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
 
-            return scores
+            return self.results_with_scores
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
