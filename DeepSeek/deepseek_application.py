@@ -7,7 +7,7 @@ import time
 import os
 import re
 import pickle
-from langchain_community.vectorstores import FAISS   
+from langchain_community.vectorstores import Qdrant 
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 
@@ -282,7 +282,7 @@ class DeepSeekApplication:
             if not splitted_docs:
                 raise ValueError("No documents to index. Check the output of your document processing step.")
 
-            self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
+            self.document_store = Qdrant.from_documents(splitted_docs, self.embeddings)
             
             logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
             

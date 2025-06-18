@@ -2,6 +2,7 @@ from typing import List, Dict
 import json
 import argparse
 import pickle
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--path", help="Put in the path of the retrieved documents dataset.", required=True)
@@ -31,7 +32,9 @@ def evaluate_ixn_for_users(
 
     avg_score = round(sum(ixn_scores) / len(ixn_scores), 4)
     print("IXN scores:", ixn_scores)
-    with open(output_file, 'wb') as f:
+
+    os.makedirs("ixn_output", exist_ok=True)
+    with open("ixn_output/" + output_file, 'wb') as f:
         pickle.dump(ixn_scores, f)
 
 with open("retrieved_docs/retrieved_docs_baseline.json") as f: 

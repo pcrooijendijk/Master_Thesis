@@ -264,11 +264,9 @@ class BaselineDeepSeekApplication:
                 return tuple(documents_array)
             
             if documents: 
-                print("Other documents?")
                 self.uploaded_doc_present = True
                 self.documents_array = loading_documents(documents, documents_array, dict=False) # Adding additional documents to the chunks
             else: 
-                print("All documents!")
                 self.uploaded_doc_present = False  
                 self.documents_array = loading_documents(self.temp_doc, documents_array, dict=True) # Adding the documents of the clients they have access to
 
