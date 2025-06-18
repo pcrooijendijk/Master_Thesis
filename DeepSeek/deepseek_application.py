@@ -308,7 +308,7 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)[0].page_content
+            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)[0][0].page_content
 
             if self.uploaded_doc_present:
                 retrieved_bits = [
