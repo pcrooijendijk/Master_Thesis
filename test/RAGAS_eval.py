@@ -62,7 +62,7 @@ deepseek.load_documents([], [])
 
 # Generate responses using the local LLM's of the clients
 eval_dataset = []
-retrieved_documents_log = []
+retrieved_documents = []
 
 print("Generating responses...\n")
 for query, reference in zip(questions, answers):
@@ -78,14 +78,14 @@ for query, reference in zip(questions, answers):
         "contexts": [chunks.page_content],
     })
 
-    retrieved_documents_log.append([doc.id for doc in relevant_docs]) # Append the documents ID
+    retrieved_documents.append([doc.page_content for doc, _ in relevant_docs]) # Append the documents ID
 
 # Save intermediate files 
 os.makedirs("retrieved_docs", exist_ok=True)
 os.makedirs("eval_dataset", exist_ok=True)
 
 with open(output_path_retrieved, "w", encoding="utf-8") as f:
-    json.dump(retrieved_documents_log, f, indent=4)
+    json.dump(retrieved_documents, f, indent=4)
 
 with open(output_path_evaluation, "w", encoding="utf-8") as f:
     json.dump(eval_dataset, f, ensure_ascii=False, indent=4)
