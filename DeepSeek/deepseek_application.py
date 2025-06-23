@@ -285,7 +285,6 @@ class DeepSeekApplication:
             if not splitted_docs:
                 raise ValueError("No documents to index. Check the output of your document processing step.")
 
-            
             logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
             
         except Exception as e:
