@@ -208,13 +208,13 @@ class DeepSeekApplication:
             raise ValueError("There are no documents uploaded.")
         
         try: 
-            self.embeddingsscores = self.document_store.similarity_search(
+            self.scores = self.document_store.similarity_search(
                 query=question, 
                 k=top_k
             )
 
             # Splitting the documents recursively 
-            text_splits = self.recursive_text_splitter.split_documents([scores[0]])
+            text_splits = self.recursive_text_splitter.split_documents([self.scores[0]])
             # Making a vector representation of the documents using embeddings
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
             # Getting the most relevant bits of the documents 
