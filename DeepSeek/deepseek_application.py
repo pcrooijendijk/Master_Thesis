@@ -334,11 +334,9 @@ class DeepSeekApplication:
                 num_beams=num_beams
             )
 
-            inputs = self.tokenizer(prompt, return_tensor="pt").to(device)
-
             with torch.no_grad():
                 generated_output = deepseek.model.generate(
-                    **inputs,
+                    prompt.to(device),
                     generation_config=generation_config,
                     do_sample=True,
                     max_new_tokens=5000,
