@@ -2,12 +2,15 @@ import os
 import json
 from typing import Optional
 import argparse
+import logging
 
 from datasets import load_dataset, Dataset, DatasetDict
 from ragas import evaluate, RunConfig
 from ragas.metrics import answer_relevancy, faithfulness, context_recall, context_precision
 from langchain_community.llms import Ollama
 from langchain_community.embeddings import OllamaEmbeddings
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--mode", help="Choose evaluation mode. Use --mode full or --mode base", required=True, default="full")
@@ -44,14 +47,14 @@ num_beams: int = 4                                            # Beam search size
 max_new_tokens: int = 256                                     # Max tokens to generate
 
 # Loading the dataset
-print("\n Loading dataset...")
+logging.info("\n Loading dataset...")
 all_documents = load_dataset("json", data_files="test_documents_1.json")["train"]
 questions = all_documents["question"]
 contexts = all_documents["context"]
 answers = all_documents["answer"]
 
 # Initialize DeepSeek
-print("\n Initializing DeepSeek...")
+logging.info("\n Initializing DeepSeek...")
 deepseek = DeepSeekApplication(
     client_id,
     ori_model,
@@ -60,19 +63,22 @@ deepseek = DeepSeekApplication(
     prompt_template
 )
 
-print("\n Loading Documents...")
+logging.info("\n Loading Documents...")
 deepseek.load_documents([], [])
 
 # Generate responses using the local LLM's of the clients
 eval_dataset = []
 retrieved_documents = []
 
-print("Generating responses...\n")
+logging.info("Generating responses...\n")
 for query, reference in zip(questions, answers):
     relevant_docs = deepseek.retrieve_relevant_docs(query, top_k=10, sim_threshold=0.4)
     chunks, _ = deepseek.return_relevant_chunks()[0]
 
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
+    logging.info("Response with normal generation", response)
+    response2 = deepseek.test_generation(query, 2000, temp, top_p, top_k, num_beams, max_new_tokens)
+    logging.info("Response with test generation", response2)
 
     eval_dataset.append({
         "question": query,
