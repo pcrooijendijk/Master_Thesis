@@ -343,7 +343,7 @@ class DeepSeekApplication:
                     eos_token_id=self.tokenizer.eos_token_id,
                     return_dict_in_generate=True,
                     output_scores=True,
-                    max_new_tokens=1000,
+                    max_new_tokens=2000,
                 )
             logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
             s = generated_output.sequences[0]
