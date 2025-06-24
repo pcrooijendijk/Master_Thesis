@@ -40,7 +40,7 @@ prompt_template: str = 'utils/prompt_template.json'           # Prompt template 
 uploaded_documents: Optional[str] = None                      # The corresponding document(s)
 custom_text: Optional[str] = None                             # Custom text input instead of documents
 
-temp: float = 0.1                                             # Temperature for token sampling
+temp: float = 0.3                                             # Temperature for token sampling
 top_p: float = 0.75                                           # Top-p sampling
 top_k: int = 20                                               # Top-k filtering
 num_beams: int = 1                                            # Beam search size
