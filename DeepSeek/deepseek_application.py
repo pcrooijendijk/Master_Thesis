@@ -335,14 +335,31 @@ class DeepSeekApplication:
             )
 
             with torch.no_grad():
-                generated_output = deepseek.model.generate(
-                    prompt.to(device),
+                generated_output = self.model.generate(
+                    input_ids=prompt.to(device),
                     generation_config=generation_config,
                     do_sample=True,
-                    max_new_tokens=5000,
+                    pad_token_id=self.tokenizer.pad_token_id,
+                    eos_token_id=self.tokenizer.eos_token_id,
+                    return_dict_in_generate=True,
+                    output_scores=True,
+                    max_new_tokens=max_new_tokens,
                 )
-            input_length = prompt.shape[0]
-            output = deepseek.tokenizer.batch_decode(generated_output[:, input_length:], skip_special_tokens=True)[0]
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
+            s = generated_output.sequences[0]
+            output = self.tokenizer.decode(s)
+            output_text = self.tokenizer.decode(generated_output[0][prompt.shape[-1]:], skip_special_tokens=True)
+            logging.info("output_text:", output_text)
+
+            # with torch.no_grad():
+            #     generated_output = deepseek.model.generate(
+            #         prompt.to(device),
+            #         generation_config=generation_config,
+            #         do_sample=True,
+            #         max_new_tokens=5000,
+            #     )
+            # input_length = prompt.shape[0]
+            # output = deepseek.tokenizer.batch_decode(generated_output[:, input_length:], skip_special_tokens=True)[0]
 
             answer = {
                 'content': self.post_processing(output),
