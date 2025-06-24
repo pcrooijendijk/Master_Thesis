@@ -348,8 +348,8 @@ class DeepSeekApplication:
             logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
             s = generated_output.sequences[0]
             output = self.tokenizer.decode(s)
-            output_text = self.tokenizer.decode(generated_output[0][prompt.shape[-1]:], skip_special_tokens=True)
-            logging.info("output_text:", output_text)
+            output_text = self.tokenizer.decode(s[prompt.shape[-1]:], skip_special_tokens=True)
+            logging.info(f"output_text: {output_text}")
 
             # with torch.no_grad():
             #     generated_output = deepseek.model.generate(
