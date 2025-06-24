@@ -332,7 +332,6 @@ class DeepSeekApplication:
                 top_p=top_p,
                 top_k=top_k,
                 num_beams=num_beams,
-                repetition_penalty=0.8,
             )
 
             with torch.no_grad():
