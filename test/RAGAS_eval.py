@@ -44,12 +44,14 @@ num_beams: int = 4                                            # Beam search size
 max_new_tokens: int = 256                                     # Max tokens to generate
 
 # Loading the dataset
+print("\n Loading dataset...")
 all_documents = load_dataset("json", data_files="test_documents_1.json")["train"]
 questions = all_documents["question"]
 contexts = all_documents["context"]
 answers = all_documents["answer"]
 
 # Initialize DeepSeek
+print("\n Initializing DeepSeek...")
 deepseek = DeepSeekApplication(
     client_id,
     ori_model,
@@ -58,6 +60,7 @@ deepseek = DeepSeekApplication(
     prompt_template
 )
 
+print("\n Loading Documents...")
 deepseek.load_documents([], [])
 
 # Generate responses using the local LLM's of the clients
