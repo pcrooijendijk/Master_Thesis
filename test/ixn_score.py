@@ -6,7 +6,7 @@ import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--path", help="Put in the path of the retrieved documents dataset.", required=True)
-parser.add_argument("--output", help="Output CSV filename", default="ixn_scores.pickle")
+parser.add_argument("--output", help="Output pickle filename", default="ixn_scores.pickle")
 args = parser.parse_args()
 
 def compute_ixn_score(
@@ -37,10 +37,28 @@ def evaluate_ixn_for_users(
     with open("ixn_output/" + output_file, 'wb') as f:
         pickle.dump(ixn_scores, f)
 
-with open("retrieved_docs/retrieved_docs_baseline.json") as f: 
+with open("retrieved_base/retrieved_docs_baseline_1.json") as f: 
     baseline_docs = json.load(f)
 
 with open(args.path) as f: 
     revelant_documents = json.load(f)
 
 evaluate_ixn_for_users(baseline_docs, revelant_documents, args.output)
+
+# import pickle
+
+# with open("ixn_output/" + "ixn_score_10.pkl", "rb") as f:
+#     ixn_score = pickle.load(f)
+
+# import numpy as np
+
+# # Convert to numpy array (optional but convenient)
+# arr = np.array(ixn_score)
+
+# # Reshape into rows of 5 elements (only works if length is divisible by 5)
+# arr_reshaped = arr.reshape(-1, 5)
+
+# # Compute mean along rows
+# averages = arr_reshaped.mean(axis=1)
+
+# print(averages)

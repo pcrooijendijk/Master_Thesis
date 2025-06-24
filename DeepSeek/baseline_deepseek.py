@@ -201,19 +201,19 @@ class BaselineDeepSeekApplication:
             raise ValueError("There are no documents uploaded.")
         
         try: 
-            scores = self.document_store.similarity_search(
+            self.scores = self.document_store.similarity_search(
                 query=question, 
                 k=top_k
             )
 
             # Splitting the documents recursively 
-            text_splits = self.recursive_text_splitter.split_documents([scores[0]])
+            text_splits = self.recursive_text_splitter.split_documents([self.scores[0]])
             # Making a vector representation of the documents using embeddings
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
 
-            return scores
+            return self.scores
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -299,7 +299,7 @@ class BaselineDeepSeekApplication:
         start_time = time.time()
         
         try:
-            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)[0].page_content
+            relevant_document = self.scores[0].page_content
 
             if self.uploaded_doc_present:
                 retrieved_bits = [

@@ -390,12 +390,18 @@ class DeepSeekApplication:
             generated_output = self.model.generate(
                 input_ids=input_ids,
                 generation_config=generation_config,
+                do_sample=True,
+                pad_token_id=self.tokenizer.pad_token_id,
+                eos_token_id=self.tokenizer.eos_token_id,
                 return_dict_in_generate=True,
                 output_scores=True,
                 max_new_tokens=max_new_tokens,
             )
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
         s = generated_output.sequences[0]
         output = self.tokenizer.decode(s)
+        output_text = self.tokenizer.decode(generated_output[0][input_ids.shape[-1]:], skip_special_tokens=True)
+        logging.info("output_text:", output_text)
 
         return self.post_processing(output)
 
