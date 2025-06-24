@@ -78,7 +78,7 @@ for query, reference in zip(questions, answers):
         "contexts": [chunks.page_content],
     })
 
-    retrieved_documents.append([doc.page_content for doc, _ in relevant_docs]) 
+    retrieved_documents.append([doc.page_content for doc in relevant_docs]) 
 
 # Save intermediate files 
 os.makedirs("retrieved_docs", exist_ok=True)
