@@ -86,6 +86,8 @@ for query, reference in zip(questions, answers):
 # Save intermediate files 
 os.makedirs("retrieved_docs", exist_ok=True)
 os.makedirs("eval_dataset", exist_ok=True)
+os.makedirs("retrieved_docs_base", exist_ok=True)
+os.makedirs("eval_dataset_base", exist_ok=True)
 
 with open(output_path_retrieved, "w", encoding="utf-8") as f:
     json.dump(retrieved_documents, f, indent=4)
