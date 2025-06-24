@@ -23,8 +23,8 @@ if args.mode == "full":
     output_path_evaluation = f"eval_dataset/eval_dataset_{client_id}.json"
 elif args.mode == "base":
     from DeepSeek.baseline_deepseek import BaselineDeepSeekApplication as DeepSeekApplication
-    output_path_retrieved = f"retrieved_docs_base/retrieved_docs_baseline{client_id}.json"
-    output_path_evaluation = f"eval_dataset_base/eval_dataset_baseline{client_id}.json"
+    output_path_retrieved = f"retrieved_docs_base/retrieved_docs_baseline_{client_id}.json"
+    output_path_evaluation = f"eval_dataset_base/eval_dataset_baseline_{client_id}.json"
 
 os.environ["RAGAS_DEBUG"] = "true"
 
