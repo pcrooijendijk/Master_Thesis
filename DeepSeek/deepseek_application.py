@@ -425,27 +425,22 @@ class DeepSeekApplication:
 
     def construct_prompt(self, query: str, context: str) -> str: 
 
+        system_prompt = (
+            "You are a professional expert assistant. "
+            "Your task is to answer questions accurately, clearly, and concisely. "
+            "If context is provided, use it. If not, answer based on your own knowledge. "
+            "Do not explain your thought process or reasoning unless explicitly asked. "
+            "Do not repeat the question or restate it. "
+            "Answer directly in short, well-structured sentences. "
+            "If multiple sectors, categories, or items are involved, list them directly. "
+            "Do not include phrases such as 'I think', 'I need to figure out', or 'I'm not sure'."
+        )
+
+        user_prompt = f"Context (may be empty):\n{context}\n\nQuestion:\n{query}"
+
         messages = [
-            {"role": "system", "content": """You are an expert assistant designed to answer questions accurately, helpfully and concise.
-
-            By the user, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
-            
-            Instructions:
-            - Do not think step-by-step or explain your reasoning.
-            - If the context is relevant and useful, base your answer on it.
-            - If the context is insufficient or empty, answer using your own understanding and general knowledge.
-            - Always respond in complete, well-structured short sentences. 
-            - Do not explain steps or show reasoning unless explicitly asked.
-            - Avoid unnecessary sentences or filler. Be direct and informative.
-            - Your goal is to provide the best possible answer regardless of context quality.""",},
-
-            {"role": "user", "content": f"""
-                Context (may be empty or partial):
-                {context}
-
-                Question:
-                {query}
-            """},
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
         ]
 
         tokenized_chat = self.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
