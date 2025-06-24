@@ -7,7 +7,7 @@ import time
 import os
 import re
 import pickle
-from langchain_community.vectorstores import FAISS 
+from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 
@@ -207,8 +207,7 @@ class DeepSeekApplication:
         if self.document_store is None: 
             raise ValueError("There are no documents uploaded.")
         
-        try:
-            print(self.document_store)
+        try: 
             scores = self.document_store.similarity_search(
                 query=question, 
                 k=top_k
@@ -280,11 +279,11 @@ class DeepSeekApplication:
 
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
 
-            self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
-
             if not splitted_docs:
                 raise ValueError("No documents to index. Check the output of your document processing step.")
 
+            self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
+            
             logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
             
         except Exception as e:
@@ -373,32 +372,14 @@ class DeepSeekApplication:
     def return_relevant_chunks(self):
         return self.results_with_scores
     
-    def test_generation(self, prompt: str, max_context_length: int, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
+    def test_generation(self, prompt: str, context: str, max_context_length: int, temp: int, top_p: int, top_k: int, num_beams: int, max_new_tokens: int) -> str:
         # Truncate context if it is too long
-        relevant_document = self.retrieve_relevant_docs(prompt, top_k, 0.4)[0].page_content
-
-        if self.uploaded_doc_present:
-            retrieved_bits = [
-                text.page_content for text, _ in self.results_with_scores
-            ]
-            metadata = self.results_with_scores[0][0].metadata
-        else: 
-            # Lower scores is more similar
-            retrieved_bits = [
-                text.page_content for text, score in self.results_with_scores if score <= 0.4
-            ]
-            metadata = self.results_with_scores[0][0].metadata
-
-        combined_texts = ' '.join(retrieved_bits)
-        
-        combined_context = combined_texts[:max_context_length] + "..." if len(combined_texts) > max_context_length else combined_texts
-
+        combined_context = context[:max_context_length] + "..." if len(context) > max_context_length else context
         
         prompt = self.construct_prompt(prompt, combined_context)
         
         inputs = self.tokenizer(prompt, return_tensors="pt")
         input_ids = inputs["input_ids"].to(device)
-        attention_mask = inputs["attention_mask"].to(device)
         generation_config = GenerationConfig(
             temperature=temp,
             top_p=top_p,
@@ -408,12 +389,10 @@ class DeepSeekApplication:
         with torch.no_grad():
             generated_output = self.model.generate(
                 input_ids=input_ids,
-                attention_mask=attention_mask,
                 generation_config=generation_config,
                 return_dict_in_generate=True,
                 output_scores=True,
                 max_new_tokens=max_new_tokens,
-                pad_token_id=self.tokenizer.pad_token_id,
             )
         s = generated_output.sequences[0]
         output = self.tokenizer.decode(s)
