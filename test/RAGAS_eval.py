@@ -23,14 +23,14 @@ if args.mode == "full":
     output_path_evaluation = f"eval_dataset/eval_dataset_{client_id}.json"
 elif args.mode == "base":
     from DeepSeek.baseline_deepseek import BaselineDeepSeekApplication as DeepSeekApplication
-    output_path_retrieved = f"retrieved_docs/retrieved_docs_baseline.json"
-    output_path_evaluation = f"eval_dataset/eval_dataset_baseline.json"
+    output_path_retrieved = f"retrieved_docs_base/retrieved_docs_baseline{client_id}.json"
+    output_path_evaluation = f"eval_dataset_base/eval_dataset_baseline{client_id}.json"
 
 os.environ["RAGAS_DEBUG"] = "true"
 
 # Variables for the client
 ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"  # The original model
-lora_weights_path: str = "FL_output/pytorch_model.bin"        # Path to the weights after LoRA
+lora_weights_path: str = f"FL_output/final_weights/local_output_{client_id}/pytorch_model.bin"       # Path to the weights after LoRA
 lora_config_path: str = "FL_output"                           # Path to the config.json file after LoRA
 prompt_template: str = 'utils/prompt_template.json'           # Prompt template for LLM
 
@@ -66,7 +66,7 @@ retrieved_documents = []
 
 print("Generating responses...\n")
 for query, reference in zip(questions, answers):
-    relevant_docs = deepseek.retrieve_relevant_docs(query, top_k=10, sim_threshold=0.5)
+    relevant_docs = deepseek.retrieve_relevant_docs(query, top_k=10, sim_threshold=0.4)
     chunks, _ = deepseek.return_relevant_chunks()[0]
 
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
@@ -78,7 +78,7 @@ for query, reference in zip(questions, answers):
         "contexts": [chunks.page_content],
     })
 
-    retrieved_documents.append([doc.page_content for doc, _ in relevant_docs]) # Append the documents ID
+    retrieved_documents.append([doc.page_content for doc, _ in relevant_docs]) 
 
 # Save intermediate files 
 os.makedirs("retrieved_docs", exist_ok=True)
