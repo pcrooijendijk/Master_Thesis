@@ -72,13 +72,11 @@ retrieved_documents = []
 
 logging.info("Generating responses...\n")
 for query, reference in zip(questions, answers):
+    logging.info("Query", query)
     relevant_docs = deepseek.retrieve_relevant_docs(query, top_k=10, sim_threshold=0.4)
     chunks, _ = deepseek.return_relevant_chunks()[0]
 
     response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
-    logging.info("Response with normal generation", response)
-    response2 = deepseek.test_generation(query, 2000, temp, top_p, top_k, num_beams, max_new_tokens)
-    logging.info("Response with test generation", response2)
 
     eval_dataset.append({
         "question": query,
