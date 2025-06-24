@@ -431,12 +431,12 @@ class DeepSeekApplication:
             By the user, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
             
             Instructions:
+            - Do not think step-by-step or explain your reasoning.
             - If the context is relevant and useful, base your answer on it.
             - If the context is insufficient or empty, answer using your own understanding and general knowledge.
             - Always respond in complete, well-structured short sentences. 
             - Do not explain steps or show reasoning unless explicitly asked.
             - Avoid unnecessary sentences or filler. Be direct and informative.
-            - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
             - Your goal is to provide the best possible answer regardless of context quality.""",},
 
             {"role": "user", "content": f"""
