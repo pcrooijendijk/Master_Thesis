@@ -42,7 +42,7 @@ custom_text: Optional[str] = None                             # Custom text inpu
 
 temp: float = 0.1                                             # Temperature for token sampling
 top_p: float = 0.75                                           # Top-p sampling
-top_k: int = 40                                               # Top-k filtering
+top_k: int = 20                                               # Top-k filtering
 num_beams: int = 1                                            # Beam search size
 max_new_tokens: int = 256                                     # Max tokens to generate
 

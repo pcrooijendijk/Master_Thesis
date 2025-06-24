@@ -349,7 +349,9 @@ class DeepSeekApplication:
             s = generated_output.sequences[0]
             output = self.tokenizer.decode(s)
             output_text = self.tokenizer.decode(s[prompt.shape[-1]:], skip_special_tokens=True)
+            post_processing = self.post_processing(output_text)
             logging.info(f"output_text: {output_text}")
+            logging.info(f"Post processing: {post_processing}")
 
             # with torch.no_grad():
             #     generated_output = deepseek.model.generate(
