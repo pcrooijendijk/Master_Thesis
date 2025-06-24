@@ -38,7 +38,7 @@ class SpacePermission:
 
 class SpacePermissionEntity:
     """
-    Permission Entity
+        Permission Entity
     """
 
     def __init__(self, permission_type: Permission, permission_granted: bool, user_permission: bool):

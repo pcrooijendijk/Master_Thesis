@@ -208,7 +208,7 @@ class DeepSeekApplication:
             raise ValueError("There are no documents uploaded.")
         
         try: 
-            scores = self.document_store.similarity_search(
+            self.embeddingsscores = self.document_store.similarity_search(
                 query=question, 
                 k=top_k
             )
@@ -220,7 +220,7 @@ class DeepSeekApplication:
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
 
-            return scores
+            return self.scores
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -306,7 +306,7 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)[0].page_content
+            relevant_document = self.scores[0].page_content
 
             if self.uploaded_doc_present:
                 retrieved_bits = [
@@ -334,9 +334,11 @@ class DeepSeekApplication:
                 num_beams=num_beams
             )
 
+            inputs = self.tokenizer(prompt, return_tensor="pt").to(device)
+
             with torch.no_grad():
                 generated_output = deepseek.model.generate(
-                    prompt.to(device),
+                    **inputs,
                     generation_config=generation_config,
                     do_sample=True,
                     max_new_tokens=5000,

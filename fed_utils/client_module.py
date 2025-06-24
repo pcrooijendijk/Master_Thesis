@@ -1,17 +1,12 @@
-# The client should contain the following: name, documents assigned to this client, list of permissions and the local LLM
-
 from perm_utils import Permission
 from perm_utils.UserPermissionManagement import UserPermissionsResource
 from utils import HomomorphicEncryption
 
 import os
-import gc
 import torch
-import pickle
 import copy
 import numpy as np
 import transformers
-import logging
 from typing import List
 from collections import OrderedDict
 from torch.utils.data import DataLoader
@@ -22,33 +17,41 @@ from peft import (
     set_peft_model_state_dict,
 )
 
-MAX_GRAD_NORM = 0.1
-
-logger = logging.getLogger(__name__)
-
 def client_selection(num_clients, client_frac, round):
+    # Selecting clients for each round used for training
     np.random.seed(round)
     selected_clients = max(int(client_frac * num_clients), 1)
     return set(np.random.choice(np.arange(num_clients), selected_clients, replace=False))
 
 class DifferentialPrivacyCallback(transformers.TrainerCallback):
-    def __init__(self, lora_params, max_grad_norm=1.0, noise_multiplier=1.0):
+    """
+    Custom TrainerCallback that applies differential privacy during training
+    by clipping gradients and adding Gaussian noise to the LoRA parameter gradients.
+    """
+    def __init__(self, lora_params, max_grad_norm : float = 1.0, noise_multiplier: float = 1.0) -> None:
         self.lora_params = lora_params
         self.max_grad_norm = max_grad_norm
         self.noise_multiplier = noise_multiplier
 
-    def on_step_end(self, args, state, control, **kwargs):
+    def on_step_end(self, args, state, control, **kwargs) -> None:
+        # Compute the squered L2 norms of all non-null gradients
         norms = [p.grad.norm(2) ** 2 for p in self.lora_params if p.grad is not None]
 
+        # If no gradients are present, step early
         if not norms:
             return  
 
+        # Calculate total norm an compute the clipping coefficient to ensure the 
+        # gradient norm stays below the maximum gradient norm
         total_norm = torch.sqrt(torch.sum(torch.stack(norms)))
         clip_coef = min(1.0, self.max_grad_norm / (total_norm + 1e-6))
 
+        # Apply clipping and add noise to each parameter gradient
         for p in self.lora_params:
             if p.grad is not None:
-                p.grad.data.mul_(clip_coef)
+                p.grad.data.mul_(clip_coef) # Clip the gradient
+
+                # Add Gaussian noise:
                 noise = torch.normal(
                     mean=0,
                     std=self.noise_multiplier * self.max_grad_norm,
@@ -58,6 +61,14 @@ class DifferentialPrivacyCallback(transformers.TrainerCallback):
                 p.grad.data.add_(noise)
 
 class Client:
+    """
+    Client class for federated learning.
+
+    Attributes:
+        client_id (int): Unique identifier for the client.
+        name (str): Name of the client.
+        user_permission_resource (UserPermissionsResource): Permission Resource which keeps track of the spaces and permissions.
+    """
     def __init__(self, client_id: int, name: str, user_permissions_resource: UserPermissionsResource) -> None:
         self.client_id = client_id
         self.name = name
@@ -73,6 +84,7 @@ class Client:
         self.spaces_permissions_init()
         self.filter_documents()
 
+    # Set the space permissions for each client
     def spaces_permissions_init(self) -> None:
         permissions = self.user_permissions_resource.get_permissions(self.name, {"Username": self.name})
         for perm in permissions:
@@ -82,8 +94,8 @@ class Client:
                 # Add to the set of permissions for this user
                 self.permissions.add(type['permissionType']) if type['permissionGranted'] else None
 
+    # Function to filter the documents based on the permissions the clients have
     def filter_documents(self) -> None:
-        # Function to filter the documents based on the permissions the clients have
         for space in self.spaces:
             _, space_key = space
             # Only allow to add the documents to the Clients documents if the client has the permission
@@ -91,6 +103,7 @@ class Client:
             if Permission.VIEWSPACE_PERMISSION.value in self.permissions:
                 self.documents = self.space_manager.get_space(space_key).get_documents()
 
+    # Initialize the local dataset of the client 
     def local_dataset_init(self, generate_and_tokenize_prompt) -> None:
         X_train, y_test = train_test_split(
             self.documents, test_size=0.3, shuffle=True
@@ -98,10 +111,9 @@ class Client:
         self.local_train_dataset = list(map(generate_and_tokenize_prompt, X_train))
         self.local_eval_dataset = list(map(generate_and_tokenize_prompt, y_test))
         self.local_train_dataloader = DataLoader(self.local_train_dataset, batch_size=8)
-        self.delta = 1 / len(self.local_train_dataset)
     
     def trainer_init(self, tokenizer, accumulation_steps, batch_size, epochs, learning_rate, group_by_length, output_dir) -> None:
-        # Use the transformer methods to perform the training steps
+        # Use the transformer method to perform the training steps
         
         self.train_args = transformers.TrainingArguments(
             per_device_train_batch_size=batch_size, 
@@ -136,7 +148,7 @@ class Client:
                 tokenizer=tokenizer, pad_to_multiple_of=8, return_tensors="pt", padding=True
             ),
             callbacks=[
-                DifferentialPrivacyCallback(
+                DifferentialPrivacyCallback( # Using the custom differential privacy callback
                     lora_params=lora_params,
                     max_grad_norm=1.0,
                     noise_multiplier=1.0,
@@ -144,11 +156,13 @@ class Client:
             ]
         )   
 
+    # Train the client using the local dataset
     def train(self) -> None:
         # Clear CUDA cache
         torch.cuda.empty_cache()
         return self.local_trainer.train()
     
+    # Initialize local training 
     def local_training(self) -> None:
         self.model.config.use_cache = False
         self.old_params = copy.deepcopy(
@@ -165,6 +179,7 @@ class Client:
             )
         ).__get__(self.model, type(self.model))
     
+    # Ending local training and get the LoRA parameters
     def end_local_training(self, epoch, dataset_length, selected_clients, output_dir, he: HomomorphicEncryption):
         dataset_length[self.client_id] = len(self.documents)
         new_weight = self.model.state_dict()
@@ -210,6 +225,7 @@ class Client:
         self.rest_user_permission_manager = user_permissions_resource.get_rest_user_permission_manager()
         self.space_manager = self.rest_user_permission_manager.get_space_manager()
 
+    # Method for saving the clients as pickle
     def __getstate__(self):
         return {
             "client_id": self.client_id,

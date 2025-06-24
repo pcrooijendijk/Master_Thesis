@@ -1,8 +1,13 @@
 class Server:
+    """
+    Server class responsible for coordinating the federated learning process.
+    Implements the Federated Averaging (FedAvg) algorithm with support for encrypted model updates.
+    """
     def __init__(self, num_clients, global_model):
         self.global_model = global_model
         self.num_clients = num_clients
-        
+
+    # Performs Federated Averaging on received encrypted model updates.    
     def FedAvg(self, encrypted_updates, context):
         aggregated_update = {}
 
@@ -24,6 +29,3 @@ class Server:
             aggregated_update[k] = chunk_avg
 
         return aggregated_update
-
-    def get_server_context(self):
-        return self.server_context
