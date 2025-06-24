@@ -338,12 +338,12 @@ class DeepSeekApplication:
                 generated_output = self.model.generate(
                     input_ids=prompt.to(device),
                     generation_config=generation_config,
-                    do_sample=True,
+                    do_sample=False,
                     pad_token_id=self.tokenizer.pad_token_id,
                     eos_token_id=self.tokenizer.eos_token_id,
                     return_dict_in_generate=True,
                     output_scores=True,
-                    max_new_tokens=max_new_tokens,
+                    max_new_tokens=1000,
                 )
             logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
             s = generated_output.sequences[0]
