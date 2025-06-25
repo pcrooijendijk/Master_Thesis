@@ -1,17 +1,19 @@
-import pickle
+import json
 
-with open("ixn_output/" + "ixn_score_1.pkl", "rb") as f:
-    ixn_score = pickle.load(f)
+with open("eval_dataset_f/eval_dataset_1.json") as f: 
+    eval = json.load(f)
 
-import numpy as np
+answers = []
+for i in eval:
+    # print(i["answer"])
+    answers.append(i["answer"])
+    # print("---------------------------------------------------------------------\n")
 
-# Convert to numpy array (optional but convenient)
-arr = np.array(ixn_score)
+def clean_outputs(outputs):
+    return [output.replace("<｜end▁of▁sentence｜>", "").strip() for output in outputs]
 
-# Reshape into rows of 5 elements (only works if length is divisible by 5)
-arr_reshaped = arr.reshape(-1, 5)
+cleaned = clean_outputs(answers)
 
-# Compute mean along rows
-averages = arr_reshaped.mean(axis=1)
-
-print(averages)
+for c in cleaned:
+    print(c)
+    print("---------------------------------------------------------------------\n")
