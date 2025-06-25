@@ -349,7 +349,7 @@ class DeepSeekApplication:
                 )
             logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
             s = generated_output.sequences[0]
-            output = self.tokenizer.decode(s)
+
             output_text = self.tokenizer.decode(s[prompt.shape[-1]:], skip_special_tokens=True)
             post_processing = self.post_processing(output_text)
             logging.info(f"output_text: {output_text}")
@@ -371,27 +371,27 @@ class DeepSeekApplication:
             raise
 
     def post_processing(self, output: str) -> str:
-      if "<think>" in output:
-        output = output.split("<think>")[-1]
-      if "</think>" in output: 
-          output = output.split("</think>")[-1]
-      if "Answer:" in output:
-          output = output.split("**Answer:")[-1].strip()
+        if "<think>" in output:
+            output = output.split("<think>")[-1]
+        if "</think>" in output: 
+            output = output.split("</think>")[-1]
+        if "Answer:" in output:
+            output = output.split("**Answer:")[-1].strip()
 
-      # Step 2: Normalize whitespace
-      output = re.sub(r'\s+', ' ', output).strip()
+        # Step 2: Normalize whitespace
+        output = re.sub(r'\s+', ' ', output).strip()
 
-      # Step 3: Remove exact repeated sentences
-      sentences = re.split(r'(?<=[.!?]) +', output)
-      seen = set()
-      deduped = []
-      for sentence in sentences:
-          key = sentence.lower().strip()
-          if key and key not in seen:
-              seen.add(key)
-              deduped.append(sentence.strip())
+        # Step 3: Remove exact repeated sentences
+        sentences = re.split(r'(?<=[.!?]) +', output)
+        seen = set()
+        deduped = []
+        for sentence in sentences:
+            key = sentence.lower().strip()
+            if key and key not in seen:
+                seen.add(key)
+                deduped.append(sentence.strip())
 
-      return ' '.join(deduped).strip()
+        return ' '.join(deduped).strip()
 
     def return_relevant_chunks(self):
         return self.results_with_scores
