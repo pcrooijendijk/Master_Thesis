@@ -441,6 +441,7 @@ class DeepSeekApplication:
             - If the context is relevant and useful, base your answer on it.
             - If the context is insufficient or empty, answer using your own understanding and general knowledge.
             - Always respond in complete, well-structured short sentences. 
+            - Use a maximum of 150 words.
             - Do not explain steps or show reasoning unless explicitly asked.
             - Avoid unnecessary sentences or filler. Be direct and informative.
             - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
