@@ -1,5 +1,4 @@
 import gradio as gr
-# from pdf2image import convert_from_path
 import fire
 
 from DeepSeek import DeepSeekApplication, Metadata

@@ -102,7 +102,7 @@ if not args.eval:
 
 # ------------------------------------------------------------------------------------------------------
 if args.eval == "eval":
-    with open(f"eval_dataset/eval_dataset_{client_id}_b.json") as f: 
+    with open(f"eval_dataset/eval_dataset_{client_id}.json") as f: 
         dataset = json.load(f)
 
     eval_subset = Dataset.from_list(dataset)

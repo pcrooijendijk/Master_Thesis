@@ -36,7 +36,7 @@ with open('BLEU_scores/scores_1.csv', newline='') as csvfile:
 
 import pandas as pd
 
-df = pd.read_csv("BLEU_scores/scores_1.csv")
+df = pd.read_csv("BLEU_scores/scores_2.csv")
 
 # Drop index column if it exists
 if 'index' in df.columns:
