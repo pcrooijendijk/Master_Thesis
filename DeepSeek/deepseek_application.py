@@ -340,7 +340,7 @@ class DeepSeekApplication:
                 generated_output = self.model.generate(
                     input_ids=prompt.to(device),
                     generation_config=generation_config,
-                    do_sample=True,
+                    do_sample=False,
                     pad_token_id=self.tokenizer.pad_token_id,
                     eos_token_id=self.tokenizer.eos_token_id,
                     return_dict_in_generate=True,
@@ -371,12 +371,12 @@ class DeepSeekApplication:
             raise
 
     def post_processing(self, output: str) -> str:
+        if "Answer:" in output:
+            output = output.split("**Answer:")[-1].strip()
         if "<think>" in output:
             output = output.split("<think>")[-1]
         if "</think>" in output: 
             output = output.split("</think>")[-1]
-        if "Answer:" in output:
-            output = output.split("**Answer:")[-1].strip()
 
         # Step 2: Normalize whitespace
         output = re.sub(r'\s+', ' ', output).strip()
@@ -433,27 +433,33 @@ class DeepSeekApplication:
     def construct_prompt(self, query: str, context: str) -> str: 
 
         messages = [
-            {"role": "system", "content": """You are an expert assistant designed to answer questions accurately, helpfully and concise.
+            {
+                "role": "system",
+                "content": """  
+                You are an expert assistant that provides **only direct, verified answers**.  
 
-            By the user, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
-            
-            Instructions:
-            - If the context is relevant and useful, base your answer on it.
-            - If the context is insufficient or empty, answer using your own understanding and general knowledge.
-            - Always respond in complete, well-structured short sentences. 
-            - Use a maximum of 150 words.
-            - Do not explain steps or show reasoning unless explicitly asked.
-            - Avoid unnecessary sentences or filler. Be direct and informative.
-            - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
-            - Your goal is to provide the best possible answer regardless of context quality.""",},
+                **Rules:**  
+                1. **Never** show your reasoning, thought process, or analysis steps.  
+                2. Answer **immediately** with the final, most accurate response.  
+                3. If unsure, say: *"I don’t have verified information on this."*  
+                4. **Avoid all filler language**, including:  
+                - "Okay, so I need to figure out..."  
+                - "Let me break this down..."  
+                - "I’m not very familiar, but..."  
+                5. For lists or categories, state them **without introduction**.  
+                6. If the question requires a source (e.g., reports), cite it **or admit uncertainty**.  
+                """
+            },
+            {
+                "role": "user",
+                "content": f"""  
+                Context (optional):  
+                {context}  
 
-            {"role": "user", "content": f"""
-                Context (may be empty or partial):
-                {context}
-
-                Question:
-                {query}
-            """},
+                Question:  
+                {query}  
+                """
+            }
         ]
 
         tokenized_chat = self.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")
