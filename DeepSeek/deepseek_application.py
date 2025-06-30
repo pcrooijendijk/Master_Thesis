@@ -12,6 +12,7 @@ from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
 from transformers import logging as log
 log.set_verbosity_info()  
+from datasets import load_dataset
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
 from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
@@ -204,6 +205,11 @@ class DeepSeekApplication:
 
         self.model.half()
         self.model.eval() # Set the model to evaluation mode 
+
+        self.all_documents = load_dataset("json", data_files="documents1.json")
+        self.temp_doc = []
+        for index, _ in enumerate(self.all_documents['train']):
+            self.temp_doc.append(self.all_documents["train"][index])
     
     def retrieve_relevant_docs(self, question: str, top_k: int, sim_threshold: float) -> List[str]:
         if self.document_store is None: 
@@ -215,6 +221,11 @@ class DeepSeekApplication:
                 k=top_k
             )
 
+            self.scores_base = self.document_store_base.similarity_search(
+                query=question, 
+                k=top_k
+            )
+
             # Splitting the documents recursively 
             text_splits = self.recursive_text_splitter.split_documents([self.scores[0]])
             # Making a vector representation of the documents using embeddings
@@ -222,7 +233,7 @@ class DeepSeekApplication:
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
 
-            return self.scores
+            return self.scores, self.scores_base
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -278,13 +289,16 @@ class DeepSeekApplication:
             else: 
                 self.uploaded_doc_present = False
                 self.documents_array = loading_documents(self.client.get_documents(), documents_array, dict=True) # Adding the documents of the clients they have access to
+                self.documents_array_base = loading_documents(self.temp_doc, documents_array, dict=True) # Adding the documents of the clients they have access to
 
             splitted_docs = self.text_splitter.split_documents(self.documents_array)
+            splitted_docs_base = self.text_splitter.split_documents(self.documents_array_base)
 
             if not splitted_docs:
                 raise ValueError("No documents to index. Check the output of your document processing step.")
 
             self.document_store = FAISS.from_documents(splitted_docs, self.embeddings)
+            self.document_store_base = FAISS.from_documents(splitted_docs_base, self.embeddings)
             
             logger.info(f"Successfully loaded {len(doc_chunks)} chunks from {len(documents)} documents")
             

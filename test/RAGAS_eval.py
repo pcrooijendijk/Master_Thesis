@@ -25,10 +25,12 @@ if not args.eval:
         from DeepSeek.deepseek_application import DeepSeekApplication
         output_path_retrieved = f"retrieved_docs/retrieved_docs_{client_id}.json"
         output_path_evaluation = f"eval_dataset/eval_dataset_{client_id}.json"
+        base = False
     elif args.mode == "base":
         from DeepSeek.baseline_deepseek import BaselineDeepSeekApplication as DeepSeekApplication
         output_path_retrieved = f"retrieved_docs_base/retrieved_docs_baseline_{client_id}.json"
         output_path_evaluation = f"eval_dataset_base/eval_dataset_baseline_{client_id}.json"
+        base = True
 
     os.environ["RAGAS_DEBUG"] = "true"
 
@@ -70,11 +72,12 @@ if not args.eval:
     # Generate responses using the local LLM's of the clients
     eval_dataset = []
     retrieved_documents = []
+    retrieved_documents_base = []
 
     logging.info("Generating responses...\n")
     for query, reference in zip(questions, answers):
         logging.info("Query", query)
-        relevant_docs = deepseek.retrieve_relevant_docs(query, top_k=10, sim_threshold=0.4)
+        relevant_docs, relevant_docs_base = deepseek.retrieve_relevant_docs(query, top_k=10, sim_threshold=0.4)
         chunks, _ = deepseek.return_relevant_chunks()[0]
 
         response = deepseek.generate_response(query, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
@@ -87,6 +90,7 @@ if not args.eval:
         })
 
         retrieved_documents.append([doc.page_content for doc in relevant_docs]) 
+        retrieved_documents_base.append([doc.page_content for doc in relevant_docs_base])
 
     # Save intermediate files 
     os.makedirs("retrieved_docs", exist_ok=True)
@@ -96,6 +100,9 @@ if not args.eval:
 
     with open(output_path_retrieved, "w", encoding="utf-8") as f:
         json.dump(retrieved_documents, f, indent=4)
+    
+    with open("retrieved_docs_base/retrieved_docs_baseline_{client_id}.json", "w", encoding="utf-8") as f:
+        json.dump(retrieved_documents_base, f, indent=4)
 
     with open(output_path_evaluation, "w", encoding="utf-8") as f:
         json.dump(eval_dataset, f, ensure_ascii=False, indent=4)
