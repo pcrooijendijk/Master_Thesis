@@ -37,7 +37,7 @@ def evaluate_ixn_for_users(
     with open("ixn_output/" + output_file, 'wb') as f:
         pickle.dump(ixn_scores, f)
 
-with open("retrieved_base/retrieved_docs_baseline_1.json") as f: 
+with open("retrieved_base.json") as f: 
     baseline_docs = json.load(f)
 
 with open(args.path) as f: 

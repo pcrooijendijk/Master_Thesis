@@ -1,0 +1,322 @@
+{
+    "118": {
+        "space_key_index": 3,
+        "question": "How many pages does the report have in total?"
+    },
+    "115": {
+        "space_key_index": 3,
+        "question": "How many times does the document mention \"DS\"?"
+    },
+    "70": {
+        "space_key_index": 3,
+        "question": "What is Shawn J. Carsten's position at Shell Midstream Partners, L.P.?"
+    },
+    "50": {
+        "space_key_index": 3,
+        "question": "What was the change in cash and cash equivalents for the year 2018?"
+    },
+    "43": {
+        "space_key_index": 3,
+        "question": "Which metric showed a statistically significant increase in correlation with human assessment over all other metrics for the German to French language pair according to Williams test?"
+    },
+    "163": {
+        "space_key_index": 3,
+        "question": "What is the tax abatement percentage that professional cryptocurrency traders with total revenues not over 170,000 euros may claim?"
+    },
+    "12": {
+        "space_key_index": 3,
+        "question": "Why are the results of BERT with a mean of 71.6% not considered meaningful?"
+    },
+    "11": {
+        "space_key_index": 3,
+        "question": "What is the performance score for Entity Recognition when multitasked with Coreference Resolution?"
+    },
+    "211": {
+        "space_key_index": 3,
+        "question": "How much does the newspaper cost?"
+    },
+    "112": {
+        "space_key_index": 3,
+        "question": "What is the main content of the second-to-last page of the document?"
+    },
+    "56": {
+        "space_key_index": 3,
+        "question": "How many acquisitions did the company complete in 2020?"
+    },
+    "119": {
+        "space_key_index": 3,
+        "question": "On which page does the document detail Bureau Objective 2.1?"
+    },
+    "127": {
+        "space_key_index": 3,
+        "question": "Is the enhancement of CSO's competitiveness tied to the recruitment of a diverse workforce?"
+    },
+    "6": {
+        "space_key_index": 3,
+        "question": "On which platform were the annotations for the BoolQ dataset collected?"
+    },
+    "123": {
+        "space_key_index": 3,
+        "question": "How many pages does the document have in total?"
+    },
+    "46": {
+        "space_key_index": 3,
+        "question": "What is the BLEU score for CodeBERT when pre-trained with MLM+RTD objectives?"
+    },
+    "147": {
+        "space_key_index": 3,
+        "question": "Does the German Code of Civil Procedure allow certain professional individuals to refuse to testify in civil trials?"
+    },
+    "140": {
+        "space_key_index": 3,
+        "question": "Can a person apply for asylum in Brazil from outside the country?"
+    },
+    "145": {
+        "space_key_index": 3,
+        "question": "What is the title of the document?"
+    },
+    "122": {
+        "space_key_index": 3,
+        "question": "When was the document approved?"
+    },
+    "98": {
+        "space_key_index": 1,
+        "question": "What might hinder the U.S.'s ability to achieve strategic prevention of religious freedom violations?"
+    },
+    "47": {
+        "space_key_index": 1,
+        "question": "Which source of supervision has the highest precision according to Table 2?"
+    },
+    "133": {
+        "space_key_index": 1,
+        "question": "What does article 10 of Finland's Constitution specifically guarantee?"
+    },
+    "175": {
+        "space_key_index": 1,
+        "question": "How many words does the document have in total?"
+    },
+    "55": {
+        "space_key_index": 1,
+        "question": "What was the company's total sales and revenues for Construction Industries in North America in 2021?"
+    },
+    "1": {
+        "space_key_index": 1,
+        "question": "How many categories of aggression were participants asked to classify texts into?"
+    },
+    "37": {
+        "space_key_index": 1,
+        "question": "What is the PPL score when using 50% of the training data according to Table 4?"
+    },
+    "100": {
+        "space_key_index": 1,
+        "question": "On which page mentions the guiding principles?"
+    },
+    "87": {
+        "space_key_index": 1,
+        "question": "Was the net cash from operating activities higher in 2020 than in 2019?"
+    },
+    "207": {
+        "space_key_index": 1,
+        "question": "What is the brief summary of the New York Poverty news?"
+    },
+    "33": {
+        "space_key_index": 1,
+        "question": "Which training signal resulted in the highest score for the CITE category?"
+    },
+    "42": {
+        "space_key_index": 1,
+        "question": "Which language pair in the WMT 2018 DARR statistics has the highest average number of tokens in the source text?"
+    },
+    "187": {
+        "space_key_index": 1,
+        "question": "Did the United States label China as a national security threat?"
+    },
+    "28": {
+        "space_key_index": 1,
+        "question": "What is the Word Error Rate (WER) of the ATD spell-corrector model for the 'Key' attack?"
+    },
+    "26": {
+        "space_key_index": 1,
+        "question": "Which model showed the largest improvement in AUC value after the addition of DSGAN?"
+    },
+    "92": {
+        "space_key_index": 1,
+        "question": "Who is the Chief Data Officer at the Department of State?"
+    },
+    "169": {
+        "space_key_index": 1,
+        "question": "What significant legislative amendment did Estonia adopt in 2016 in response to human rights violations in foreign countries?"
+    },
+    "88": {
+        "space_key_index": 1,
+        "question": "What is the energy efficiency target for Toyota's compact SUV in the bZ series?"
+    },
+    "192": {
+        "space_key_index": 1,
+        "question": "How many people did Representative Steve Scalise need to be elected on the House floor?"
+    },
+    "39": {
+        "space_key_index": 1,
+        "question": "Calculate the average F1 score across all context languages when the question language is German (de)."
+    },
+    "167": {
+        "space_key_index": 0,
+        "question": "What are the consequences for a foreign national who changes their resident status and moves out of Iran without transferring their real estate rights?"
+    },
+    "79": {
+        "space_key_index": 0,
+        "question": "Did the company declare cash dividends in 2022?"
+    },
+    "223": {
+        "space_key_index": 0,
+        "question": "Who reported the news about the child welfare agency accusation?"
+    },
+    "20": {
+        "space_key_index": 0,
+        "question": "What is the significance of the R-GCN component within the Entity-GCN model based on the ablation study?"
+    },
+    "204": {
+        "space_key_index": 0,
+        "question": "How many additional reservists did the Israeli government approve to call-up?"
+    },
+    "113": {
+        "space_key_index": 0,
+        "question": "How many words are there in the document?"
+    },
+    "137": {
+        "space_key_index": 0,
+        "question": "Is the IBGE allowed to share data with public or private companies for generating official statistics?"
+    },
+    "44": {
+        "space_key_index": 0,
+        "question": "Which model received the highest human fluency score?"
+    },
+    "103": {
+        "space_key_index": 0,
+        "question": "Did the Court allow the government to use proposed exhibits during the opening statement?"
+    },
+    "38": {
+        "space_key_index": 0,
+        "question": "According to Figure 4, does the training speed of NCRF++ continue to increase after a batch size of 100?"
+    },
+    "159": {
+        "space_key_index": 0,
+        "question": "What is the aim of FIRS according to the Policy Statement on Draft Regulations for the Foreign Influence Registration Scheme?"
+    },
+    "82": {
+        "space_key_index": 0,
+        "question": "What was the percentage change in pre-tax earnings for K-47's service and retailing businesses from 2019 to 2020?"
+    },
+    "170": {
+        "space_key_index": 0,
+        "question": "What model does China Exim Bank follow, which allows the use of natural resources as collateral for loans?"
+    },
+    "168": {
+        "space_key_index": 0,
+        "question": "Has the United Kingdom introduced a bill concerning the regulation of AI and workers' rights?"
+    },
+    "102": {
+        "space_key_index": 0,
+        "question": "What is the page range for the 'Bureau Goals and Objectives' section?"
+    },
+    "162": {
+        "space_key_index": 0,
+        "question": "How many pages does the document have in total?"
+    },
+    "64": {
+        "space_key_index": 0,
+        "question": "What was the total revenue of Tesla for the year 2020?"
+    },
+    "30": {
+        "space_key_index": 0,
+        "question": "According to Figure 3, what is the sequence followed to generate the final labels for Named Entity Recognition?"
+    },
+    "222": {
+        "space_key_index": 0,
+        "question": "On what data was the newspaper released?"
+    },
+    "72": {
+        "space_key_index": 0,
+        "question": "What benefits are expected from the Siemens Healthineers acquisition of Varian?"
+    },
+    "217": {
+        "space_key_index": 2,
+        "question": "How many words are there in total in the frontpage?"
+    },
+    "69": {
+        "space_key_index": 2,
+        "question": "Did both deposit-related fees and lending-related fees increase in 2021 compared to 2020?"
+    },
+    "14": {
+        "space_key_index": 2,
+        "question": "How does the performance of LSTUR-con measured by AUC compare to LSTUR-ini as the mask probability p increases?"
+    },
+    "57": {
+        "space_key_index": 2,
+        "question": "What was the core revenue growth percentage including Cytiva for Danaher in 2020?"
+    },
+    "19": {
+        "space_key_index": 2,
+        "question": "Why does the model not perform as well on German compared to Spanish and Dutch?"
+    },
+    "96": {
+        "space_key_index": 2,
+        "question": "Is the trade policy described in Bureau Objective 2.3 worker-centered?"
+    },
+    "68": {
+        "space_key_index": 2,
+        "question": "What are the four distinct focus areas of Novo Nordisk's corporate strategy?"
+    },
+    "129": {
+        "space_key_index": 2,
+        "question": "What does the abbreviation \"DHS/HSI\" refer to?"
+    },
+    "174": {
+        "space_key_index": 2,
+        "question": "Does Israeli law require a specific license for each cosmetic product in addition to a general cosmetic license?"
+    },
+    "94": {
+        "space_key_index": 2,
+        "question": "Is the C5+1 platform inclusive of objectives for democracy, human rights, and governance?"
+    },
+    "35": {
+        "space_key_index": 2,
+        "question": "How much did the average accuracy improve when using the model with context and label compared to the model with synonym, for the RNN architecture?"
+    },
+    "181": {
+        "space_key_index": 2,
+        "question": "Did Bed Bath & Beyond file for bankruptcy?"
+    },
+    "89": {
+        "space_key_index": 2,
+        "question": "How does the Bureau plan to mitigate the risk of not seeking diversity?"
+    },
+    "54": {
+        "space_key_index": 2,
+        "question": "What was the impact of treasury share transactions on Novartis AG's equity in 2020 compared to the net cash outflow?"
+    },
+    "193": {
+        "space_key_index": 2,
+        "question": "What accomplishments had Louise Glück achieved before receiving the Nobel Prize?"
+    },
+    "10": {
+        "space_key_index": 2,
+        "question": "Why was English excluded from the linguistic similarity and pre-training study?"
+    },
+    "180": {
+        "space_key_index": 2,
+        "question": "Who wrote the Supreme Court article about the adoption law ruling in favor of tribes?"
+    },
+    "153": {
+        "space_key_index": 2,
+        "question": "What is the title of the document?"
+    },
+    "58": {
+        "space_key_index": 2,
+        "question": "What positions did Dr. Reese hold at the Company between 2015 and 2018?"
+    },
+    "157": {
+        "space_key_index": 2,
+        "question": "Was the Parikkala LPOE improving project funded by the European Neighbourhood Instrument?"
+    }
+}
