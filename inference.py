@@ -7,7 +7,7 @@ from DeepSeek import DeepSeekApplication, Metadata
 OUTPUT_HISTORY = []
 
 def run(
-    client_id: int = 9,    
+    client_id: int = 1,    
     ori_model: str = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", # The original model 
     lora_weights_path: str = "FL_output/pytorch_model.bin", # Path to the weights after LoRA
     lora_config_path: str = "FL_output", # Path to the config.json file after LoRA
@@ -70,6 +70,7 @@ def run(
                 metadata[file_name] = metadata_doc
 
             deepseek.load_documents(documents, metadata[file_name])
+            deepseek.retrieve_relevant_docs(question, top_k=10, sim_threshold=0.4)
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         # If there is manual input from the user, treat it as if it is a document and append to the total list of documents
         elif custom_text:  
@@ -83,10 +84,12 @@ def run(
                     processing_time=0.0
                 )
             deepseek.load_documents(documents, metadata, custom_text=True)
+            deepseek.retrieve_relevant_docs(question, top_k=10, sim_threshold=0.4)
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.0, temp, True)
         # If there are no documents uploaded, generate a prompt without extra context
         else:
             deepseek.load_documents([], metadata)
+            deepseek.retrieve_relevant_docs(question, top_k=10, sim_threshold=0.4)
             response, content_doc = deepseek.generate_response(question, deepseek, top_k, top_p, num_beams, max_new_tokens, 0.28, temp, False)
         # For the output history
         OUTPUT_HISTORY.append([question, response['content']])
