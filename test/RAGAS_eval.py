@@ -120,24 +120,3 @@ if args.eval == "eval":
 
     evaluation.to_pandas().to_csv(f"results_{client_id}.csv")
     print("Evaluation complete. Results saved to results.csv")
-
-# import pandas as pd
-
-# for i in range(1,12):
-#     df = pd.read_csv(f"RAGAS_scores/results_{i}.csv")
-#     metrics = ["context_precision", "answer_relevancy", "faithfulness", "context_recall"]
-#     metric_arr = []
-#     for metric in metrics: 
-#         metric_arr.append(df[metric].mean())
-
-#     mean_row = " & ".join(f"{val:.4f}" for val in metric_arr)
-#     print(i)
-#     print(mean_row)
-
-# df = pd.read_csv(f"RAGAS_scores/results_{1}.csv")
-# metrics = ["context_precision", "answer_relevancy", "faithfulness", "context_recall"]
-
-# for idx, row in df[metrics].iterrows():
-#     row_number = idx + 1  # 1-based indexing
-#     formatted = " & ".join(f"{val:.2f}" for val in row)
-#     print(f"{row_number} & {formatted} \\\\")
