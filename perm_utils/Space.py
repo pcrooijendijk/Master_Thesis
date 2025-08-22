@@ -2,7 +2,7 @@ from typing import List
 
 class Space: 
     """
-        Space is a collection of documents
+        Space is a collection of documents.
     """
     
     def __init__(self, name: str, key: str):

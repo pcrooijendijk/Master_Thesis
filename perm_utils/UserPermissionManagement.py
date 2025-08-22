@@ -85,7 +85,7 @@ class RestUserPermissionManager:
             user_permission  = False
             space_permissions = space.get_permissions()
             for space_permission in space_permissions:
-                if not space_permission.is_user_permission: # Make this a while loop?
+                if not space_permission.is_user_permission: 
                     continue
                 elif space_permission.get_user_name() == username: 
                     if space_permission.get_permission_type() == space_permission_type:

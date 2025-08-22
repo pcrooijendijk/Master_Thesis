@@ -7,4 +7,12 @@ __pycache__/
 *.py[cod]
 /eval_dataset
 /retrieved_docs
-
+__pycache__/
+*.pyc
+eval/data_pics.py
+utils/printing_scores.py
+FL_main.sh
+run_bleu_scores.sh
+run_ixn_scores.sh
+eval_dataset_base/
+retrieved_docs_base/

@@ -1,10 +1,13 @@
 from fed_utils import client_selection, Server
-from utils import SpaceManagement, PromptHelper, Users
+from utils import SpaceManagement, PromptHelper, Users, HomomorphicEncryption
+import faulthandler
+faulthandler.enable()
+import os
+import numpy as np
 
 import torch
 import fire
 import pickle
-import tenseal as ts
 from typing import List
 from peft import (
     LoraConfig,
@@ -36,33 +39,16 @@ user_permissions_resource = management.get_user_permissions_resource()
 with open(output_dir + "/user_permission_resource.pkl", "wb") as f:
     pickle.dump(user_permissions_resource, f)
 
-def decrypt_model_weights(model, encrypted_aggregated):
-    decrypted_state = {}
-
-    for name, encrypted_chunks in encrypted_aggregated.items():
-        flat_weights = []
-
-        # Handle multiple chunks per parameter
-        for chunk in encrypted_chunks:
-            flat_weights.extend(chunk.decrypt())
-
-        # Reshape to original tensor shape
-        original_shape = model.state_dict()[name].shape
-        decrypted_tensor = torch.tensor(flat_weights).view(original_shape)
-        decrypted_state[name] = decrypted_tensor
-
-    return decrypted_state
-
 # Main federated learning function
 def federated_privacy_learning(
     global_model: str = 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', # The global model
     output_dir: str = 'FL_output/', # The output directory
-    client_frac: float = 0.5, # The fraction of clients chosen from the total number of clients
+    client_frac: float = 0.4, # The fraction of clients chosen from the total number of clients
     comm_rounds: int = 10, # Number of communication rounds
-    num_clients: int = 10, # Number of clients
+    num_clients: int = 11, # Number of clients
     batch_size = 2, # Batch size for the local models
     micro_batch_size: int = 1, # Micro batch size for the local models
-    epochs: int = 1, # Number of total epochs for the local models to train on
+    epochs: int = 10, # Number of total epochs for the local models to train on
     lr: float = 1e-2, # Learning rate for the local models
     save_steps: int = 3, # After this amount of steps there is a checkpoint
     max_length: int = 512, # After this length there is a cutoff 
@@ -147,10 +133,21 @@ def federated_privacy_learning(
     model.is_parallelizable = True
     model.model_parallel = True
 
-    for epoch in tqdm(range(comm_rounds)):
-        print("Selecting clients...")
+    model_weights = {}
+
+    # Initialize HE
+    he = HomomorphicEncryption()
+    he.generate_context()
+    he.save_contexts()
+
+    training_loss = [[] for _ in range(num_clients)]
+
+    for round in tqdm(range(comm_rounds)):
+        local_models = []
+        print("Selecting clients...\n")
         # Selecting the indices of the clients which will be used for FL 
-        selected_clients_index = client_selection(num_clients, client_frac)
+        selected_clients_index = client_selection(num_clients, client_frac, round)
+        print(f"Selected clients:\n{selected_clients_index}")
 
         # Setting and getting all the clients
         users.set_clients(user_permissions_resource)
@@ -164,6 +161,7 @@ def federated_privacy_learning(
 
         for client_id in selected_clients_index:
             client = clients[client_id] 
+            print("\nSetting the model")
             client.set_model(model)
             # client.model_init(lora_rank, lora_alpha, lora_dropout, lora_module)
             print("\nPreparing the local dataset and trainer for client {}".format(client_id))
@@ -182,27 +180,33 @@ def federated_privacy_learning(
             client.local_training()
 
             print("\nStarting local training...")
-            client.train()
+            results = client.train()
+            training_loss.append((round, client_id, results.training_loss))
 
             print("\nEnding the local training of client {}".format(client_id))
-            dataset_length, selected_clients, _ = client.end_local_training(
-                epoch, dataset_length, selected_clients, output_dir
+            dataset_length, selected_clients, _, encrypted_weights = client.end_local_training(
+                round, dataset_length, selected_clients, output_dir, he
                 )
             
             with open(output_dir + "/client_{}.pkl".format(client.get_client_id()), "wb") as f:
                 pickle.dump(client, f)
 
-            del client # Ensuring that there is enough space on GPU
             import gc 
             gc.collect()
             torch.cuda.empty_cache()
+            local_models.append(encrypted_weights)
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
-        model_weights = server.FedAvg(model, selected_clients, dataset_length, epoch, output_dir)
-        decrypted_weights = decrypt_model_weights(model, model_weights)
+        # Aggregating the weights
+        model_weights = server.FedAvg(local_models, he.load_full_context())
+        # Decrypting the weights
+        decrypted_weights = he.decrypt_model_weights(model_weights, model.state_dict())
         set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")
-        lora_config.save_pretrained(output_dir) 
+        lora_config.save_pretrained(output_dir)
+
+    with open('training_loss.pkl', 'wb') as f:
+        pickle.dump(training_loss, f)
 
 if __name__ == "__main__":
     fire.Fire(federated_privacy_learning)

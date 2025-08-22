@@ -10,6 +10,8 @@ import pickle
 from langchain_community.vectorstores import FAISS   
 from typing import Tuple, List, Optional, Dict
 from dataclasses import dataclass
+from transformers import logging as log
+log.set_verbosity_info()  
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, GenerationConfig
 from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
@@ -208,19 +210,19 @@ class DeepSeekApplication:
             raise ValueError("There are no documents uploaded.")
         
         try: 
-            scores = self.document_store.similarity_search(
+            self.scores = self.document_store.similarity_search(
                 query=question, 
                 k=top_k
             )
 
             # Splitting the documents recursively 
-            text_splits = self.recursive_text_splitter.split_documents([scores[0]])
+            text_splits = self.recursive_text_splitter.split_documents([self.scores[0]])
             # Making a vector representation of the documents using embeddings
             vectorstore = Chroma.from_documents(documents=text_splits, embedding=self.embeddings)
             # Getting the most relevant bits of the documents 
             self.results_with_scores = vectorstore.similarity_search_with_score(question, k=top_k)
 
-            return scores
+            return self.scores
 
         except Exception as e: 
             logger.error(f"Error retrieving relevant documents: {str(e)}")
@@ -244,7 +246,6 @@ class DeepSeekApplication:
             doc_chunks = []
             self.documents = documents
             documents_array = []
-            print("foutje?")
 
             def loading_documents(documents: List, documents_array: List, dict: bool = False):
                 # Getting the documents content into the Document Langchain object
@@ -307,7 +308,7 @@ class DeepSeekApplication:
         start_time = time.time()
         
         try:
-            relevant_document = self.retrieve_relevant_docs(query, top_k, similarity_threshold)[0].page_content
+            relevant_document = self.scores[0].page_content
 
             if self.uploaded_doc_present:
                 retrieved_bits = [
@@ -332,21 +333,30 @@ class DeepSeekApplication:
                 temperature=temp,
                 top_p=top_p,
                 top_k=top_k,
-                num_beams=num_beams
+                num_beams=num_beams,
             )
 
             with torch.no_grad():
-                generated_output = deepseek.model.generate(
-                    prompt.to(device),
+                generated_output = self.model.generate(
+                    input_ids=prompt.to(device),
                     generation_config=generation_config,
-                    do_sample=True,
-                    max_new_tokens=5000,
+                    do_sample=False,
+                    pad_token_id=self.tokenizer.pad_token_id,
+                    eos_token_id=self.tokenizer.eos_token_id,
+                    return_dict_in_generate=True,
+                    output_scores=True,
+                    max_new_tokens=2000,
                 )
-            input_length = prompt.shape[0]
-            output = deepseek.tokenizer.batch_decode(generated_output[:, input_length:], skip_special_tokens=True)[0]
+            logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
+            s = generated_output.sequences[0]
+
+            output_text = self.tokenizer.decode(s[prompt.shape[-1]:], skip_special_tokens=True)
+            post_processing = self.post_processing(output_text)
+            logging.info(f"output_text: {output_text}")
+            logging.info(f"Post processing: {post_processing}")
 
             answer = {
-                'content': self.post_processing(output),
+                'content': post_processing,
                 'metadata': {
                     'text_metadata': metadata,
                     'processing_time': time.time() - start_time,
@@ -361,14 +371,27 @@ class DeepSeekApplication:
             raise
 
     def post_processing(self, output: str) -> str:
-        match = re.search(r"</think>\s*(.*)", output)
-        if match:
-            answer = match.group(1).strip()
-            answer = re.sub(r"[\\]boxed\{(.*?)}", r"\1", answer)
-            return answer.strip()
+        if "Answer:" in output:
+            output = output.split("**Answer:")[-1].strip()
+        if "<think>" in output:
+            output = output.split("<think>")[-1]
+        if "</think>" in output: 
+            output = output.split("</think>")[-1]
 
-        # Fallback if pattern not found
-        return output.strip()
+        # Step 2: Normalize whitespace
+        output = re.sub(r'\s+', ' ', output).strip()
+
+        # Step 3: Remove exact repeated sentences
+        sentences = re.split(r'(?<=[.!?]) +', output)
+        seen = set()
+        deduped = []
+        for sentence in sentences:
+            key = sentence.lower().strip()
+            if key and key not in seen:
+                seen.add(key)
+                deduped.append(sentence.strip())
+
+        return ' '.join(deduped).strip()
 
     def return_relevant_chunks(self):
         return self.results_with_scores
@@ -391,12 +414,18 @@ class DeepSeekApplication:
             generated_output = self.model.generate(
                 input_ids=input_ids,
                 generation_config=generation_config,
+                do_sample=False,
+                pad_token_id=self.tokenizer.pad_token_id,
+                eos_token_id=self.tokenizer.eos_token_id,
                 return_dict_in_generate=True,
                 output_scores=True,
                 max_new_tokens=max_new_tokens,
             )
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
         s = generated_output.sequences[0]
         output = self.tokenizer.decode(s)
+        output_text = self.tokenizer.decode(generated_output[0][input_ids.shape[-1]:], skip_special_tokens=True)
+        logging.info("output_text:", output_text)
 
         return self.post_processing(output)
 
@@ -404,26 +433,33 @@ class DeepSeekApplication:
     def construct_prompt(self, query: str, context: str) -> str: 
 
         messages = [
-            {"role": "system", "content": """You are an expert assistant designed to answer questions accurately, helpfully and concise.
+            {
+                "role": "system",
+                "content": """  
+                You are an expert assistant that provides **only direct, verified answers**.  
 
-            By the user, you are given an optional context document and a user question. If the context is useful, use it. If it is missing, unclear, or irrelevant, rely on your own knowledge to answer as clearly and informatively as possible.
-            
-            Instructions:
-            - If the context is relevant and useful, base your answer on it.
-            - If the context is insufficient or empty, answer using your own understanding and general knowledge.
-            - Always respond in complete, well-structured short sentences. 
-            - Do not explain steps or show reasoning unless explicitly asked.
-            - Avoid unnecessary sentences or filler. Be direct and informative.
-            - Do not mention the context’s quality (e.g., avoid saying "The context is insufficient").
-            - Your goal is to provide the best possible answer regardless of context quality.""",},
+                **Rules:**  
+                1. **Never** show your reasoning, thought process, or analysis steps.  
+                2. Answer **immediately** with the final, most accurate response.  
+                3. If unsure, say: *"I don’t have verified information on this."*  
+                4. **Avoid all filler language**, including:  
+                - "Okay, so I need to figure out..."  
+                - "Let me break this down..."  
+                - "I’m not very familiar, but..."  
+                5. For lists or categories, state them **without introduction**.  
+                6. If the question requires a source (e.g., reports), cite it **or admit uncertainty**.  
+                """
+            },
+            {
+                "role": "user",
+                "content": f"""  
+                Context (optional):  
+                {context}  
 
-            {"role": "user", "content": f"""
-                Context (may be empty or partial):
-                {context}
-
-                Question:
-                {query}
-            """},
+                Question:  
+                {query}  
+                """
+            }
         ]
 
         tokenized_chat = self.tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True, return_tensors="pt")

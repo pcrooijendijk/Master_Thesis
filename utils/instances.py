@@ -60,9 +60,11 @@ class SpaceManagement:
     
     def save_permissions(self) -> None:
         for user in self.users:
-            space = self.space_manager.get_space(self.user_list[user]["space"])
+            user_spaces = []
+            for space in self.user_list[user]["space"]:
+                user_spaces.append(self.space_manager.get_space(space))
             permissions = self.user_list[user]["permissions"]
-            self.space_permission_manager.save_permission(space, user, permissions)
+            self.space_permission_manager.save_permission(user_spaces, user, permissions)
     
     def get_user_permissions_resource(self) -> UserPermissionsResource:
         return self.user_permissions_resource
