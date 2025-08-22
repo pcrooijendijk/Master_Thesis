@@ -197,7 +197,9 @@ def federated_privacy_learning(
             local_models.append(encrypted_weights)
         
         print('\nGetting the weights of the clients and send it to the server for aggregation')
+        # Aggregating the weights
         model_weights = server.FedAvg(local_models, he.load_full_context())
+        # Decrypting the weights
         decrypted_weights = he.decrypt_model_weights(model_weights, model.state_dict())
         set_peft_model_state_dict(model, decrypted_weights, "default")
         torch.save(model.state_dict(), output_dir + "pytorch_model.bin")

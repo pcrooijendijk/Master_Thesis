@@ -9,8 +9,10 @@ __pycache__/
 /retrieved_docs
 __pycache__/
 *.pyc
-test/data_pics.py
+eval/data_pics.py
 utils/printing_scores.py
 FL_main.sh
 run_bleu_scores.sh
 run_ixn_scores.sh
+eval_dataset_base/
+retrieved_docs_base/
