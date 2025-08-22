@@ -11,3 +11,6 @@ __pycache__/
 *.pyc
 test/data_pics.py
 utils/printing_scores.py
+FL_main.sh
+run_bleu_scores.sh
+run_ixn_scores.sh

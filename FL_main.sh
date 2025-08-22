@@ -17,9 +17,6 @@ export TRITON_CACHE_DIR="vol/csedu-nobackup/project/prooijendijk/triton/cache"
 # Navigate to the project directory
 cd /vol/csedu-nobackup/project/prooijendijk
 
-# Activate the virtual environment (if applicable)
-# source myenv/bin/activate
-
 cd /vol/csedu-nobackup/project/prooijendijk/Master_Thesis
 
 # Commands to run your program go here, e.g.:

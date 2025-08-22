@@ -187,7 +187,7 @@ class BaselineDeepSeekApplication:
 
         self.model.eval() # Set the model to evaluation mode 
 
-        self.all_documents = load_dataset("json", data_files="documents1.json")
+        self.all_documents = load_dataset("json", data_files="documents.json")
         self.temp_doc = []
         for index, _ in enumerate(self.all_documents['train']):
             self.temp_doc.append(self.all_documents["train"][index])
